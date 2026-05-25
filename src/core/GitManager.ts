@@ -11,9 +11,9 @@ export class GitManager {
   hasUncommittedChanges(): boolean {
     try {
       const output = execSync('git status --porcelain', {
+        cwd: this.rootDir,
         encoding: 'utf8',
         stdio: 'pipe',
-        cwd: this.rootDir,
       })
       return output.trim() !== ''
     }
@@ -22,12 +22,41 @@ export class GitManager {
     }
   }
 
+  getLastTag(): string | null {
+    try {
+      const output = execSync('git describe --tags --abbrev=0', {
+        cwd: this.rootDir,
+        encoding: 'utf8',
+        stdio: 'pipe',
+      })
+      return output.trim() || null
+    }
+    catch {
+      return null
+    }
+  }
+
+  getCommitsSinceLastTag(): { message: string, files: string[] }[] {
+    try {
+      const lastTag = this.getLastTag()
+      const range = lastTag ? `${lastTag}..HEAD` : '--max-count=50'
+      const output = execSync(`git log ${range} --format=%B`, {
+        cwd: this.rootDir,
+        encoding: 'utf8',
+        stdio: 'pipe',
+      })
+      return output.trim().split('\n').filter(Boolean).map(message => ({ message, files: [] }))
+    }
+    catch {
+      return []
+    }
+  }
+
   checkVersionExists(version: string, tagPrefix: string = 'v'): boolean {
     try {
-      const tagName = `${tagPrefix}${version}`
-      execSync(`git rev-parse ${tagName}`, {
-        stdio: 'pipe',
+      execSync(`git rev-parse --verify ${tagPrefix}${version}`, {
         cwd: this.rootDir,
+        stdio: 'pipe',
       })
       return true
     }
@@ -36,67 +65,12 @@ export class GitManager {
     }
   }
 
-  getCommitsWithFiles(): Array<{ message: string, files: string[] }> {
-    try {
-      const output = execSync('git log --oneline -20 --format=format:%s', {
-        encoding: 'utf8',
-        cwd: this.rootDir,
-      })
-      const lines = output.trim().split('\n')
-      return lines.map(message => ({
-        message: message.trim(),
-        files: [],
-      }))
-    }
-    catch {
-      return []
-    }
-  }
-
-  getLastTag(): string {
-    try {
-      const output = execSync('git describe --tags --abbrev=0', {
-        encoding: 'utf8',
-        stdio: 'pipe',
-        cwd: this.rootDir,
-      })
-      return output.trim()
-    }
-    catch {
-      return ''
-    }
-  }
-
-  getCommitsSinceLastTag(): Array<{ message: string, files: string[] }> {
-    try {
-      const lastTag = this.getLastTag()
-      if (!lastTag) {
-        return this.getCommitsWithFiles()
-      }
-
-      const output = execSync(`git log ${lastTag}..HEAD --format=format:%s`, {
-        encoding: 'utf8',
-        cwd: this.rootDir,
-      })
-      const lines = output.trim().split('\n')
-      return lines.map(message => ({
-        message: message.trim(),
-        files: [],
-      }))
-    }
-    catch {
-      return []
-    }
-  }
-
   addFiles(files: string[]): void {
     try {
-      const filesStr = files.join(' ')
-      execSync(`git add ${filesStr}`, {
+      execSync(`git add ${files.join(' ')}`, {
         cwd: this.rootDir,
         stdio: 'pipe',
       })
-      log.debug(`Git add: ${filesStr}`)
     }
     catch (error) {
       throw new Error(`Git add failed: ${(error as Error).message}`)
@@ -116,22 +90,21 @@ export class GitManager {
     }
   }
 
-  createTag(version: string, tagPrefix: string = 'v'): string {
+  createTag(version: string, tagPrefix: string = 'v'): void {
     try {
       const tagName = `${tagPrefix}${version}`
       execSync(`git tag -a ${tagName} -m "Release ${tagName}"`, {
         cwd: this.rootDir,
         stdio: 'pipe',
       })
-      return `已创建 tag: ${tagName}`
+      log.success(`已创建 tag: ${tagName}`)
     }
     catch (error) {
       throw new Error(`创建 Tag 失败: ${(error as Error).message}`)
     }
   }
 
-  push(includeTags: boolean = true): string[] {
-    const messages: string[] = []
+  push(includeTags: boolean = true): void {
     try {
       execSync('git push', {
         cwd: this.rootDir,
@@ -144,18 +117,15 @@ export class GitManager {
           cwd: this.rootDir,
           stdio: 'pipe',
         })
-        messages.push('已推送 tags')
+        log.success('已推送 tags')
       }
     }
     catch (error) {
       throw new Error(`Git push failed: ${(error as Error).message}`)
     }
-    return messages
   }
 
-  commitAndPush(message: string, push: boolean = true, createTag: boolean = false, tagVersion?: string, tagPrefix: string = 'v'): string[] {
-    const messages: string[] = []
-
+  commitAndPush(message: string, push: boolean = true, createTag: boolean = false, tagVersion?: string, tagPrefix: string = 'v'): void {
     try {
       execSync('git config --local core.autocrlf false', {
         cwd: this.rootDir,
@@ -170,20 +140,16 @@ export class GitManager {
     this.commit(message)
 
     if (createTag && tagVersion) {
-      const tagMessage = this.createTag(tagVersion, tagPrefix)
-      messages.push(tagMessage)
+      this.createTag(tagVersion, tagPrefix)
     }
 
     if (push) {
       try {
-        const pushMessages = this.push(createTag)
-        messages.push(...pushMessages)
+        this.push(createTag)
       }
       catch (error) {
         log.warn(`Git push failed: ${(error as Error).message}`)
       }
     }
-
-    return messages
   }
 }

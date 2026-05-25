@@ -67,8 +67,6 @@ export class VersionManager {
       error: null,
     }
 
-    const updateMessages: string[] = []
-
     return log.withSpinner(
       `正在更新${pkgName === 'all' ? '所有包' : `包${pkgName}`}的版本...`,
 
@@ -169,12 +167,12 @@ export class VersionManager {
             }
 
             if (dryRun) {
-              updateMessages.push(`将更新 ${pkg.name} 从 v${pkg.version} 到 v${newVersion}`)
+              log.dryRun(`将更新 ${pkg.name} 从 v${pkg.version} 到 v${newVersion}`)
             }
             else {
               const updatedPkg = { ...pkg, version: newVersion }
               this.savePackageInfo(pkgPath, updatedPkg)
-              updateMessages.push(`已更新 ${pkg.name} 到 v${newVersion}`)
+              log.info(`已更新 ${pkg.name} 到 v${newVersion}`)
             }
 
             result.updatedPackages.push({
@@ -189,7 +187,7 @@ export class VersionManager {
             try {
               const commits = this.gitManager.getCommitsSinceLastTag()
               await this.changelogManager.updateChangelog(finalVersion, commits)
-              updateMessages.push('已更新 CHANGELOG.md')
+              log.success('已更新 CHANGELOG.md')
             }
             catch (changelogError) {
               log.warn(`CHANGELOG生成失败: ${(changelogError as Error).message}`)
@@ -244,8 +242,7 @@ export class VersionManager {
                 commitMessage = `chore: bump version for ${pkgName} to v${newVersion}`
               }
 
-              const gitMessages = this.gitManager.commitAndPush(commitMessage, this.gitPush, tag, newVersion, tagPrefix)
-              updateMessages.push(...gitMessages)
+              this.gitManager.commitAndPush(commitMessage, this.gitPush, tag, newVersion, tagPrefix)
             }
             catch (gitError: any) {
               log.warn(`Git操作失败: ${gitError.message}`)
@@ -264,12 +261,7 @@ export class VersionManager {
         succeedText: pkgName === 'all' ? '所有包版本更新完成' : `包 ${pkgName} 版本更新完成`,
         failText: '版本更新失败',
       },
-    ).then((result) => {
-      if (updateMessages.length > 0) {
-        updateMessages.forEach(msg => log.info(msg))
-      }
-      return result
-    })
+    )
   }
 
   async gitCommitAndPush(push: boolean = true): Promise<void> {
