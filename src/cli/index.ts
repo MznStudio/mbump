@@ -5,6 +5,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
+import semver from 'semver'
 import { loadConfigAsync } from '@/config/loader'
 import { VersionManager } from '@/core/VersionManager'
 import log from '@/utils/logger'
@@ -233,6 +234,32 @@ async function main(): Promise<void> {
     }
 
     if (parsedArgs.package === 'all' && Object.keys(packageVersionSelections).length > 0) {
+      // Dry-run 模式：显示详细预览
+      if (parsedArgs.dryRun) {
+        log.info('🔍 Dry-run 模式 - 以下操作将被执行:\n')
+
+        for (const [packageName, selection] of Object.entries(packageVersionSelections)) {
+          const pkgPath = config.packagePaths[packageName]
+          const pkg = versionManager.getPackageInfo(pkgPath)
+          const newVersion = selection.customVersion || semver.inc(pkg.version, selection.type)!
+
+          // 判断是否为主项目包
+          const isDefaultPackage = packageName === 'default' || pkgPath === 'package.json'
+          const tagPrefix = config.git?.tagPrefix || 'v'
+          const tagName = isDefaultPackage ? `${tagPrefix}${newVersion}` : `${pkg.name}@${newVersion}`
+
+          log.info(`  📦 ${packageName}`)
+          log.info(`     当前版本: ${pkg.version}`)
+          log.info(`     新版本:   ${newVersion}`)
+          log.info(`     Tag:      ${tagName}`)
+          log.info(`     CHANGELOG: ${isDefaultPackage && config.git?.changelog !== false ? '是' : '跳过（子包或配置禁用）'}`)
+          log.info('')
+        }
+
+        log.info('✅ 以上为预览，未执行任何实际操作')
+        process.exit(0)
+      }
+
       const updatedPackagesInfo: Array<{ name: string, newVersion: string, pkgKey: string }> = []
       const errors: Array<{ packageName: string, error: Error }> = []
 
@@ -319,6 +346,30 @@ async function main(): Promise<void> {
       }
     }
     else {
+      // 单包更新的 dry-run 预览
+      if (parsedArgs.dryRun && parsedArgs.package) {
+        const pkgPath = config.packagePaths[parsedArgs.package]
+        const pkg = versionManager.getPackageInfo(pkgPath)
+        const newVersion = customVersion || semver.inc(pkg.version, selectedType)!
+
+        // 判断是否为主项目包
+        const isDefaultPackage = parsedArgs.package === 'default' || pkgPath === 'package.json'
+        const tagPrefix = config.git?.tagPrefix || 'v'
+        const tagName = isDefaultPackage ? `${tagPrefix}${newVersion}` : `${pkg.name}@${newVersion}`
+
+        log.info('🔍 Dry-run 模式 - 以下操作将被执行:\n')
+        log.info(`  📦 ${parsedArgs.package}`)
+        log.info(`     当前版本: ${pkg.version}`)
+        log.info(`     新版本:   ${newVersion}`)
+        log.info(`     Tag:      ${tagName}`)
+        log.info(`     CHANGELOG: ${config.git?.changelog !== false ? '是' : '否（配置禁用）'}`)
+        log.info(`     Git Commit: ${parsedArgs.autoCommit ? '是' : '否'}`)
+        log.info(`     Git Push: ${parsedArgs.push ? '是' : '否'}`)
+        log.info(`     NPM Publish: ${parsedArgs.npm ? '是' : '否'}`)
+        log.info('\n✅ 以上为预览，未执行任何实际操作')
+        process.exit(0)
+      }
+
       await versionManager.updateVersion(parsedArgs.package!, selectedType, {
         dryRun: parsedArgs.dryRun,
         verbose: parsedArgs.verbose,

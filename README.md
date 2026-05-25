@@ -566,6 +566,96 @@ mbump all patch
 - **Git 原子性**：所有成功的包会被一起提交到一个 Git commit 中
 - **NPM 独立性**：每个包的 NPM 发布是独立的，互不影响
 
+## 🔍 Dry-run 模式增强
+
+`--dry-run`（或 `-d`）选项允许你在实际执行操作之前预览将要进行的更改。增强后的 dry-run 模式会显示详细的预览信息，帮助你确认操作是否符合预期。
+
+### 单包更新预览
+
+```bash
+mbump components patch --dry-run
+```
+
+**输出示例**：
+```
+🔍 Dry-run 模式 - 以下操作将被执行:
+
+  📦 components
+     当前版本: 1.0.0
+     新版本:   1.0.1
+     Tag:      @mznjs/components@1.0.1
+     CHANGELOG: 是
+     Git Commit: 是
+     Git Push: 是
+     NPM Publish: 否
+
+✅ 以上为预览，未执行任何实际操作
+```
+
+### 批量更新预览
+
+```bash
+mbump all minor --dry-run
+```
+
+**输出示例**：
+```
+🔍 Dry-run 模式 - 以下操作将被执行:
+
+  📦 default
+     当前版本: 0.0.1
+     新版本:   0.1.0
+     Tag:      v0.1.0
+     CHANGELOG: 是
+
+  📦 components
+     当前版本: 1.0.0
+     新版本:   1.1.0
+     Tag:      @mznjs/components@1.1.0
+     CHANGELOG: 跳过（子包或配置禁用）
+
+  📦 cli
+     当前版本: 2.0.0
+     新版本:   2.1.0
+     Tag:      @mznjs/cli@2.1.0
+     CHANGELOG: 跳过（子包或配置禁用）
+
+✅ 以上为预览，未执行任何实际操作
+```
+
+### 预览信息说明
+
+Dry-run 模式会显示以下关键信息：
+
+1. **📦 包名**：要更新的包名称
+2. **当前版本**：包的当前版本号
+3. **新版本**：将要升级到的版本号
+4. **Tag**：将要创建的 Git Tag 名称
+   - 主项目包：`v{version}` 格式
+   - 子包：`{package-name}@{version}` 格式
+5. **CHANGELOG**：是否会生成 CHANGELOG
+   - 主项目包：根据 `git.changelog` 配置
+   - 子包：批量更新时跳过，单包更新时生成
+6. **Git Commit**：是否会自动提交到 Git（仅单包更新显示）
+7. **Git Push**：是否会自动推送到远程仓库（仅单包更新显示）
+8. **NPM Publish**：是否会发布到 NPM（仅单包更新显示）
+
+### 使用场景
+
+1. **验证版本计算**：确认新版本号是否正确
+2. **检查 Tag 命名**：预览将要创建的 Git Tag 名称
+3. **确认操作范围**：了解哪些包会被更新
+4. **避免误操作**：在实际执行前发现潜在问题
+5. **团队协作**：在 PR 中展示将要进行的更改
+
+### 注意事项
+
+- Dry-run 模式不会修改任何文件
+- 不会创建 Git commits 或 tags
+- 不会发布到 NPM
+- 适合用于 CI/CD 流程中的预检步骤
+- 可以与 `--verbose` 结合使用获取更多信息
+
 ## 📊 版本类型
 
 | 类型 | 说明 | 示例 |
