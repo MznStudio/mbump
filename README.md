@@ -1,4 +1,4 @@
-# zbump
+# mbump
 
 企业级版本管理工具，支持单包和 monorepo 场景。
 
@@ -19,7 +19,7 @@
 ## 安装
 
 ```bash
-npm install -g @mznjs/zbump
+npm install -g @mznjs/mbump
 ```
 
 ## 快速开始
@@ -28,18 +28,18 @@ npm install -g @mznjs/zbump
 
 ```bash
 # 升级补丁版本
-zbump patch
+mbump patch
 
 # 升级小版本
-zbump minor
+mbump minor
 
 # 升级主版本
-zbump major
+mbump major
 ```
 
 ### Monorepo 项目
 
-创建配置文件 `.zbump.config.json`:
+创建配置文件 `.mbump.config.json`:
 
 ```json
 {
@@ -53,16 +53,16 @@ zbump major
 
 ```bash
 # 更新所有包
-zbump all
+mbump all
 
 # 更新指定包
-zbump components minor
+mbump components minor
 ```
 
 ## 命令行参数
 
 ```
-用法: zbump [package] [type] [options]
+用法: mbump [package] [type] [options]
 
 参数:
   [package]      要更新的包名称或 "all" 更新所有包
@@ -80,7 +80,7 @@ zbump components minor
 
 ## 配置文件
 
-支持多种配置格式：`.zbump.config.json`, `.zbump.config.yaml`, `.zbump.config.toml`, `.zbump.config.js`
+支持多种配置格式：`.mbump.config.json`, `.mbump.config.yaml`, `.mbump.config.toml`, `.mbump.config.js`
 
 ### 完整配置示例
 
@@ -114,7 +114,7 @@ zbump components minor
 ## API 使用
 
 ```typescript
-import { VersionManager, loadConfig } from '@mznjs/zbump'
+import { VersionManager, loadConfig } from '@mznjs/mbump'
 
 const config = loadConfig(process.cwd())
 const manager = new VersionManager({ config, rootDir: process.cwd() })

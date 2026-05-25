@@ -38,11 +38,11 @@ for (const packageJsonPath of possiblePaths) {
 process.env.NODE_NO_WARNINGS = '1'
 
 export function showHelp(): void {
-  const helpText = `🔧 zbump v${packageVersion}
+  const helpText = `🔧 mbump v${packageVersion}
 ========================
 企业级版本管理工具，支持单包和monorepo场景
 
-用法: zbump [package] [type] [options]
+用法: mbump [package] [type] [options]
 
 参数:
   [package]      要更新的包名称或 "all" 更新所有包
@@ -59,11 +59,11 @@ export function showHelp(): void {
   --help, -h     显示此帮助信息
 
 示例:
-  zbump components patch    # 将components包升级一个补丁版本
-  zbump all minor           # 将所有包升级一个小版本
-  zbump plugins major --dry-run  # 试运行升级plugins包主版本
-  zbump core patch --no-push  # 更新版本并提交到本地，但不推送到远程
-  zbump components patch --npm  # 更新版本并发布到npm
+  mbump components patch    # 将components包升级一个补丁版本
+  mbump all minor           # 将所有包升级一个小版本
+  mbump plugins major --dry-run  # 试运行升级plugins包主版本
+  mbump core patch --no-push  # 更新版本并提交到本地，但不推送到远程
+  mbump components patch --npm  # 更新版本并发布到npm
 `
   log.info(helpText)
 }
@@ -146,7 +146,7 @@ async function main(): Promise<void> {
         }
 
         if (!parsedArgs.dryRun) {
-          const commitMessage = 'chore: update zbump config and settings'
+          const commitMessage = 'chore: update mbump config and settings'
           execSync(`git add . && git commit -m "${commitMessage}"`, { encoding: 'utf8', stdio: 'pipe' })
           log.success(`已提交更改: ${commitMessage}`)
         }

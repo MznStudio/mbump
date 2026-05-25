@@ -163,7 +163,7 @@ const parsers: Record<string, ConfigParser> = {
       try {
         const parsedConfig = JSON.parse(jsonContent)
         if (configPath.includes('package.json')) {
-          return parsedConfig.zbump || parsedConfig.mvbump || parsedConfig.bump || null
+          return parsedConfig.mbump || parsedConfig.mvbump || parsedConfig.bump || null
         }
         return parsedConfig
       }
@@ -209,14 +209,14 @@ function getFileExtension(path: string): string {
 
 async function loadConfigAsyncImpl(rootDir: string): Promise<{ config: Partial<Config>, path: string | null }> {
   const configPaths = [
-    join(rootDir, '.zbump.config.js'),
-    join(rootDir, '.zbump.config.cjs'),
-    join(rootDir, '.zbump.config.mjs'),
-    join(rootDir, '.zbump.config.json'),
-    join(rootDir, '.zbump.config.jsonc'),
-    join(rootDir, '.zbump.config.yaml'),
-    join(rootDir, '.zbump.config.yml'),
-    join(rootDir, '.zbump.config.toml'),
+    join(rootDir, '.mbump.config.js'),
+    join(rootDir, '.mbump.config.cjs'),
+    join(rootDir, '.mbump.config.mjs'),
+    join(rootDir, '.mbump.config.json'),
+    join(rootDir, '.mbump.config.jsonc'),
+    join(rootDir, '.mbump.config.yaml'),
+    join(rootDir, '.mbump.config.yml'),
+    join(rootDir, '.mbump.config.toml'),
     join(rootDir, 'package.json'),
   ]
 
@@ -265,13 +265,13 @@ async function loadConfigAsyncImpl(rootDir: string): Promise<{ config: Partial<C
 
 function loadConfigSyncImpl(rootDir: string): { config: Partial<Config>, path: string | null } {
   const configPaths = [
-    join(rootDir, '.zbump.config.json'),
-    join(rootDir, '.zbump.config.jsonc'),
-    join(rootDir, '.zbump.config.yaml'),
-    join(rootDir, '.zbump.config.yml'),
-    join(rootDir, '.zbump.config.toml'),
-    join(rootDir, '.zbump.config.js'),
-    join(rootDir, '.zbump.config.cjs'),
+    join(rootDir, '.mbump.config.json'),
+    join(rootDir, '.mbump.config.jsonc'),
+    join(rootDir, '.mbump.config.yaml'),
+    join(rootDir, '.mbump.config.yml'),
+    join(rootDir, '.mbump.config.toml'),
+    join(rootDir, '.mbump.config.js'),
+    join(rootDir, '.mbump.config.cjs'),
     join(rootDir, 'package.json'),
   ]
 
