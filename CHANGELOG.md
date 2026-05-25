@@ -5,6 +5,19 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.0.0-beta.3] - 2026-05-25
+
+🚀 新增功能
+
+- feat(cli&core): 实现monorepo多包差异化git tag策略
+
+📦 其他变更
+
+- 1. 重构gitCommitAndPush方法，支持传入更新包列表和tag配置
+- 2. 为子包单独创建{包名}@{版本号}格式的tag，主项目保留v前缀格式
+- 3. 更新README文档，新增git tag策略详细说明
+- 4. 修复批量更新时的tag创建逻辑，适配多包场景
+
 ## [1.0.0-beta.2] - 2026-05-25
 
 🩹 缺陷修复
