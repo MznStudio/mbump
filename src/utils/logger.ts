@@ -1,42 +1,33 @@
 import type { Ora } from 'ora'
-import { consola } from 'consola'
 import ora from 'ora'
 
-// 禁用时间戳格式
-consola.withDefaults({
-  format: (logObj) => {
-    return `${logObj.args.join(' ')}`
-  },
-})
-
-const logger = consola
-
-export function setLevel(level: string): void {
-  logger.level = level === 'debug' ? 4 : 3
+// 简单的日志函数，直接输出到控制台
+export function setLevel(_level: string): void {
+  // 保留接口，但不实际使用
 }
 
 export function debug(message: string): void {
-  logger.debug(message)
+  console.log(`🐛 ${message}`)
 }
 
 export function info(message: string): void {
-  logger.info(message)
+  console.log(`ℹ ${message}`)
 }
 
 export function success(message: string): void {
-  logger.success(message)
+  console.log(`✔ ${message}`)
 }
 
 export function warn(message: string): void {
-  logger.warn(message)
+  console.log(`⚠ ${message}`)
 }
 
 export function error(message: string): void {
-  logger.error(message)
+  console.log(`✖ ${message}`)
 }
 
 export function dryRun(message: string): void {
-  logger.info(`[dry-run] ${message}`)
+  console.log(`[dry-run] ${message}`)
 }
 
 export async function withSpinner<T>(
@@ -44,17 +35,17 @@ export async function withSpinner<T>(
   fn: () => Promise<T>,
   options: { succeedText?: string, failText?: string } = {},
 ): Promise<T> {
-  const spinner: Ora = ora(text).start()
+  const spinner = ora(text).start()
 
   try {
     const result = await fn()
     spinner.succeed(options.succeedText || text)
-    console.log('')
+    console.log('') // 空行分隔
     return result
   }
   catch (error) {
     spinner.fail(options.failText || text)
-    console.log('')
+    console.log('') // 空行分隔
     throw error
   }
 }
