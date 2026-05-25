@@ -301,9 +301,9 @@ export class VersionManager {
 
   async gitCommitAndPush(
     push: boolean = true,
-    updatedPackages?: Array<{ name: string, newVersion: string }>,
+    updatedPackages?: Array<{ name: string, newVersion: string, pkgKey?: string }>,
     tag: boolean = this.gitConfig.tag !== false,
-    _tagPrefix: string = this.gitConfig.tagPrefix || 'v',
+    tagPrefix: string = this.gitConfig.tagPrefix || 'v',
   ): Promise<void> {
     try {
       const commitMessage = 'chore: bump versions for multiple packages'
@@ -314,10 +314,23 @@ export class VersionManager {
         this.gitManager.addFiles(['-u'])
         this.gitManager.commit(commitMessage)
 
-        // 为每个包创建独立的 tag，格式：package-name@version
+        // 为每个包创建独立的 tag
         const { execSync } = await import('node:child_process')
         for (const pkg of updatedPackages) {
-          const tagName = `${pkg.name}@${pkg.newVersion}`
+          let tagName: string
+          
+          // 通过 pkgKey 判断是否为主项目包
+          const isMainPackage = pkg.pkgKey === 'default'
+          
+          if (isMainPackage) {
+            // 主项目包：使用 {tagPrefix}{version} 格式
+            tagName = `${tagPrefix}${pkg.newVersion}`
+          }
+          else {
+            // 子包：使用 {package-name}@{version} 格式
+            tagName = `${pkg.name}@${pkg.newVersion}`
+          }
+          
           try {
             execSync(`git tag -a ${tagName} -m "Release ${tagName}"`, {
               cwd: this.rootDir,

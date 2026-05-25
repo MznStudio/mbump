@@ -233,7 +233,7 @@ async function main(): Promise<void> {
     }
 
     if (parsedArgs.package === 'all' && Object.keys(packageVersionSelections).length > 0) {
-      const updatedPackagesInfo: Array<{ name: string, newVersion: string }> = []
+      const updatedPackagesInfo: Array<{ name: string, newVersion: string, pkgKey: string }> = []
       
       for (const [packageName, selection] of Object.entries(packageVersionSelections)) {
         const result = await log.withSpinner(`正在更新包...${packageName}...`, async () => {
@@ -249,9 +249,12 @@ async function main(): Promise<void> {
           failText: `包 ${packageName} 更新失败`,
         })
         
-        // 收集更新的包信息
+        // 收集更新的包信息，同时记录包名 key
         if (result.success && result.updatedPackages.length > 0) {
-          updatedPackagesInfo.push(...result.updatedPackages)
+          updatedPackagesInfo.push(...result.updatedPackages.map(pkg => ({
+            ...pkg,
+            pkgKey: packageName,
+          })))
         }
       }
 
