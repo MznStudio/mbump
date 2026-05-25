@@ -104,7 +104,7 @@ export class ChangelogManager {
       })
 
       for (const category of sortedCategories) {
-        content += `${category.config.title}\n\n`
+        content += `1 ${category.config.title}\n\n`
         for (const item of category.items) {
           content += `- ${item.message}\n`
         }
