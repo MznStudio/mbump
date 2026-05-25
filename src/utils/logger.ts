@@ -2,6 +2,13 @@ import type { Ora } from 'ora'
 import { consola } from 'consola'
 import ora from 'ora'
 
+// 禁用时间戳格式
+consola.withDefaults({
+  format: (logObj) => {
+    return `${logObj.args.join(' ')}`
+  },
+})
+
 const logger = consola
 
 export function setLevel(level: string): void {
