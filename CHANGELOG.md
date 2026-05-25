@@ -5,6 +5,16 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.0.2-beta.6] - 2026-05-25
+
+🚀 新增功能
+
+- feat(core): 添加智能缓存机制提升批量操作性能 (README.md, loader.ts, VersionManager.ts, index.ts)
+
+🩹 缺陷修复
+
+- fix(cli): 修复错误日志显示和类型检查问题 (index.ts, VersionManager.ts, index.ts)
+
 ## [0.0.2-beta.5] - 2026-05-25
 
 🚀 新增功能
