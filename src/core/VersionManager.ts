@@ -189,7 +189,7 @@ export class VersionManager {
             try {
               const commits = this.gitManager.getCommitsSinceLastTag()
               await this.changelogManager.updateChangelog(finalVersion, commits)
-              log.success('已更新 CHANGELOG.md')
+              updateMessages.push('已更新 CHANGELOG.md')
             }
             catch (changelogError) {
               log.warn(`CHANGELOG生成失败: ${(changelogError as Error).message}`)
