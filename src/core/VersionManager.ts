@@ -195,9 +195,15 @@ export class VersionManager {
             else {
               try {
                 const commits = this.gitManager.getCommitsSinceLastTag()
-                // 获取第一个包的 name 作为 packageName
-                const firstPkg = this.getPackageInfo(targets[0])
-                const packageName = firstPkg.name
+                
+                // 主项目包不传 packageName（使用 tagPrefix 格式），子包传 packageName（使用 {package-name}@{version} 格式）
+                let packageName: string | undefined
+                if (!isDefaultPackage) {
+                  // 子包：获取 package.json 的 name 字段
+                  const firstPkg = this.getPackageInfo(targets[0])
+                  packageName = firstPkg.name
+                }
+                // 主项目包：packageName 为 undefined，ChangelogManager 会直接使用 version
                 
                 await this.changelogManager.updateChangelog(finalVersion, commits, packageName)
                 log.success('已更新 CHANGELOG.md')

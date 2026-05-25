@@ -393,7 +393,7 @@ mbump 在不同场景下采用不同的 CHANGELOG 生成策略：
 mbump components patch
 # → CHANGELOG.md 中添加: ## [@mznjs/components@1.0.1] - 2024-01-15 ✅
 
-# 主项目包更新
+# 主项目包单独更新
 mbump default patch
 # → CHANGELOG.md 中添加: ## [v1.0.1] - 2024-01-15 ✅
 
