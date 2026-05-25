@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 import process from 'node:process'
 import semver from 'semver'
+import inquirer from 'inquirer'
 import { loadConfig } from '@/config/loader'
 import log from '@/utils/logger'
 import { validateCommand, validatePath } from '@/utils/security'
@@ -196,17 +197,60 @@ export class VersionManager {
               try {
                 const commits = this.gitManager.getCommitsSinceLastTag()
                 
-                // 主项目包不传 packageName（使用 tagPrefix 格式），子包传 packageName（使用 {package-name}@{version} 格式）
-                let packageName: string | undefined
-                if (!isDefaultPackage) {
-                  // 子包：获取 package.json 的 name 字段
-                  const firstPkg = this.getPackageInfo(targets[0])
-                  packageName = firstPkg.name
-                }
-                // 主项目包：packageName 为 undefined，ChangelogManager 会直接使用 version
+                // 如果没有找到 commits，询问用户是否手动输入
+                let finalCommits = commits
+                let shouldSkipChangelog = false
                 
-                await this.changelogManager.updateChangelog(finalVersion, commits, packageName)
-                log.success('已更新 CHANGELOG.md')
+                if (commits.length === 0) {
+                  const answer = await inquirer.prompt([
+                    {
+                      type: 'confirm',
+                      name: 'manualInput',
+                      message: `未找到自上一个 Tag 以来的 commits，是否手动输入变更描述？`,
+                      default: true,
+                    },
+                  ])
+                  
+                  if (answer.manualInput) {
+                    // 用户选择手动输入
+                    const manualAnswer = await inquirer.prompt([
+                      {
+                        type: 'input',
+                        name: 'description',
+                        message: '请输入变更描述：',
+                        validate: (input: string) => {
+                          if (input.trim().length === 0) {
+                            return '变更描述不能为空'
+                          }
+                          return true
+                        },
+                      },
+                    ])
+                    
+                    // 创建手动输入的 commit 对象
+                    finalCommits = [{ message: manualAnswer.description, files: [] }]
+                  }
+                  else {
+                    // 用户选择跳过
+                    log.info('跳过 CHANGELOG 生成')
+                    shouldSkipChangelog = true
+                  }
+                }
+                
+                // 如果用户没有选择跳过，则生成 CHANGELOG
+                if (!shouldSkipChangelog) {
+                  // 主项目包不传 packageName（使用 tagPrefix 格式），子包传 packageName（使用 {package-name}@{version} 格式）
+                  let packageName: string | undefined
+                  if (!isDefaultPackage) {
+                    // 子包：获取 package.json 的 name 字段
+                    const firstPkg = this.getPackageInfo(targets[0])
+                    packageName = firstPkg.name
+                  }
+                  // 主项目包：packageName 为 undefined，ChangelogManager 会直接使用 version
+                  
+                  await this.changelogManager.updateChangelog(finalVersion, finalCommits, packageName)
+                  log.success('已更新 CHANGELOG.md')
+                }
               }
               catch (changelogError) {
                 log.warn(`CHANGELOG生成失败: ${(changelogError as Error).message}`)
