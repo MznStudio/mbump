@@ -656,6 +656,148 @@ Dry-run 模式会显示以下关键信息：
 - 适合用于 CI/CD 流程中的预检步骤
 - 可以与 `--verbose` 结合使用获取更多信息
 
+## ⚠️ 错误提示优化
+
+mbump 提供了友好的错误提示信息，帮助用户快速理解和解决问题。
+
+### 常见错误及解决方案
+
+#### 1. 版本已存在
+
+**错误信息**：
+```
+⚠️ 版本 v1.0.1 已存在
+💡 请使用其他版本号，或运行 git tag -d <tag> 删除已有标签
+```
+
+**原因**：尝试创建的 Git Tag 已经存在
+
+**解决方案**：
+- 使用不同的版本号
+- 或删除已有的 tag：`git tag -d v1.0.1 && git push origin :refs/tags/v1.0.1`
+
+#### 2. Git 冲突
+
+**错误信息**：
+```
+⚠️ 检测到 Git 冲突
+💡 请先解决冲突后重试：git add . && git commit -m "resolve conflicts"
+```
+
+**原因**：工作区有未解决的合并冲突
+
+**解决方案**：
+- 手动解决冲突
+- 提交解决后的更改
+- 重新运行 mbump
+
+#### 3. NPM 认证失败
+
+**错误信息**：
+```
+🔐 NPM 认证失败
+💡 请运行 npm login 或 pnpm login 登录后重试
+```
+
+**原因**：未登录或登录凭证过期
+
+**解决方案**：
+- 运行 `npm login` 或 `pnpm login`
+- 输入用户名、密码和邮箱
+- 重新运行 mbump
+
+#### 4. NPM 包已存在
+
+**错误信息**：
+```
+📦 NPM 包已存在或无权限
+💡 检查包名是否已被占用，或确认是否有发布权限
+```
+
+**原因**：包名已被他人注册，或没有发布权限
+
+**解决方案**：
+- 检查包名是否唯一
+- 联系包的所有者获取权限
+- 或使用 scoped package（如 @my-org/package-name）
+
+#### 5. 网络连接失败
+
+**错误信息**：
+```
+🌐 网络连接失败
+💡 请检查网络连接，或配置 NPM 镜像源
+```
+
+**原因**：网络不通或 NPM registry 无法访问
+
+**解决方案**：
+- 检查网络连接
+- 配置国内镜像源：
+  ```bash
+  npm config set registry https://registry.npmmirror.com
+  # 或
+  pnpm config set registry https://registry.npmmirror.com
+  ```
+
+#### 6. 文件路径安全
+
+**错误信息**：
+```
+🔒 检测到不安全的文件路径
+💡 请确保配置文件中的路径在项目根目录内
+```
+
+**原因**：配置文件中的路径指向项目外部
+
+**解决方案**：
+- 检查 `.mbump.config.js` 中的 `packagePaths`
+- 确保所有路径都在项目根目录内
+
+#### 7. 无效的包名
+
+**错误信息**：
+```
+❌ 无效的包名
+💡 请检查配置文件中的 packagePaths 是否正确设置
+```
+
+**原因**：指定的包名在配置中不存在
+
+**解决方案**：
+- 检查 `.mbump.config.js` 中的 `packagePaths` 配置
+- 确保包名与配置中的 key 一致
+
+### 调试模式
+
+如果遇到未知错误，可以使用 `DEBUG` 环境变量查看详细信息：
+
+```bash
+# Linux/Mac
+DEBUG=true mbump components patch
+
+# Windows PowerShell
+$env:DEBUG="true"; mbump components patch
+
+# Windows CMD
+set DEBUG=true && mbump components patch
+```
+
+这将显示完整的错误堆栈信息，便于排查问题。
+
+### 批量更新错误报告
+
+在批量更新模式下，如果部分包失败，会统一报告：
+
+```
+❌ 批量更新完成，但有 1 个包更新失败:
+   - cli: Git conflict detected
+
+💡 提示: 可以单独重试失败的包，或检查错误信息后重新运行
+```
+
+每个失败的包都会显示友好的错误提示和解决方案。
+
 ## 📊 版本类型
 
 | 类型 | 说明 | 示例 |

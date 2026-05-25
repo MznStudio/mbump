@@ -23,6 +23,97 @@ const possiblePaths = [
   join(process.cwd(), 'package.json'),
 ]
 
+/**
+ * 获取友好的错误提示和解决方案
+ */
+function getFriendlyErrorMessage(error: Error): { message: string, solution?: string } {
+  const errorMessage = error.message
+
+  // 版本已存在
+  if (errorMessage.includes('已存在')) {
+    return {
+      message: `⚠️ 版本 ${errorMessage.match(/版本 (.+?) 已存在/)?.[1] || ''} 已存在`,
+      solution: '💡 请使用其他版本号，或运行 git tag -d <tag> 删除已有标签',
+    }
+  }
+
+  // Git 冲突
+  if (errorMessage.includes('Git conflict') || errorMessage.includes('conflict')) {
+    return {
+      message: '⚠️ 检测到 Git 冲突',
+      solution: '💡 请先解决冲突后重试：git add . && git commit -m "resolve conflicts"',
+    }
+  }
+
+  // NPM 认证失败
+  if (errorMessage.includes('npm ERR! code E401') || errorMessage.includes('authentication')) {
+    return {
+      message: '🔐 NPM 认证失败',
+      solution: '💡 请运行 npm login 或 pnpm login 登录后重试',
+    }
+  }
+
+  // NPM 包已存在
+  if (errorMessage.includes('npm ERR! code E403') || errorMessage.includes('cannot publish')) {
+    return {
+      message: '📦 NPM 包已存在或无权限',
+      solution: '💡 检查包名是否已被占用，或确认是否有发布权限',
+    }
+  }
+
+  // 网络错误
+  if (errorMessage.includes('network') || errorMessage.includes('ENOTFOUND') || errorMessage.includes('ECONNREFUSED')) {
+    return {
+      message: '🌐 网络连接失败',
+      solution: '💡 请检查网络连接，或配置 NPM 镜像源',
+    }
+  }
+
+  // 文件路径安全
+  if (errorMessage.includes('不安全的文件路径')) {
+    return {
+      message: '🔒 检测到不安全的文件路径',
+      solution: '💡 请确保配置文件中的路径在项目根目录内',
+    }
+  }
+
+  // 无效的包名
+  if (errorMessage.includes('无效的包名')) {
+    return {
+      message: '❌ 无效的包名',
+      solution: '💡 请检查配置文件中的 packagePaths 是否正确设置',
+    }
+  }
+
+  // 默认错误消息
+  return {
+    message: `❌ ${errorMessage}`,
+    solution: '💡 请检查错误信息，或使用 --verbose 模式查看更多详情',
+  }
+}
+
+/**
+ * 显示友好的错误信息
+ */
+function displayError(error: Error, context?: { packageName?: string, operation?: string }): void {
+  const { message, solution } = getFriendlyErrorMessage(error)
+
+  if (context?.packageName) {
+    log.error(`包 ${context.packageName} ${context.operation || '操作'} 失败:`)
+  }
+
+  log.error(`  ${message}`)
+
+  if (solution) {
+    log.info(`  ${solution}`)
+  }
+
+  // 调试模式下显示详细错误
+  if (process.env.DEBUG) {
+    log.debug('详细错误信息:', error)
+  }
+}
+
 for (const packageJsonPath of possiblePaths) {
   try {
     if (existsSync(packageJsonPath)) {
@@ -289,7 +380,7 @@ async function main(): Promise<void> {
         }
         catch (error) {
           errors.push({ packageName, error: error as Error })
-          log.warn(`⚠️ 包 ${packageName} 更新失败: ${(error as Error).message}`)
+          displayError(error as Error, { packageName, operation: '更新' })
         }
       }
 
@@ -332,7 +423,7 @@ async function main(): Promise<void> {
           }
           catch (error) {
             npmErrors.push({ packageName, error: error as Error })
-            log.warn(`⚠️ 包 ${packageName} 发布失败: ${(error as Error).message}`)
+            displayError(error as Error, { packageName, operation: '发布' })
           }
         }
 
@@ -384,12 +475,12 @@ async function main(): Promise<void> {
     process.exit(0)
   }
   catch (error: any) {
-    log.error(error.message)
+    displayError(error as Error)
     process.exit(1)
   }
 }
 
 main().catch((error: any) => {
-  console.error('CLI执行错误:', error)
+  displayError(error as Error, { operation: 'CLI执行' })
   process.exit(1)
 })
