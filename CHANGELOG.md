@@ -5,6 +5,16 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.0-beta.7] - 2026-05-25
+
+🔧 工具变更
+
+- chore(logger): 在日志 spinner 结束后添加空行分隔
+
+📦 其他变更
+
+- 在成功和失败的 spinner 输出后添加空行，优化终端输出的可读性
+
 ## [0.1.0-beta.6] - 2026-05-25
 
 ♻️ 代码重构
