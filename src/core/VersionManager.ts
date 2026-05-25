@@ -244,7 +244,8 @@ export class VersionManager {
                 commitMessage = `chore: bump version for ${pkgName} to v${newVersion}`
               }
 
-              this.gitManager.commitAndPush(commitMessage, this.gitPush, tag, newVersion, tagPrefix)
+              const gitMessages = this.gitManager.commitAndPush(commitMessage, this.gitPush, tag, newVersion, tagPrefix)
+              updateMessages.push(...gitMessages)
             }
             catch (gitError: any) {
               log.warn(`Git操作失败: ${gitError.message}`)

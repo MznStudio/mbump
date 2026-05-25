@@ -116,21 +116,22 @@ export class GitManager {
     }
   }
 
-  createTag(version: string, tagPrefix: string = 'v'): void {
+  createTag(version: string, tagPrefix: string = 'v'): string {
     try {
       const tagName = `${tagPrefix}${version}`
       execSync(`git tag -a ${tagName} -m "Release ${tagName}"`, {
         cwd: this.rootDir,
         stdio: 'pipe',
       })
-      log.success(`已创建 tag: ${tagName}`)
+      return `已创建 tag: ${tagName}`
     }
     catch (error) {
       throw new Error(`创建 Tag 失败: ${(error as Error).message}`)
     }
   }
 
-  push(includeTags: boolean = true): void {
+  push(includeTags: boolean = true): string[] {
+    const messages: string[] = []
     try {
       execSync('git push', {
         cwd: this.rootDir,
@@ -143,15 +144,18 @@ export class GitManager {
           cwd: this.rootDir,
           stdio: 'pipe',
         })
-        log.success('已推送 tags')
+        messages.push('已推送 tags')
       }
     }
     catch (error) {
       throw new Error(`Git push failed: ${(error as Error).message}`)
     }
+    return messages
   }
 
-  commitAndPush(message: string, push: boolean = true, createTag: boolean = false, tagVersion?: string, tagPrefix: string = 'v'): void {
+  commitAndPush(message: string, push: boolean = true, createTag: boolean = false, tagVersion?: string, tagPrefix: string = 'v'): string[] {
+    const messages: string[] = []
+
     try {
       execSync('git config --local core.autocrlf false', {
         cwd: this.rootDir,
@@ -166,16 +170,20 @@ export class GitManager {
     this.commit(message)
 
     if (createTag && tagVersion) {
-      this.createTag(tagVersion, tagPrefix)
+      const tagMessage = this.createTag(tagVersion, tagPrefix)
+      messages.push(tagMessage)
     }
 
     if (push) {
       try {
-        this.push(createTag)
+        const pushMessages = this.push(createTag)
+        messages.push(...pushMessages)
       }
       catch (error) {
         log.warn(`Git push failed: ${(error as Error).message}`)
       }
     }
+
+    return messages
   }
 }
