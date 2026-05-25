@@ -24,7 +24,8 @@
     "test:watch": "vitest",
     "typecheck": "pnpm exec tsc --noEmit",
     "lint": "eslint .",
-    "release": "pnpm publish --access public"
+    "release": "pnpm publish --access public",
+    "default": "tsx src/cli/index.ts default -d"
   },
   "keywords": [
     "version",
