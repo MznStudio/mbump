@@ -69,8 +69,11 @@ export class ChangelogManager {
     }
   }
 
-  async updateChangelog(newVersion: string, commits: ChangelogCommit[]): Promise<void> {
+  async updateChangelog(newVersion: string, commits: ChangelogCommit[], packageName?: string): Promise<void> {
     const today = new Date().toISOString().split('T')[0]
+    
+    // 构建版本标题：如果有包名，使用 {package-name}@{version} 格式
+    const versionTitle = packageName ? `${packageName}@${newVersion}` : newVersion
 
     const categorized: Record<
       string,
@@ -96,7 +99,7 @@ export class ChangelogManager {
 
     if (!existsSync(this.changelogPath)) {
       let content = `# 更新日志 (Changelog)\n\n本项目的所有重要变更都将记录在此文件中。\n\n格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，\n本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。\n\n`
-      content += `## [${newVersion}] - ${today}\n\n`
+      content += `## [${versionTitle}] - ${today}\n\n`
 
       const sortedCategories = Object.values(categorized).sort((a, b) => {
         const order = ['🚀', '🩹', '🔥', '♻️', '📝', '💄', '🔧', '📦', '👷', '✅', '⏪', '💥']
@@ -120,10 +123,10 @@ export class ChangelogManager {
 
     let header: string
     if (format.usesBrackets) {
-      header = `${format.titlePrefix}${newVersion}] - ${today}\n\n`
+      header = `${format.titlePrefix}${versionTitle}] - ${today}\n\n`
     }
     else {
-      header = `${format.titlePrefix}${newVersion} - ${today}\n\n`
+      header = `${format.titlePrefix}${versionTitle} - ${today}\n\n`
     }
 
     const sortedCategories = Object.values(categorized).sort((a, b) => {

@@ -183,14 +183,28 @@ export class VersionManager {
           }
 
           // 生成CHANGELOG
+           // 在 mbump all 时，只有主项目包（default）才生成 CHANGELOG
+          const isAllPackages = pkgName === 'all'
+          const isDefaultPackage = pkgName === 'default' || this.config.packagePaths[pkgName] === 'package.json'
+          
           if (!dryRun && changelog && finalVersion) {
-            try {
-              const commits = this.gitManager.getCommitsSinceLastTag()
-              await this.changelogManager.updateChangelog(finalVersion, commits)
-              log.success('已更新 CHANGELOG.md')
+            // 如果是 all 模式且不是主项目包，跳过 CHANGELOG 生成
+            if (isAllPackages && !isDefaultPackage) {
+              log.info(`子包 ${pkgName} 跳过 CHANGELOG 生成`)
             }
-            catch (changelogError) {
-              log.warn(`CHANGELOG生成失败: ${(changelogError as Error).message}`)
+            else {
+              try {
+                const commits = this.gitManager.getCommitsSinceLastTag()
+                // 获取第一个包的 name 作为 packageName
+                const firstPkg = this.getPackageInfo(targets[0])
+                const packageName = firstPkg.name
+                
+                await this.changelogManager.updateChangelog(finalVersion, commits, packageName)
+                log.success('已更新 CHANGELOG.md')
+              }
+              catch (changelogError) {
+                log.warn(`CHANGELOG生成失败: ${(changelogError as Error).message}`)
+              }
             }
           }
 

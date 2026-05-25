@@ -307,7 +307,7 @@ export default () => ({
 | `autoCommit` | `boolean` | `true` | 是否自动提交更改 |
 | `tag` | `boolean` | `true` | 是否创建 Git 标签 |
 | `tagPrefix` | `string` | `'v'` | 标签前缀（如 `v1.0.0`）。**注意**：仅主项目包使用此配置，子包使用 `{包名}@{版本号}` 格式 |
-| `changelog` | `boolean` | `true` | 是否生成 CHANGELOG |
+| `changelog` | `boolean` | `true` | 是否生成 CHANGELOG。**注意**：在 `mbump all` 批量更新时，只有主项目包会生成 CHANGELOG，子包跳过此步骤 |
 
 **Git Tag 策略**：
 
@@ -364,6 +364,50 @@ mbump all
 - ✅ 便于单独回滚某个包到特定版本
 - ✅ 符合 Monorepo 最佳实践（类似 pnpm、lerna）
 - ✅ 支持独立的 CI/CD 流程
+
+#### CHANGELOG 生成策略
+
+mbump 在不同场景下采用不同的 CHANGELOG 生成策略：
+
+**单包更新** (`mbump components patch`)：
+- ✅ 为该包生成 CHANGELOG.md
+- ✅ 记录从上一个 Tag 到当前的所有 commits
+- ✅ **标题格式**: `[package-name@version]`，例如 `[@mznjs/components@1.0.1]`
+
+**批量更新** (`mbump all`)：
+- ✅ **主项目包**：生成 CHANGELOG.md（如果 `git.changelog = true`）
+- ❌ **子包**：跳过 CHANGELOG 生成，避免重复和混乱
+
+**原因**：
+- Monorepo 项目中，所有包的 commits 通常都在同一个仓库中
+- 为每个子包单独生成 CHANGELOG 会导致内容重复
+- 只在主项目包生成一份完整的 CHANGELOG 更清晰、更易维护
+
+**CHANGELOG 标题格式**：
+- **主项目包**: `[v1.0.1]` (使用 tagPrefix)
+- **子包**: `[@mznjs/components@1.0.1]` (使用 package.json 的 name 字段)
+
+**示例**：
+```bash
+# 单包更新 - 会生成 CHANGELOG
+mbump components patch
+# → CHANGELOG.md 中添加: ## [@mznjs/components@1.0.1] - 2024-01-15 ✅
+
+# 主项目包更新
+mbump default patch
+# → CHANGELOG.md 中添加: ## [v1.0.1] - 2024-01-15 ✅
+
+# 批量更新 - 只有主项目包生成 CHANGELOG
+mbump all
+# → 主项目包: CHANGELOG.md 中添加: ## [v1.0.1] - 2024-01-15 ✅
+# → 子包 components: 子包 components 跳过 CHANGELOG 生成
+# → 子包 cli: 子包 cli 跳过 CHANGELOG 生成
+```
+
+如需为子包单独生成 CHANGELOG，可以单独更新该包：
+```bash
+mbump components patch --changelog
+```
 
 #### publish 选项
 
