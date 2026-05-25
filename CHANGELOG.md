@@ -5,6 +5,16 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.0-beta.2] - 2026-05-25
+
+♻️ 代码重构
+
+- refactor(VersionManager): 优化版本更新逻辑的日志收集与输出
+
+💄 代码格式
+
+- style(VersionManager): 修复包名前后的空格不一致问题
+
 ## [0.1.0-beta.1] - 2026-05-25
 
 🩹 缺陷修复
