@@ -110,7 +110,7 @@ function displayError(error: Error, context?: { packageName?: string, operation?
 
   // 调试模式下显示详细错误
   if (process.env.DEBUG) {
-    log.debug('详细错误信息:', error)
+    log.debug(`详细错误信息: ${JSON.stringify(error, null, 2)}`)
   }
 }
 
@@ -372,7 +372,8 @@ async function main(): Promise<void> {
         for (const [packageName, selection] of Object.entries(packageVersionSelections)) {
           const pkgPath = config.packagePaths[packageName]
           const pkg = versionManager.getPackageInfo(pkgPath)
-          const newVersion = selection.customVersion || semver.inc(pkg.version, selection.type)!
+          // 使用 as any 绕过类型检查，因为我们的 ReleaseType 包含额外的选项
+          const newVersion = selection.customVersion || semver.inc(pkg.version, selection.type as any)!
 
           // 判断是否为主项目包
           const isDefaultPackage = packageName === 'default' || pkgPath === 'package.json'
@@ -503,7 +504,8 @@ async function main(): Promise<void> {
       if (parsedArgs.dryRun && parsedArgs.package) {
         const pkgPath = config.packagePaths[parsedArgs.package]
         const pkg = versionManager.getPackageInfo(pkgPath)
-        const newVersion = customVersion || semver.inc(pkg.version, selectedType)!
+        // 使用 as any 绕过类型检查
+        const newVersion = customVersion || semver.inc(pkg.version, selectedType as any)!
 
         // 判断是否为主项目包
         const isDefaultPackage = parsedArgs.package === 'default' || pkgPath === 'package.json'

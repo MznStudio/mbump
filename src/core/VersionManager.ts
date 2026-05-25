@@ -52,10 +52,10 @@ export class VersionManager {
       }
       catch (error) {
         // 忽略预加载失败，在实际使用时再处理
-        logger.debug(`预加载包信息失败 ${pkgPath}: ${(error as Error).message}`)
+        log.debug(`预加载包信息失败 ${pkgPath}: ${(error as Error).message}`)
       }
     }
-    logger.debug(`已预加载 ${this.packageCache.size} 个包的信息到缓存`)
+    log.debug(`已预加载 ${this.packageCache.size} 个包的信息到缓存`)
   }
 
   /**
@@ -65,11 +65,11 @@ export class VersionManager {
   clearPackageCache(pkgPath?: string): void {
     if (pkgPath) {
       this.packageCache.delete(pkgPath)
-      logger.debug(`已清除包缓存: ${pkgPath}`)
+      log.debug(`已清除包缓存: ${pkgPath}`)
     }
     else {
       this.packageCache.clear()
-      logger.debug('已清除所有包缓存')
+      log.debug('已清除所有包缓存')
     }
   }
 
@@ -441,7 +441,7 @@ export class VersionManager {
    * @param pkgPath 包的路径
    * @returns 包信息对象
    */
-  private getPackageInfo(pkgPath: string): PackageInfo {
+  getPackageInfo(pkgPath: string): PackageInfo {
     // 首先检查缓存
     const cached = this.packageCache.get(pkgPath)
     if (cached) {

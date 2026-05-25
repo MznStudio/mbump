@@ -6,7 +6,7 @@ export function defineConfig(config?: Config): Config {
 
 export default defineConfig
 
-export { loadConfig, loadConfigAsync, clearConfigCache } from './config/loader'
+export { clearConfigCache, loadConfig, loadConfigAsync } from './config/loader'
 export { BASE_CONFIG } from './config/schema'
 export { ChangelogManager } from './core/ChangelogManager'
 export { GitManager } from './core/GitManager'
