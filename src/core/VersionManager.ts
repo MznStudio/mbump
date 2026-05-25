@@ -37,6 +37,59 @@ export class VersionManager {
     }
 
     this._resolvePackagePaths(rootDir)
+
+    // 性能优化：预加载所有包信息到缓存
+    this._preloadPackageCache()
+  }
+
+  /**
+   * 预加载所有包信息到缓存，避免后续重复读取文件
+   */
+  private _preloadPackageCache(): void {
+    for (const pkgPath of Object.values(this.packagePaths)) {
+      try {
+        this.getPackageInfo(pkgPath)
+      }
+      catch (error) {
+        // 忽略预加载失败，在实际使用时再处理
+        logger.debug(`预加载包信息失败 ${pkgPath}: ${(error as Error).message}`)
+      }
+    }
+    logger.debug(`已预加载 ${this.packageCache.size} 个包的信息到缓存`)
+  }
+
+  /**
+   * 清除包信息缓存
+   * @param pkgPath 可选，指定要清除的包路径，不传则清除所有缓存
+   */
+  clearPackageCache(pkgPath?: string): void {
+    if (pkgPath) {
+      this.packageCache.delete(pkgPath)
+      logger.debug(`已清除包缓存: ${pkgPath}`)
+    }
+    else {
+      this.packageCache.clear()
+      logger.debug('已清除所有包缓存')
+    }
+  }
+
+  /**
+   * 刷新指定包的缓存（重新从文件读取）
+   * @param pkgPath 包的路径
+   */
+  refreshPackageCache(pkgPath: string): PackageInfo {
+    this.packageCache.delete(pkgPath)
+    return this.getPackageInfo(pkgPath)
+  }
+
+  /**
+   * 获取缓存统计信息
+   */
+  getCacheStats(): { size: number, packages: string[] } {
+    return {
+      size: this.packageCache.size,
+      packages: Array.from(this.packageCache.keys()),
+    }
   }
 
   private _resolvePackagePaths(rootDir: string): void {
@@ -383,13 +436,22 @@ export class VersionManager {
     }
   }
 
+  /**
+   * 获取包信息（带缓存）
+   * @param pkgPath 包的路径
+   * @returns 包信息对象
+   */
   private getPackageInfo(pkgPath: string): PackageInfo {
+    // 首先检查缓存
     const cached = this.packageCache.get(pkgPath)
     if (cached) {
       return cached
     }
+
+    // 缓存未命中，从文件读取
     try {
       const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as PackageInfo
+      // 写入缓存
       this.packageCache.set(pkgPath, pkg)
       return pkg
     }
@@ -405,6 +467,7 @@ export class VersionManager {
 
     try {
       writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`)
+      // 更新缓存
       this.packageCache.set(pkgPath, pkg)
     }
     catch (error: any) {

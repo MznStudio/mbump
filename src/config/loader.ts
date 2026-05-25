@@ -5,6 +5,50 @@ import { join, resolve } from 'node:path'
 import logger from '@/utils/logger'
 import { BASE_CONFIG, isValidConfig } from './schema'
 
+/**
+ * 配置缓存 - 避免重复读取和解析配置文件
+ * Key: 项目根目录的绝对路径
+ * Value: 配置对象
+ */
+const configCache = new Map<string, Config>()
+
+/**
+ * 清除配置缓存
+ * @param rootDir 可选，指定要清除的项目目录，不传则清除所有缓存
+ */
+export function clearConfigCache(rootDir?: string): void {
+  if (rootDir) {
+    const cacheKey = resolve(rootDir)
+    configCache.delete(cacheKey)
+    logger.debug(`已清除配置缓存: ${cacheKey}`)
+  }
+  else {
+    configCache.clear()
+    logger.debug('已清除所有配置缓存')
+  }
+}
+
+/**
+ * 获取缓存的配置
+ * @param rootDir 项目根目录
+ * @returns 缓存的配置，如果不存在则返回 null
+ */
+function getCachedConfig(rootDir: string): Config | null {
+  const cacheKey = resolve(rootDir)
+  return configCache.get(cacheKey) || null
+}
+
+/**
+ * 设置配置缓存
+ * @param rootDir 项目根目录
+ * @param config 配置对象
+ */
+function setCachedConfig(rootDir: string, config: Config): void {
+  const cacheKey = resolve(rootDir)
+  configCache.set(cacheKey, config)
+  logger.debug(`已缓存配置: ${cacheKey}`)
+}
+
 function removeJsoncComments(jsoncString: string): string {
   let cleanString = jsoncString.replace(/\/\/.*$/gm, '')
   cleanString = cleanString.replace(/\/\*[\s\S]*?\*\//g, '')
@@ -440,6 +484,13 @@ function mergeConfig(userConfig: Partial<Config>, rootDir: string): Config {
 }
 
 export async function loadConfigAsync(rootDir: string): Promise<Config> {
+  // 检查缓存
+  const cached = getCachedConfig(rootDir)
+  if (cached) {
+    logger.debug('使用缓存的配置')
+    return cached
+  }
+
   const { config: userConfig, path: usedConfigPath } = await loadConfigAsyncImpl(rootDir)
 
   if (usedConfigPath) {
@@ -451,10 +502,21 @@ export async function loadConfigAsync(rootDir: string): Promise<Config> {
 
   const mergedConfig = mergeConfig(userConfig, rootDir)
   mergedConfig.usedConfigPath = usedConfigPath
+
+  // 设置缓存
+  setCachedConfig(rootDir, mergedConfig)
+
   return mergedConfig
 }
 
 export function loadConfig(rootDir: string): Config {
+  // 检查缓存
+  const cached = getCachedConfig(rootDir)
+  if (cached) {
+    logger.debug('使用缓存的配置')
+    return cached
+  }
+
   const { config: userConfig, path: usedConfigPath } = loadConfigSyncImpl(rootDir)
 
   if (usedConfigPath) {
@@ -466,6 +528,10 @@ export function loadConfig(rootDir: string): Config {
 
   const mergedConfig = mergeConfig(userConfig, rootDir)
   mergedConfig.usedConfigPath = usedConfigPath
+
+  // 设置缓存
+  setCachedConfig(rootDir, mergedConfig)
+
   return mergedConfig
 }
 
