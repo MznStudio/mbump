@@ -5,6 +5,66 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [core@2.1.0-beta.1] - 2026-05-25
+
+🚀 新增功能
+
+- feat(monorepo): 优化多包场景下的CHANGELOG生成逻辑
+
+📦 其他变更
+
+- 1. 修复mbump all批量更新时子包重复生成CHANGELOG的问题，仅主项目包生成CHANGELOG
+- 2. 为ChangelogManager新增packageName参数，支持按包名格式化版本标题
+- 3. 更新README文档，补充CHANGELOG生成策略说明和使用示例
+
+## [utils@1.1.0-beta.3] - 2026-05-25
+
+🚀 新增功能
+
+- feat(monorepo): 优化多包场景下的CHANGELOG生成逻辑
+
+📦 其他变更
+
+- 1. 修复mbump all批量更新时子包重复生成CHANGELOG的问题，仅主项目包生成CHANGELOG
+- 2. 为ChangelogManager新增packageName参数，支持按包名格式化版本标题
+- 3. 更新README文档，补充CHANGELOG生成策略说明和使用示例
+
+## [web@1.1.0-beta.2] - 2026-05-25
+
+🚀 新增功能
+
+- feat(monorepo): 优化多包场景下的CHANGELOG生成逻辑
+
+📦 其他变更
+
+- 1. 修复mbump all批量更新时子包重复生成CHANGELOG的问题，仅主项目包生成CHANGELOG
+- 2. 为ChangelogManager新增packageName参数，支持按包名格式化版本标题
+- 3. 更新README文档，补充CHANGELOG生成策略说明和使用示例
+
+## [theme@1.0.1-beta.4] - 2026-05-25
+
+🚀 新增功能
+
+- feat(monorepo): 优化多包场景下的CHANGELOG生成逻辑
+
+📦 其他变更
+
+- 1. 修复mbump all批量更新时子包重复生成CHANGELOG的问题，仅主项目包生成CHANGELOG
+- 2. 为ChangelogManager新增packageName参数，支持按包名格式化版本标题
+- 3. 更新README文档，补充CHANGELOG生成策略说明和使用示例
+
+## [@mznjs/mbump@1.0.0-beta.8] - 2026-05-25
+
+🚀 新增功能
+
+- feat(monorepo): 优化多包场景下的CHANGELOG生成逻辑
+
+📦 其他变更
+
+- 1. 修复mbump all批量更新时子包重复生成CHANGELOG的问题，仅主项目包生成CHANGELOG
+- 2. 为ChangelogManager新增packageName参数，支持按包名格式化版本标题
+- 3. 更新README文档，补充CHANGELOG生成策略说明和使用示例
+
 ## [2.1.0-beta.0] - 2026-05-25
 
 ♻️ 代码重构
