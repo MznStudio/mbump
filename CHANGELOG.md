@@ -5,6 +5,19 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.0-beta.5] - 2026-05-25
+
+♻️ 代码重构
+
+- refactor(logger, version-manager): 优化日志收集与输出逻辑
+
+📦 其他变更
+
+- 1. 新增日志缓冲区，在spinner执行期间收集日志并统一输出
+- 2. 移除VersionManager中的updateMessages变量，改用日志函数直接输出
+- 3. 重构GitManager的代码，简化构造函数和部分方法逻辑
+- 4. 调整GitManager部分方法的返回值类型，移除不必要的消息返回
+
 ## [0.1.0-beta.4] - 2026-05-25
 
 ♻️ 代码重构
