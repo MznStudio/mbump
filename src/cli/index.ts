@@ -133,7 +133,9 @@ async function main(): Promise<void> {
           {
             type: 'confirm',
             name: 'continue',
-            message: '是否提交这些更改并继续?',
+            message: parsedArgs.dryRun
+              ? '是否继续（dry-run模式不会实际提交更改）?'
+              : '是否提交这些更改并继续?',
             default: true,
           },
         ])
@@ -143,9 +145,14 @@ async function main(): Promise<void> {
           process.exit(0)
         }
 
-        const commitMessage = 'chore: update zbump config and settings'
-        execSync(`git add . && git commit -m "${commitMessage}"`, { encoding: 'utf8', stdio: 'pipe' })
-        log.success(`已提交更改: ${commitMessage}`)
+        if (!parsedArgs.dryRun) {
+          const commitMessage = 'chore: update zbump config and settings'
+          execSync(`git add . && git commit -m "${commitMessage}"`, { encoding: 'utf8', stdio: 'pipe' })
+          log.success(`已提交更改: ${commitMessage}`)
+        }
+        else {
+          log.info('dry-run模式: 跳过实际提交操作')
+        }
       }
       else {
         log.warn('警告: 存在未提交的Git更改，您选择了忽略此检查。请注意这可能导致不一致的版本状态。')
