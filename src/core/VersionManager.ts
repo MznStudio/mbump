@@ -58,6 +58,7 @@ export class VersionManager {
       changelog = this.gitConfig.changelog !== false,
       tag = this.gitConfig.tag !== false,
       tagPrefix = this.gitConfig.tagPrefix || 'v',
+      isBatchMode = false,  // 默认不是批量模式
     } = options
 
     const result: UpdateResult = {
@@ -183,13 +184,12 @@ export class VersionManager {
           }
 
           // 生成CHANGELOG
-           // 在 mbump all 时，只有主项目包（default）才生成 CHANGELOG
-          const isAllPackages = pkgName === 'all'
+           // 在批量更新模式时，只有主项目包（default）才生成 CHANGELOG
           const isDefaultPackage = pkgName === 'default' || this.config.packagePaths[pkgName] === 'package.json'
           
           if (!dryRun && changelog && finalVersion) {
-            // 如果是 all 模式且不是主项目包，跳过 CHANGELOG 生成
-            if (isAllPackages && !isDefaultPackage) {
+            // 如果是批量模式且不是主项目包，跳过 CHANGELOG 生成
+            if (isBatchMode && !isDefaultPackage) {
               log.info(`子包 ${pkgName} 跳过 CHANGELOG 生成`)
             }
             else {

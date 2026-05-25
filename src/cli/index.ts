@@ -243,6 +243,7 @@ async function main(): Promise<void> {
             customVersion: selection.customVersion,
             autoCommit: false,
             push: false,
+            isBatchMode: true,  // 标识这是批量更新模式
           })
         }, {
           succeedText: `包 ${packageName} 更新完成`,
