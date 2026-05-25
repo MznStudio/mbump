@@ -5,6 +5,13 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.0.0-beta.12] - 2026-05-25
+
+🔧 工具变更
+
+- chore(theme): add empty test file 2.txt
+- chore(plugins/utils): add 1.txt test file
+
 ## [theme@1.0.1-beta.8] - 2026-05-25
 
 🚀 新增功能
