@@ -192,7 +192,7 @@ async function main(): Promise<void> {
 
     if (parsedArgs.package === 'all' && Object.keys(packageVersionSelections).length > 0) {
       for (const [packageName, selection] of Object.entries(packageVersionSelections)) {
-        await log.withSpinner(`正在更新包 ${packageName}...`, async () => {
+        await log.withSpinner(`正在更新包...${packageName}...`, async () => {
           await versionManager.updateVersion(packageName, selection.type, {
             dryRun: parsedArgs.dryRun,
             verbose: parsedArgs.verbose,
