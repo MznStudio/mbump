@@ -48,29 +48,31 @@ export class VersionManager {
   }
 
   async updateVersion(pkgName: string, releaseType: ReleaseType = 'patch', options: UpdateOptions = {}): Promise<UpdateResult> {
+    const {
+      dryRun = false,
+      verbose = false,
+      packagePaths = this.packagePaths,
+      customVersion = null,
+      autoCommit = this.gitConfig.autoCommit !== false,
+      npm = false,
+      changelog = this.gitConfig.changelog !== false,
+      tag = this.gitConfig.tag !== false,
+      tagPrefix = this.gitConfig.tagPrefix || 'v',
+    } = options
+
+    const result: UpdateResult = {
+      success: false,
+      updatedPackages: [],
+      publishedPackages: [],
+      error: null,
+    }
+
+    const updateMessages: string[] = []
+
     return log.withSpinner(
       `正在更新${pkgName === 'all' ? '所有包' : `包${pkgName}`}的版本...`,
 
       async () => {
-        const {
-          dryRun = false,
-          verbose = false,
-          packagePaths = this.packagePaths,
-          customVersion = null,
-          autoCommit = this.gitConfig.autoCommit !== false,
-          npm = false,
-          changelog = this.gitConfig.changelog !== false,
-          tag = this.gitConfig.tag !== false,
-          tagPrefix = this.gitConfig.tagPrefix || 'v',
-        } = options
-
-        const result: UpdateResult = {
-          success: false,
-          updatedPackages: [],
-          publishedPackages: [],
-          error: null,
-        }
-
         try {
           const targets = pkgName === 'all' ? Object.values(packagePaths) : [packagePaths[pkgName]]
 
@@ -167,12 +169,12 @@ export class VersionManager {
             }
 
             if (dryRun) {
-              log.dryRun(`将更新 ${pkg.name} 从 v${pkg.version} 到 v${newVersion}`)
+              updateMessages.push(`将更新 ${pkg.name} 从 v${pkg.version} 到 v${newVersion}`)
             }
             else {
               const updatedPkg = { ...pkg, version: newVersion }
               this.savePackageInfo(pkgPath, updatedPkg)
-              log.info(`已更新 ${pkg.name} 到 v${newVersion}`)
+              updateMessages.push(`已更新 ${pkg.name} 到 v${newVersion}`)
             }
 
             result.updatedPackages.push({
@@ -261,7 +263,12 @@ export class VersionManager {
         succeedText: pkgName === 'all' ? '所有包版本更新完成' : `包 ${pkgName} 版本更新完成`,
         failText: '版本更新失败',
       },
-    )
+    ).then((result) => {
+      if (updateMessages.length > 0) {
+        updateMessages.forEach(msg => log.info(msg))
+      }
+      return result
+    })
   }
 
   async gitCommitAndPush(push: boolean = true): Promise<void> {
