@@ -103,7 +103,10 @@ async function main(): Promise<void> {
 
     const packageNames = Object.keys(config.packagePaths)
     if (!parsedArgs.package) {
-      if (packageNames.length === 1) {
+      if (packageNames.includes('default')) {
+        parsedArgs.package = 'default'
+      }
+      else if (packageNames.length === 1) {
         parsedArgs.package = packageNames[0]
       }
       else {
@@ -121,27 +124,32 @@ async function main(): Promise<void> {
     const versionManager = new VersionManager({ config, rootDir })
     log.setLevel(parsedArgs.verbose ? 'debug' : 'info')
 
-    if (!parsedArgs.allowUncommitted) {
-      await log.withSpinner('正在检查git状态...', async () => {
-        if (hasUncommittedChanges()) {
-          throw new Error('检测到未提交的更改')
-        }
-      }, {
-        succeedText: 'Git状态检查完成',
-        failText: 'Git状态检查失败',
-      }).catch((error: any) => {
-        if (error.message === '检测到未提交的更改') {
-          log.error('错误: 存在未提交的Git更改。请先提交或暂存所有更改后再继续。')
-          log.info('提示: 您可以使用 git commit 命令提交更改，或使用 git stash 命令暂存更改。')
-          log.info('提示: 您也可以使用 --allow-uncommitted (-u) 参数来忽略此检查。')
-          process.exit(1)
-        }
-        throw error
-      })
-    }
+    if (hasUncommittedChanges()) {
+      if (!parsedArgs.allowUncommitted) {
+        log.warn('警告: 检测到未提交的Git更改')
 
-    if (parsedArgs.allowUncommitted && hasUncommittedChanges()) {
-      log.warn('警告: 存在未提交的Git更改，您选择了忽略此检查。请注意这可能导致不一致的版本状态。')
+        const inquirer = await import('inquirer')
+        const answers = await inquirer.default.prompt([
+          {
+            type: 'confirm',
+            name: 'continue',
+            message: '是否提交这些更改并继续?',
+            default: true,
+          },
+        ])
+
+        if (!answers.continue) {
+          log.info('操作已取消')
+          process.exit(0)
+        }
+
+        const commitMessage = 'chore: update zbump config and settings'
+        execSync(`git add . && git commit -m "${commitMessage}"`, { encoding: 'utf8', stdio: 'pipe' })
+        log.success(`已提交更改: ${commitMessage}`)
+      }
+      else {
+        log.warn('警告: 存在未提交的Git更改，您选择了忽略此检查。请注意这可能导致不一致的版本状态。')
+      }
     }
 
     if (parsedArgs.verbose) {
