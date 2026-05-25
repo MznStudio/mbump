@@ -42,10 +42,12 @@ export async function withSpinner<T>(
   try {
     const result = await fn()
     spinner.succeed(options.succeedText || text)
+    console.log('')
     return result
   }
   catch (error) {
     spinner.fail(options.failText || text)
+    console.log('')
     throw error
   }
 }
