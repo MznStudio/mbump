@@ -1,3 +1,11 @@
+import type { Config } from './types'
+
+export function defineConfig(config?: Config): Config {
+  return config || {} as Config
+}
+
+export default defineConfig
+
 export { loadConfig, loadConfigAsync } from './config/loader'
 export { BASE_CONFIG } from './config/schema'
 export { ChangelogManager } from './core/ChangelogManager'

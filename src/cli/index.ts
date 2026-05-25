@@ -96,8 +96,44 @@ async function main(): Promise<void> {
     const parsedArgs = parseArgs(args, config.defaults)
 
     if (parsedArgs.showConfig) {
-      log.info('当前加载的配置:')
-      log.info(JSON.stringify(config, null, 2))
+      log.info('📋 当前加载的配置:')
+      log.info('')
+
+      // 显示配置文件路径
+      if (config.usedConfigPath) {
+        const fileName = config.usedConfigPath.split(/[/\\]/).pop()
+        log.info(`  配置文件: ${fileName}`)
+      }
+      else {
+        log.info('  配置文件: (默认配置)')
+      }
+
+      // 显示包路径
+      log.info('')
+      log.info('📦 包路径:')
+      for (const [name, path] of Object.entries(config.packagePaths)) {
+        const relativePath = path.split(/[/\\]/).pop()
+        log.info(`  ${name}: ${relativePath}`)
+      }
+
+      // 显示默认选项
+      log.info('')
+      log.info('⚙️  默认选项:')
+      log.info(`  releaseType: ${config.defaults.releaseType}`)
+      log.info(`  dryRun: ${config.defaults.dryRun}`)
+      log.info(`  verbose: ${config.defaults.verbose}`)
+      log.info(`  allowUncommitted: ${config.defaults.allowUncommitted}`)
+      log.info(`  npm: ${config.defaults.npm}`)
+
+      // 显示 Git 选项
+      log.info('')
+      log.info('🔧 Git 选项:')
+      log.info(`  commit: ${(config.git as any).autoCommit}`)
+      log.info(`  push: ${(config.git as any).push}`)
+      log.info(`  tag: ${(config.git as any).tag}`)
+      log.info(`  changelog: ${(config.git as any).changelog}`)
+
+      log.info('')
       process.exit(0)
     }
 

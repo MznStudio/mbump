@@ -200,7 +200,7 @@ function getFileExtension(path: string): string {
   const ext = path.split('.').pop()?.toLowerCase()
   if (ext === 'yml')
     return 'yaml'
-  if (ext === 'cjs' || ext === 'mjs')
+  if (ext === 'cjs' || ext === 'mjs' || ext === 'ts' || ext === 'js')
     return 'js'
   if (ext === 'jsonc')
     return 'json'
@@ -209,6 +209,7 @@ function getFileExtension(path: string): string {
 
 async function loadConfigAsyncImpl(rootDir: string): Promise<{ config: Partial<Config>, path: string | null }> {
   const configPaths = [
+    join(rootDir, '.mbump.config.ts'),
     join(rootDir, '.mbump.config.js'),
     join(rootDir, '.mbump.config.cjs'),
     join(rootDir, '.mbump.config.mjs'),
@@ -225,25 +226,37 @@ async function loadConfigAsyncImpl(rootDir: string): Promise<{ config: Partial<C
       const content = readFileSync(configPath, 'utf8')
       const ext = getFileExtension(configPath)
 
-      if (ext === 'js' && (configPath.endsWith('.mjs') || configPath.endsWith('.js'))) {
+      if (ext === 'js') {
         try {
           const absPath = resolve(rootDir, configPath)
-          const jsModule = await import(absPath)
-          const config = jsModule.default || jsModule
+          let config: any
+          if (configPath.endsWith('.ts')) {
+            // 对于 TypeScript 配置文件，使用 tsx 注册器
+            const require = createRequire(import.meta.url)
+            require('tsx')
+            const tsModule = require(absPath)
+            config = tsModule.default || tsModule
+          }
+          else if (configPath.endsWith('.mjs') || configPath.endsWith('.js')) {
+            const jsModule = await import(absPath)
+            config = jsModule.default || jsModule
+          }
+          else {
+            const require = createRequire(import.meta.url)
+            const jsModule = require(configPath)
+            config = jsModule.default || jsModule
+          }
+
+          // 如果导出的是函数，则调用它获取配置
+          if (typeof config === 'function') {
+            config = config()
+          }
+
           if (config)
             return { config, path: configPath }
         }
         catch {
-          try {
-            const require = createRequire(import.meta.url)
-            const jsModule = require(configPath)
-            const config = jsModule.default || jsModule
-            if (config)
-              return { config, path: configPath }
-          }
-          catch {
-            continue
-          }
+          continue
         }
       }
       else {
