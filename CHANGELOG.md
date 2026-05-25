@@ -5,6 +5,16 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.0.0-beta.0] - 2026-05-25
+
+🔧 工具变更
+
+- chore: 将项目重命名为mbump
+
+📦 其他变更
+
+- 更新了包名、CLI命令名、配置文件名以及文档中的相关引用，统一项目全量名称为mbump
+
 ## [0.1.0-beta.12] - 2026-05-25
 
 🔧 工具变更
