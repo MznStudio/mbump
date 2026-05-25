@@ -1,0 +1,64 @@
+{
+  "name": "@mznjs/zbump",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "企业级版本管理工具，支持单包和monorepo场景",
+  "main": "dist/index.js",
+  "bin": {
+    "zbump": "./bin/index.js"
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "bin/",
+    "dist/",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "rimraf dist && tsdown",
+    "dev": "tsx src/cli/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "pnpm exec tsc --noEmit",
+    "lint": "eslint .",
+    "release": "pnpm publish --access public"
+  },
+  "keywords": [
+    "version",
+    "bump",
+    "changelog",
+    "git",
+    "tag",
+    "monorepo",
+    "semver"
+  ],
+  "author": "mznjs",
+  "license": "MIT",
+  "dependencies": {
+    "consola": "^3.4.2",
+    "inquirer": "^9.2.16",
+    "ora": "^8.2.0",
+    "semver": "^7.5.4"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^9.0.0",
+    "@mznjs/eslint-config": "^0.0.4",
+    "@mznjs/tsconfig": "^1.0.1",
+    "@types/inquirer": "^9.0.9",
+    "@types/node": "^25.9.1",
+    "@types/semver": "^7.5.8",
+    "eslint": "^10.4.0",
+    "eslint-plugin-format": "^2.0.1",
+    "rimraf": "^5.0.10",
+    "tsdown": "^0.10.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.9.3",
+    "vitest": "^1.5.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
