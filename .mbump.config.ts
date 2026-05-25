@@ -8,10 +8,10 @@ import type { Config } from './src/index'
 
 export default {
   packagePaths: {
-    components: 'packages/components/package.json',
-    cli: 'packages/cli/package.json',
-    core: 'packages/core/package.json',
-    default: 'package.json',
+    theme: 'packages/theme/package.json',
+    web: 'packages/web/package.json',
+    utils: 'plugins/utils/package.json',
+    core: 'plugins/core/package.json',
   },
   defaults: {
     releaseType: 'patch',
