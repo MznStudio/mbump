@@ -5,7 +5,7 @@ import { VersionManager } from '@/core/VersionManager'
 
 export async function selectVersionInteractive(
   config: Config,
-  _packageName: string,
+  packageName: string,
   currentVersion: string,
 ): Promise<{ type: ReleaseType, customVersion: string | null }> {
   const choices = [
@@ -38,7 +38,7 @@ export async function selectVersionInteractive(
     {
       type: 'list',
       name: 'versionType',
-      message: `Current version ${currentVersion} »`,
+      message: `[${packageName}] Current version ${currentVersion} »`,
       choices,
       default: config.defaults?.releaseType || 'patch',
     },

@@ -243,18 +243,18 @@ export class VersionManager {
                 commitMessage = `chore: bump version for ${pkgName} to v${newVersion}`
               }
 
-              // 主项目包使用 tagPrefix，子包使用 {package-name}@{version} 格式
+              // 主项目包使用 {tagPrefix}{version} 格式，子包使用 {package-name}@{version} 格式
               if (isDefaultPackage) {
-                // 主项目包：使用配置的 tagPrefix
+                // 主项目包：使用配置的 tagPrefix (如 v1.0.1)
                 this.gitManager.commitAndPush(commitMessage, this.gitPush, tag, newVersion, tagPrefix)
               }
               else {
-                // 子包：先提交，然后创建 {package-name}@{version} 格式的 tag
+                // 子包：创建 {package-name}@{version} 格式的 tag
                 const { execSync } = await import('node:child_process')
-
+                
                 this.gitManager.addFiles(['-u'])
                 this.gitManager.commit(commitMessage)
-
+                
                 // 创建 {package-name}@{version} 格式的 tag
                 const tagName = `${updatedPackage.name}@${newVersion}`
                 try {
@@ -267,7 +267,7 @@ export class VersionManager {
                 catch (tagError) {
                   log.warn(`创建 tag ${tagName} 失败: ${(tagError as Error).message}`)
                 }
-
+                
                 // 推送
                 if (this.gitPush) {
                   try {

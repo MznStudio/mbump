@@ -316,35 +316,54 @@ mbump 根据包的类型采用不同的 Tag 命名策略：
 #### 主项目包 (default / root package)
 - **Tag 格式**: `{tagPrefix}{version}`
 - **使用前缀**: 是（默认 `v`）
+- **识别条件**: 包名为 `default` 或包路径为 `package.json`（根目录）
 - **示例**: 
   ```bash
   mbump default patch
+  # 假设 package.json 中 "name": "@my-org/monorepo"
   # → 创建 Tag: v1.0.1
+  
+  # 自定义前缀
+  mbump default minor
+  # 如果配置 git.tagPrefix = "release-"
+  # → 创建 Tag: release-1.1.0
   ```
 
 #### 子包 (所有非主项目包)
 - **Tag 格式**: `{package-name}@{version}`
-- **不使用前缀**: 直接使用 package.json 中的 name 字段
+- **不使用前缀**: 直接使用 package.json 中的 `name` 字段
 - **适用场景**: 
   - 单独更新子包：`mbump components patch`
   - 批量更新所有包：`mbump all`
 - **示例**:
   ```bash
   mbump components patch
-  # → 创建 Tag: components@1.0.1
+  # 假设 components/package.json 中 "name": "@my-org/components"
+  # → 创建 Tag: @my-org/components@1.0.1
   
-  mbump all
-  # → 为每个子包创建独立 Tag:
-  #   - components@1.0.1
-  #   - cli@2.3.0
-  #   - core@0.5.2
+  mbump cli minor
+  # 假设 cli/package.json 中 "name": "@my-org/cli"
+  # → 创建 Tag: @my-org/cli@2.3.0
   ```
 
+#### 批量更新 (mbump all)
+当使用 `mbump all` 时，会为每个包创建相应的 Tag：
+```bash
+mbump all
+# → 主项目包: v1.0.1 (使用 tagPrefix)
+# → 子包们:
+#   - @my-org/components@1.0.1
+#   - @my-org/cli@2.3.0
+#   - @my-org/core@0.5.2
+```
+
 **优势**：
-- ✅ 主项目包保持简洁的 `v1.0.1` 格式
+- ✅ 主项目包保持简洁的 `v1.0.1` 格式，符合传统习惯
 - ✅ 子包使用清晰的 `{包名}@{版本号}` 格式，便于区分
+- ✅ 清晰区分主项目和子包的版本历史
+- ✅ 便于单独回滚某个包到特定版本
 - ✅ 符合 Monorepo 最佳实践（类似 pnpm、lerna）
-- ✅ 支持独立的版本追踪和回滚
+- ✅ 支持独立的 CI/CD 流程
 
 #### publish 选项
 
