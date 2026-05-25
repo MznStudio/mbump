@@ -5,6 +5,20 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.0.0-beta.10] - 2026-05-25
+
+♻️ 代码重构
+
+- refactor(VersionManager): 优化包版本更新时的包名处理逻辑
+
+📝 文档更新
+
+- docs(README): 更新主项目包更新的描述文字
+
+📦 其他变更
+
+- 区分主项目包和子包的changelog生成方式
+
 ## [@mznjs/mbump@1.0.0-beta.9] - 2026-05-25
 
 🚀 新增功能
