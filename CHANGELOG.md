@@ -5,6 +5,30 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.0.1] - 2026-05-25
+
+♻️ 代码重构
+
+- refactor(cli): 移除多余空行并优化代码格式
+- refactor(config): 整理配置加载模块的代码格式
+- refactor(changelog): 优化变更日志管理器的代码格式
+- refactor(version): 整理版本管理器的代码格式和注释
+- refactor(types): 规范化类型定义中的注释格式
+
+📦 其他变更
+
+- 移除了 src/cli/index.ts 中多余的空行，统一了注释格式的空格处理，
+- 使代码更加整洁规范。同时修正了注释中的空格问题，保持一致的
+- 代码风格。
+- 清理了 src/config/loader.ts 中的多余空行，统一了代码块之间的
+- 间距格式，使配置加载逻辑更加清晰易读。
+- 移除了 src/core/ChangelogManager.ts 中的多余空行，保持
+- 代码结构的整洁性。
+- 统一了 src/core/VersionManager.ts 中的注释格式，移除了多
+- 余空行，并规范化了 isBatchMode 参数的注释格式。
+- 统一了 src/types/index.ts 中 isBatchMode 字段的注释格式，
+- 移除了多余空格，保持类型定义的一致性。
+
 ## [0.0.0] - 2026-05-25
 
 🚀 新增功能
