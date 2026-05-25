@@ -1,7 +1,9 @@
 import type { Config } from '@/types'
 
 export const BASE_CONFIG: Config = {
-  packagePaths: {},
+  packagePaths: {
+    default: 'package.json',
+  },
   defaults: {
     releaseType: 'patch',
     dryRun: false,

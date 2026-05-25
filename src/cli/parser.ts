@@ -11,6 +11,7 @@ export function parseArgs(args: string[], defaults: DefaultsConfig = {}): Parsed
     push: (defaults as any).git?.push !== false,
     allowUncommitted: defaults.allowUncommitted || false,
     npm: defaults.npm || false,
+    showConfig: false,
   }
 
   const allowedTypes: ReleaseType[] = [
@@ -51,6 +52,10 @@ export function parseArgs(args: string[], defaults: DefaultsConfig = {}): Parsed
     }
     else if (arg === '--npm' || arg === '-npm') {
       parsed.npm = true
+      i++
+    }
+    else if (arg === '--show-config') {
+      parsed.showConfig = true
       i++
     }
     else if (arg === '--type' || arg === '-t') {

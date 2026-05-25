@@ -25,7 +25,7 @@
     "typecheck": "pnpm exec tsc --noEmit",
     "lint": "eslint .",
     "release": "pnpm publish --access public",
-    "default": "tsx src/cli/index.ts default -d"
+    "default": "tsx src/cli/index.ts default -h"
   },
   "keywords": [
     "version",

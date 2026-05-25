@@ -55,6 +55,7 @@ export function showHelp(): void {
   --no-push, -p    禁用自动推送到远程仓库
   --allow-uncommitted, -u  允许在有未提交更改的情况下继续操作
   --npm, -npm    启用npm包发布功能（默认不发布）
+  --show-config  显示当前加载的完整配置信息
   --help, -h     显示此帮助信息
 
 示例:
@@ -93,6 +94,12 @@ async function main(): Promise<void> {
     })
 
     const parsedArgs = parseArgs(args, config.defaults)
+
+    if (parsedArgs.showConfig) {
+      log.info('当前加载的配置:')
+      log.info(JSON.stringify(config, null, 2))
+      process.exit(0)
+    }
 
     const packageNames = Object.keys(config.packagePaths)
     if (!parsedArgs.package) {

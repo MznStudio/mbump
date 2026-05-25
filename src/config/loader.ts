@@ -296,13 +296,15 @@ function loadConfigSyncImpl(rootDir: string): { config: Partial<Config>, path: s
 }
 
 function mergeConfig(userConfig: Partial<Config>, rootDir: string): Config {
+  const userPackagePaths = userConfig?.packagePaths
+  const hasUserPackagePaths = userPackagePaths && Object.keys(userPackagePaths).length > 0
+
   const mergedConfig: Config = {
     ...BASE_CONFIG,
     ...(userConfig || {}),
-    packagePaths: {
-      ...BASE_CONFIG.packagePaths,
-      ...(userConfig?.packagePaths || {}),
-    },
+    packagePaths: hasUserPackagePaths
+      ? { ...BASE_CONFIG.packagePaths, ...userPackagePaths }
+      : BASE_CONFIG.packagePaths,
     defaults: {
       ...BASE_CONFIG.defaults,
       ...(userConfig?.defaults || {}),
