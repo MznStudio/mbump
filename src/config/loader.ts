@@ -332,7 +332,7 @@ function mergeConfig(userConfig: Partial<Config>, rootDir: string): Config {
 
   const resolvedPackagePaths: Record<string, string> = {}
   for (const [name, path] of Object.entries(mergedConfig.packagePaths)) {
-    if (path && typeof path === 'string' && !path.startsWith('/') && !path.match(/^[a-z]:\\/i)) {
+    if (path && typeof path === 'string' && !path.startsWith('/') && !/^[a-z]:\\/i.test(path)) {
       resolvedPackagePaths[name] = join(rootDir, path)
     }
     else {

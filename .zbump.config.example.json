@@ -2,7 +2,8 @@
   "packagePaths": {
     "components": "packages/components/package.json",
     "cli": "packages/cli/package.json",
-    "core": "packages/core/package.json"
+    "core": "packages/core/package.json",
+    "default": "package.json"
   },
   "defaults": {
     "releaseType": "patch",

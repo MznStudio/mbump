@@ -1,6 +1,6 @@
 {
   "name": "@mznjs/zbump",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "type": "module",
   "description": "企业级版本管理工具，支持单包和monorepo场景",
   "main": "dist/index.js",
@@ -45,7 +45,7 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^9.0.0",
-    "@mznjs/eslint-config": "^0.0.4",
+    "@mznjs/eslint-config": "^0.0.5",
     "@mznjs/tsconfig": "^1.0.1",
     "@types/inquirer": "^9.0.9",
     "@types/node": "^25.9.1",

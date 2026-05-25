@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isValidVersion, incrementVersion, compareVersions } from '@/utils/semver'
+import { isValidVersion, incrementVersion, compareVersions } from '../src/utils/semver'
 
 describe('semver utilities', () => {
   describe('isValidVersion', () => {

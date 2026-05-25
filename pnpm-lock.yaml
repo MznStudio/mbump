@@ -25,8 +25,8 @@ importers:
         specifier: ^9.0.0
         version: 9.0.0(@typescript-eslint/rule-tester@8.59.4(eslint@10.4.0(jiti@2.7.0))(typescript@5.9.3))(@typescript-eslint/typescript-estree@8.59.4(typescript@5.9.3))(@typescript-eslint/utils@8.59.4(eslint@10.4.0(jiti@2.7.0))(typescript@5.9.3))(@vue/compiler-sfc@3.5.34)(eslint-plugin-format@2.0.1(eslint@10.4.0(jiti@2.7.0)))(eslint@10.4.0(jiti@2.7.0))(typescript@5.9.3)(vitest@1.6.1(@types/node@25.9.1)(lightningcss@1.32.0))
       '@mznjs/eslint-config':
-        specifier: ^0.0.4
-        version: 0.0.4(@antfu/eslint-config@9.0.0(@typescript-eslint/rule-tester@8.59.4(eslint@10.4.0(jiti@2.7.0))(typescript@5.9.3))(@typescript-eslint/typescript-estree@8.59.4(typescript@5.9.3))(@typescript-eslint/utils@8.59.4(eslint@10.4.0(jiti@2.7.0))(typescript@5.9.3))(@vue/compiler-sfc@3.5.34)(eslint-plugin-format@2.0.1(eslint@10.4.0(jiti@2.7.0)))(eslint@10.4.0(jiti@2.7.0))(typescript@5.9.3)(vitest@1.6.1(@types/node@25.9.1)(lightningcss@1.32.0)))(eslint@10.4.0(jiti@2.7.0))
+        specifier: ^0.0.5
+        version: 0.0.5(@antfu/eslint-config@9.0.0(@typescript-eslint/rule-tester@8.59.4(eslint@10.4.0(jiti@2.7.0))(typescript@5.9.3))(@typescript-eslint/typescript-estree@8.59.4(typescript@5.9.3))(@typescript-eslint/utils@8.59.4(eslint@10.4.0(jiti@2.7.0))(typescript@5.9.3))(@vue/compiler-sfc@3.5.34)(eslint-plugin-format@2.0.1(eslint@10.4.0(jiti@2.7.0)))(eslint@10.4.0(jiti@2.7.0))(typescript@5.9.3)(vitest@1.6.1(@types/node@25.9.1)(lightningcss@1.32.0)))(eslint@10.4.0(jiti@2.7.0))
       '@mznjs/tsconfig':
         specifier: ^1.0.1
         version: 1.0.1
@@ -609,8 +609,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@mznjs/eslint-config@0.0.4':
-    resolution: {integrity: sha512-USci4MqR505jbK0Aa0lMcFJcy2I6JcaZRebyCzXbc25oQ3nZRUxvcSJMsDm1vxyBHIrA8WQkfCVpf8S4C8BPMQ==}
+  '@mznjs/eslint-config@0.0.5':
+    resolution: {integrity: sha512-bKot6b4Z45D9jDsqmYGZe6Rupp/MjoUNJjUiLQerC9xfFfiPGWGy3cN5C9ja6HtyVBLzEigaxP/JZAjE2IdEQg==}
     peerDependencies:
       '@antfu/eslint-config': ^5.0.0
       eslint: ^9.10.0
@@ -3417,7 +3417,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@mznjs/eslint-config@0.0.4(@antfu/eslint-config@9.0.0(@typescript-eslint/rule-tester@8.59.4(eslint@10.4.0(jiti@2.7.0))(typescript@5.9.3))(@typescript-eslint/typescript-estree@8.59.4(typescript@5.9.3))(@typescript-eslint/utils@8.59.4(eslint@10.4.0(jiti@2.7.0))(typescript@5.9.3))(@vue/compiler-sfc@3.5.34)(eslint-plugin-format@2.0.1(eslint@10.4.0(jiti@2.7.0)))(eslint@10.4.0(jiti@2.7.0))(typescript@5.9.3)(vitest@1.6.1(@types/node@25.9.1)(lightningcss@1.32.0)))(eslint@10.4.0(jiti@2.7.0))':
+  '@mznjs/eslint-config@0.0.5(@antfu/eslint-config@9.0.0(@typescript-eslint/rule-tester@8.59.4(eslint@10.4.0(jiti@2.7.0))(typescript@5.9.3))(@typescript-eslint/typescript-estree@8.59.4(typescript@5.9.3))(@typescript-eslint/utils@8.59.4(eslint@10.4.0(jiti@2.7.0))(typescript@5.9.3))(@vue/compiler-sfc@3.5.34)(eslint-plugin-format@2.0.1(eslint@10.4.0(jiti@2.7.0)))(eslint@10.4.0(jiti@2.7.0))(typescript@5.9.3)(vitest@1.6.1(@types/node@25.9.1)(lightningcss@1.32.0)))(eslint@10.4.0(jiti@2.7.0))':
     dependencies:
       '@antfu/eslint-config': 9.0.0(@typescript-eslint/rule-tester@8.59.4(eslint@10.4.0(jiti@2.7.0))(typescript@5.9.3))(@typescript-eslint/typescript-estree@8.59.4(typescript@5.9.3))(@typescript-eslint/utils@8.59.4(eslint@10.4.0(jiti@2.7.0))(typescript@5.9.3))(@vue/compiler-sfc@3.5.34)(eslint-plugin-format@2.0.1(eslint@10.4.0(jiti@2.7.0)))(eslint@10.4.0(jiti@2.7.0))(typescript@5.9.3)(vitest@1.6.1(@types/node@25.9.1)(lightningcss@1.32.0))
       '@eslint/eslintrc': 3.3.5

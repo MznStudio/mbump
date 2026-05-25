@@ -41,7 +41,7 @@ export class VersionManager {
 
   private _resolvePackagePaths(rootDir: string): void {
     for (const [name, path] of Object.entries(this.packagePaths)) {
-      if (path && typeof path === 'string' && !path.startsWith('/') && !path.match(/^[a-z]:\\/i)) {
+      if (path && typeof path === 'string' && !path.startsWith('/') && !/^[a-z]:\\/i.test(path)) {
         this.packagePaths[name] = `${rootDir}/${path}`
       }
     }

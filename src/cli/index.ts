@@ -150,9 +150,7 @@ async function main(): Promise<void> {
     const packageVersionSelections: PackageVersionSelections = {}
 
     if (
-      args.find(
-        arg => arg === '--type' || arg.startsWith('--type=') || arg === '-t' || arg.startsWith('-t='),
-      ) === undefined
+      !args.some(arg => arg === '--type' || arg.startsWith('--type=') || arg === '-t' || arg.startsWith('-t='))
     ) {
       if (parsedArgs.package === 'all') {
         const selections = await selectAllVersionsInteractive(config, rootDir)

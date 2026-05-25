@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { validatePath, validateCommand, sanitizeFileName } from '@/utils/security'
+import { validatePath, validateCommand, sanitizeFileName } from '../src/utils/security'
 
 describe('security utilities', () => {
   describe('validatePath', () => {
