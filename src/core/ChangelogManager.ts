@@ -71,7 +71,7 @@ export class ChangelogManager {
 
   async updateChangelog(newVersion: string, commits: ChangelogCommit[], packageName?: string): Promise<void> {
     const today = new Date().toISOString().split('T')[0]
-    
+
     // 构建版本标题：如果有包名，使用 {package-name}@{version} 格式
     const versionTitle = packageName ? `${packageName}@${newVersion}` : newVersion
 

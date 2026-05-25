@@ -58,7 +58,7 @@ export class VersionManager {
       changelog = this.gitConfig.changelog !== false,
       tag = this.gitConfig.tag !== false,
       tagPrefix = this.gitConfig.tagPrefix || 'v',
-      isBatchMode = false,  // 默认不是批量模式
+      isBatchMode = false, // 默认不是批量模式
     } = options
 
     const result: UpdateResult = {
@@ -184,9 +184,9 @@ export class VersionManager {
           }
 
           // 生成CHANGELOG
-           // 在批量更新模式时，只有主项目包（default）才生成 CHANGELOG
+          // 在批量更新模式时，只有主项目包（default）才生成 CHANGELOG
           const isDefaultPackage = pkgName === 'default' || this.config.packagePaths[pkgName] === 'package.json'
-          
+
           if (!dryRun && changelog && finalVersion) {
             // 如果是批量模式且不是主项目包，跳过 CHANGELOG 生成
             if (isBatchMode && !isDefaultPackage) {
@@ -195,7 +195,7 @@ export class VersionManager {
             else {
               try {
                 const commits = this.gitManager.getCommitsSinceLastTag()
-                
+
                 // 主项目包不传 packageName（使用 tagPrefix 格式），子包传 packageName（使用 {package-name}@{version} 格式）
                 let packageName: string | undefined
                 if (!isDefaultPackage) {
@@ -204,7 +204,7 @@ export class VersionManager {
                   packageName = firstPkg.name
                 }
                 // 主项目包：packageName 为 undefined，ChangelogManager 会直接使用 version
-                
+
                 await this.changelogManager.updateChangelog(finalVersion, commits, packageName)
                 log.success('已更新 CHANGELOG.md')
               }
@@ -271,10 +271,10 @@ export class VersionManager {
               else {
                 // 子包：创建 {package-name}@{version} 格式的 tag
                 const { execSync } = await import('node:child_process')
-                
+
                 this.gitManager.addFiles(['-u'])
                 this.gitManager.commit(commitMessage)
-                
+
                 // 创建 {package-name}@{version} 格式的 tag
                 const tagName = `${updatedPackage.name}@${newVersion}`
                 try {
@@ -287,7 +287,7 @@ export class VersionManager {
                 catch (tagError) {
                   log.warn(`创建 tag ${tagName} 失败: ${(tagError as Error).message}`)
                 }
-                
+
                 // 推送
                 if (this.gitPush) {
                   try {
@@ -338,10 +338,10 @@ export class VersionManager {
         const { execSync } = await import('node:child_process')
         for (const pkg of updatedPackages) {
           let tagName: string
-          
+
           // 通过 pkgKey 判断是否为主项目包
           const isMainPackage = pkg.pkgKey === 'default'
-          
+
           if (isMainPackage) {
             // 主项目包：使用 {tagPrefix}{version} 格式
             tagName = `${tagPrefix}${pkg.newVersion}`
@@ -350,7 +350,7 @@ export class VersionManager {
             // 子包：使用 {package-name}@{version} 格式
             tagName = `${pkg.name}@${pkg.newVersion}`
           }
-          
+
           try {
             execSync(`git tag -a ${tagName} -m "Release ${tagName}"`, {
               cwd: this.rootDir,

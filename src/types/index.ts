@@ -72,7 +72,7 @@ export interface UpdateOptions {
   changelog?: boolean
   tag?: boolean
   tagPrefix?: string
-  isBatchMode?: boolean  // 标识是否是 mbump all 批量更新模式
+  isBatchMode?: boolean // 标识是否是 mbump all 批量更新模式
 }
 
 export interface UpdatedPackage {

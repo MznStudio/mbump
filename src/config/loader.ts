@@ -241,12 +241,12 @@ async function loadConfigAsyncImpl(rootDir: string): Promise<{ config: Partial<C
   for (const configPath of configPaths) {
     try {
       const ext = getFileExtension(configPath)
-      
+
       // 处理 JavaScript/TypeScript 类型的配置文件
       if (ext === 'js') {
         const absPath = resolve(rootDir, configPath)
         let config: any
-        
+
         try {
           if (configPath.endsWith('.ts')) {
             // TypeScript 配置文件：使用 tsx 注册器
@@ -345,14 +345,14 @@ function loadConfigSyncImpl(rootDir: string): { config: Partial<Config>, path: s
   for (const configPath of configPaths) {
     try {
       const ext = getFileExtension(configPath)
-      
+
       // 处理 JavaScript 类型的配置文件
       if (ext === 'js') {
         try {
           const require = createRequire(import.meta.url)
           const jsModule = require(configPath)
           let config = jsModule.default || jsModule
-          
+
           // 如果导出的是函数，则调用它获取配置
           if (typeof config === 'function') {
             config = config()
@@ -441,14 +441,14 @@ function mergeConfig(userConfig: Partial<Config>, rootDir: string): Config {
 
 export async function loadConfigAsync(rootDir: string): Promise<Config> {
   const { config: userConfig, path: usedConfigPath } = await loadConfigAsyncImpl(rootDir)
-  
+
   if (usedConfigPath) {
     logger.success(`配置加载完成 (配置文件: ${usedConfigPath})`)
   }
   else {
     logger.warn('未找到配置文件，将使用默认配置')
   }
-  
+
   const mergedConfig = mergeConfig(userConfig, rootDir)
   mergedConfig.usedConfigPath = usedConfigPath
   return mergedConfig
@@ -456,14 +456,14 @@ export async function loadConfigAsync(rootDir: string): Promise<Config> {
 
 export function loadConfig(rootDir: string): Config {
   const { config: userConfig, path: usedConfigPath } = loadConfigSyncImpl(rootDir)
-  
+
   if (usedConfigPath) {
     logger.success(`配置加载完成 (配置文件: ${usedConfigPath})`)
   }
   else {
     logger.warn('未找到配置文件，将使用默认配置')
   }
-  
+
   const mergedConfig = mergeConfig(userConfig, rootDir)
   mergedConfig.usedConfigPath = usedConfigPath
   return mergedConfig
