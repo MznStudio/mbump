@@ -5,6 +5,12 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.0.2] - 2026-05-25
+
+📝 文档更新
+
+- docs(README): 更新文档添加测试说明和贡献指南 (README.md, integration.test.ts)
+
 ## [0.0.2-beta.6] - 2026-05-25
 
 🚀 新增功能
