@@ -5,6 +5,16 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.0.1-beta.0] - 2026-05-25
+
+🔧 工具变更
+
+- chore: 初始化多package配置并更新mbump扫描路径
+
+📦 其他变更
+
+- 调整.mbump.config.ts的包扫描路径，新增web、theme、utils、core四个包的配置文件
+
 ## [1.0.0-beta.3] - 2026-05-25
 
 🚀 新增功能
