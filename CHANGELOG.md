@@ -5,6 +5,27 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [theme@1.0.1-beta.8] - 2026-05-25
+
+🚀 新增功能
+
+- feat(version): 添加无commit时手动输入变更描述的功能
+
+📝 文档更新
+
+- docs(utils): 添加测试文件
+- docs(theme): 添加主题包测试文件
+
+📦 其他变更
+
+- 新增当无自上一个Tag以来的commit时，支持用户手动输入变更描述来生成CHANGELOG的交互逻辑，同时支持跳过CHANGELOG生成，适配首次初始化项目、手动修改版本号等场景
+- ```
+- 添加新的测试文件用于验证功能
+- ```
+- ```
+- 新增测试文件用于验证主题包功能
+- ```
+
 ## [theme@1.0.1-beta.7] - 2026-05-25
 
 ### 待补充
