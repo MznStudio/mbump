@@ -5,6 +5,16 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.0.0-beta.13] - 2026-05-25
+
+♻️ 代码重构
+
+- refactor(changelog): 移除手动输入变更描述的交互逻辑
+
+📦 其他变更
+
+- 移除了无commits时的手动输入变更描述交互功能，直接使用现有commits生成changelog，简化了版本发布流程。
+
 ## [1.0.0-beta.12] - 2026-05-25
 
 🔧 工具变更
