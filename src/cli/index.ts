@@ -119,25 +119,25 @@ async function main(): Promise<void> {
       // 显示默认选项
       log.info('')
       log.info('⚙️  默认选项:')
-      log.info(`  releaseType: ${config.defaults.releaseType}`)
-      log.info(`  dryRun: ${config.defaults.dryRun}`)
-      log.info(`  verbose: ${config.defaults.verbose}`)
-      log.info(`  allowUncommitted: ${config.defaults.allowUncommitted}`)
-      log.info(`  npm: ${config.defaults.npm}`)
+      log.info(`  releaseType: ${config.defaults?.releaseType}`)
+      log.info(`  dryRun: ${config.defaults?.dryRun}`)
+      log.info(`  verbose: ${config.defaults?.verbose}`)
+      log.info(`  allowUncommitted: ${config.defaults?.allowUncommitted}`)
+      log.info(`  npm: ${config.defaults?.npm}`)
 
       // 显示 Git 选项
       log.info('')
       log.info('🔧 Git 选项:')
-      log.info(`  commit: ${(config.git as any).autoCommit}`)
-      log.info(`  push: ${(config.git as any).push}`)
-      log.info(`  tag: ${(config.git as any).tag}`)
-      log.info(`  changelog: ${(config.git as any).changelog}`)
+      log.info(`  commit: ${config.git?.autoCommit}`)
+      log.info(`  push: ${config.git?.push}`)
+      log.info(`  tag: ${config.git?.tag}`)
+      log.info(`  changelog: ${config.git?.changelog}`)
 
       // 显示 Publish 选项
       log.info('')
       log.info('🚀 发布选项:')
-      log.info(`  command: ${(config.publish as any).command}`)
-      log.info(`  skipChecks: ${(config.publish as any).skipChecks}`)
+      log.info(`  command: ${config.publish?.command}`)
+      log.info(`  skipChecks: ${config.publish?.skipChecks}`)
 
       log.info('')
       process.exit(0)
