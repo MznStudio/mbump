@@ -5,6 +5,66 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.1.0-beta.0] - 2026-05-25
+
+♻️ 代码重构
+
+- refactor(cli,version): 优化多包更新的tag生成逻辑
+
+📦 其他变更
+
+- 1. 扩展updatedPackages类型，新增pkgKey字段用于区分主包和子包
+- 2. 重构gitCommitAndPush方法的tag命名逻辑，主项目包使用v前缀格式，子包保留原有格式
+- 3. 调整gitCommitAndPush的参数名称，将_taPrefix改为tagPrefix提升可读性
+
+## [1.1.0-beta.2] - 2026-05-25
+
+♻️ 代码重构
+
+- refactor(cli,version): 优化多包更新的tag生成逻辑
+
+📦 其他变更
+
+- 1. 扩展updatedPackages类型，新增pkgKey字段用于区分主包和子包
+- 2. 重构gitCommitAndPush方法的tag命名逻辑，主项目包使用v前缀格式，子包保留原有格式
+- 3. 调整gitCommitAndPush的参数名称，将_taPrefix改为tagPrefix提升可读性
+
+## [1.1.0-beta.1] - 2026-05-25
+
+♻️ 代码重构
+
+- refactor(cli,version): 优化多包更新的tag生成逻辑
+
+📦 其他变更
+
+- 1. 扩展updatedPackages类型，新增pkgKey字段用于区分主包和子包
+- 2. 重构gitCommitAndPush方法的tag命名逻辑，主项目包使用v前缀格式，子包保留原有格式
+- 3. 调整gitCommitAndPush的参数名称，将_taPrefix改为tagPrefix提升可读性
+
+## [1.0.1-beta.3] - 2026-05-25
+
+♻️ 代码重构
+
+- refactor(cli,version): 优化多包更新的tag生成逻辑
+
+📦 其他变更
+
+- 1. 扩展updatedPackages类型，新增pkgKey字段用于区分主包和子包
+- 2. 重构gitCommitAndPush方法的tag命名逻辑，主项目包使用v前缀格式，子包保留原有格式
+- 3. 调整gitCommitAndPush的参数名称，将_taPrefix改为tagPrefix提升可读性
+
+## [1.0.0-beta.7] - 2026-05-25
+
+♻️ 代码重构
+
+- refactor(cli,version): 优化多包更新的tag生成逻辑
+
+📦 其他变更
+
+- 1. 扩展updatedPackages类型，新增pkgKey字段用于区分主包和子包
+- 2. 重构gitCommitAndPush方法的tag命名逻辑，主项目包使用v前缀格式，子包保留原有格式
+- 3. 调整gitCommitAndPush的参数名称，将_taPrefix改为tagPrefix提升可读性
+
 ## [2.0.0-beta.2] - 2026-05-25
 
 ### 待补充
