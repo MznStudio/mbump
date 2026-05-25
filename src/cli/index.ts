@@ -233,9 +233,11 @@ async function main(): Promise<void> {
     }
 
     if (parsedArgs.package === 'all' && Object.keys(packageVersionSelections).length > 0) {
+      const updatedPackagesInfo: Array<{ name: string, newVersion: string }> = []
+      
       for (const [packageName, selection] of Object.entries(packageVersionSelections)) {
-        await log.withSpinner(`正在更新包...${packageName}...`, async () => {
-          await versionManager.updateVersion(packageName, selection.type, {
+        const result = await log.withSpinner(`正在更新包...${packageName}...`, async () => {
+          return await versionManager.updateVersion(packageName, selection.type, {
             dryRun: parsedArgs.dryRun,
             verbose: parsedArgs.verbose,
             customVersion: selection.customVersion,
@@ -246,10 +248,20 @@ async function main(): Promise<void> {
           succeedText: `包 ${packageName} 更新完成`,
           failText: `包 ${packageName} 更新失败`,
         })
+        
+        // 收集更新的包信息
+        if (result.success && result.updatedPackages.length > 0) {
+          updatedPackagesInfo.push(...result.updatedPackages)
+        }
       }
 
-      if (!parsedArgs.dryRun && parsedArgs.autoCommit) {
-        await versionManager.gitCommitAndPush(parsedArgs.push)
+      if (!parsedArgs.dryRun && parsedArgs.autoCommit && updatedPackagesInfo.length > 0) {
+        await versionManager.gitCommitAndPush(
+          parsedArgs.push,
+          updatedPackagesInfo,
+          config.git?.tag !== false,
+          config.git?.tagPrefix || 'v',
+        )
       }
 
       if (parsedArgs.npm && !parsedArgs.dryRun) {

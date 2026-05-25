@@ -230,6 +230,7 @@ export class VersionManager {
               let commitMessage: string
               const updatedPackage = result.updatedPackages[0]
               const newVersion = updatedPackage.newVersion
+              const isDefaultPackage = pkgName === 'default' || this.config.packagePaths[pkgName] === 'package.json'
 
               if (this.gitConfig.commitMessage && this.gitConfig.commitMessage !== 'chore: bump version to {{newVersion}}') {
                 commitMessage = this.gitConfig.commitMessage.replace(/\{\{newVersion\}\}/g, newVersion)
@@ -242,7 +243,41 @@ export class VersionManager {
                 commitMessage = `chore: bump version for ${pkgName} to v${newVersion}`
               }
 
-              this.gitManager.commitAndPush(commitMessage, this.gitPush, tag, newVersion, tagPrefix)
+              // 主项目包使用 tagPrefix，子包使用 {package-name}@{version} 格式
+              if (isDefaultPackage) {
+                // 主项目包：使用配置的 tagPrefix
+                this.gitManager.commitAndPush(commitMessage, this.gitPush, tag, newVersion, tagPrefix)
+              }
+              else {
+                // 子包：先提交，然后创建 {package-name}@{version} 格式的 tag
+                const { execSync } = await import('node:child_process')
+
+                this.gitManager.addFiles(['-u'])
+                this.gitManager.commit(commitMessage)
+
+                // 创建 {package-name}@{version} 格式的 tag
+                const tagName = `${updatedPackage.name}@${newVersion}`
+                try {
+                  execSync(`git tag -a ${tagName} -m "Release ${tagName}"`, {
+                    cwd: this.rootDir,
+                    stdio: 'pipe',
+                  })
+                  log.success(`已创建 tag: ${tagName}`)
+                }
+                catch (tagError) {
+                  log.warn(`创建 tag ${tagName} 失败: ${(tagError as Error).message}`)
+                }
+
+                // 推送
+                if (this.gitPush) {
+                  try {
+                    this.gitManager.push(true)
+                  }
+                  catch (pushError) {
+                    log.warn(`Git push failed: ${(pushError as Error).message}`)
+                  }
+                }
+              }
             }
             catch (gitError: any) {
               log.warn(`Git操作失败: ${gitError.message}`)
@@ -264,10 +299,51 @@ export class VersionManager {
     )
   }
 
-  async gitCommitAndPush(push: boolean = true): Promise<void> {
+  async gitCommitAndPush(
+    push: boolean = true,
+    updatedPackages?: Array<{ name: string, newVersion: string }>,
+    tag: boolean = this.gitConfig.tag !== false,
+    _tagPrefix: string = this.gitConfig.tagPrefix || 'v',
+  ): Promise<void> {
     try {
       const commitMessage = 'chore: bump versions for multiple packages'
-      this.gitManager.commitAndPush(commitMessage, push)
+
+      // 如果提供了更新的包列表且启用了 tag，则为每个包创建独立的 tag
+      if (tag && updatedPackages && updatedPackages.length > 0) {
+        // 先提交更改
+        this.gitManager.addFiles(['-u'])
+        this.gitManager.commit(commitMessage)
+
+        // 为每个包创建独立的 tag，格式：package-name@version
+        const { execSync } = await import('node:child_process')
+        for (const pkg of updatedPackages) {
+          const tagName = `${pkg.name}@${pkg.newVersion}`
+          try {
+            execSync(`git tag -a ${tagName} -m "Release ${tagName}"`, {
+              cwd: this.rootDir,
+              stdio: 'pipe',
+            })
+            log.success(`已创建 tag: ${tagName}`)
+          }
+          catch (error) {
+            log.warn(`创建 tag ${tagName} 失败: ${(error as Error).message}`)
+          }
+        }
+
+        // 推送 commits 和 tags
+        if (push) {
+          try {
+            this.gitManager.push(true)
+          }
+          catch (error) {
+            log.warn(`Git push failed: ${(error as Error).message}`)
+          }
+        }
+      }
+      else {
+        // 原有逻辑：不创建 tag
+        this.gitManager.commitAndPush(commitMessage, push, false)
+      }
     }
     catch (error: any) {
       log.warn(`Git操作失败: ${error.message}`)

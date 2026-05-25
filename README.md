@@ -306,8 +306,45 @@ export default () => ({
 | `push` | `boolean` | `true` | 是否自动推送到远程仓库 |
 | `autoCommit` | `boolean` | `true` | 是否自动提交更改 |
 | `tag` | `boolean` | `true` | 是否创建 Git 标签 |
-| `tagPrefix` | `string` | `'v'` | 标签前缀（如 `v1.0.0`） |
+| `tagPrefix` | `string` | `'v'` | 标签前缀（如 `v1.0.0`）。**注意**：仅主项目包使用此配置，子包使用 `{包名}@{版本号}` 格式 |
 | `changelog` | `boolean` | `true` | 是否生成 CHANGELOG |
+
+**Git Tag 策略**：
+
+mbump 根据包的类型采用不同的 Tag 命名策略：
+
+#### 主项目包 (default / root package)
+- **Tag 格式**: `{tagPrefix}{version}`
+- **使用前缀**: 是（默认 `v`）
+- **示例**: 
+  ```bash
+  mbump default patch
+  # → 创建 Tag: v1.0.1
+  ```
+
+#### 子包 (所有非主项目包)
+- **Tag 格式**: `{package-name}@{version}`
+- **不使用前缀**: 直接使用 package.json 中的 name 字段
+- **适用场景**: 
+  - 单独更新子包：`mbump components patch`
+  - 批量更新所有包：`mbump all`
+- **示例**:
+  ```bash
+  mbump components patch
+  # → 创建 Tag: components@1.0.1
+  
+  mbump all
+  # → 为每个子包创建独立 Tag:
+  #   - components@1.0.1
+  #   - cli@2.3.0
+  #   - core@0.5.2
+  ```
+
+**优势**：
+- ✅ 主项目包保持简洁的 `v1.0.1` 格式
+- ✅ 子包使用清晰的 `{包名}@{版本号}` 格式，便于区分
+- ✅ 符合 Monorepo 最佳实践（类似 pnpm、lerna）
+- ✅ 支持独立的版本追踪和回滚
 
 #### publish 选项
 
@@ -509,6 +546,164 @@ mbump --show-config
 # 预览将要执行的操作，不实际修改文件
 mbump components minor --dry-run
 ```
+
+## 🏷️ Git Tag 策略详解
+
+mbump 采用智能的 Git Tag 策略，根据包的类型自动选择合适的命名格式：
+
+### 主项目包 (default / root package)
+
+主项目包通常对应根目录的 `package.json`，配置为 `"default": "package.json"`。
+
+```bash
+mbump default patch
+# 或简写为
+mbump patch  # 如果默认包名为 default
+```
+
+**Tag 格式**：`{tagPrefix}{version}`
+- 默认前缀：`v`
+- 示例：`v1.0.1`, `v2.3.0`, `release-3.0.0`
+
+**行为**：
+- ✅ 自动创建带注释的 Git Tag
+- ✅ 推送到远程仓库（如果 `git.push = true`）
+- ✅ 使用配置的 `tagPrefix`（可通过 `git.tagPrefix` 自定义）
+
+**自定义前缀示例**：
+```json
+{
+  "git": {
+    "tagPrefix": "release-"
+  }
+}
+```
+```bash
+mbump default minor
+# → 创建 Tag: release-1.1.0
+```
+
+---
+
+### 子包 (所有非主项目包)
+
+子包包括所有在 `packagePaths` 中配置的非主项目包。
+
+#### 单独更新子包
+
+```bash
+mbump components patch
+mbump cli minor
+```
+
+**Tag 格式**：`{package-name}@{version}`
+- **不使用** `tagPrefix` 配置
+- 直接使用 `package.json` 中的 `name` 字段
+- 为更新的包创建独立标签
+
+**示例**：
+```bash
+mbump components patch
+# 假设 components/package.json 中 "name": "@my-org/components"
+# → 创建 Tag: @my-org/components@1.0.1
+
+mbump cli minor
+# 假设 cli/package.json 中 "name": "@my-org/cli"
+# → 创建 Tag: @my-org/cli@2.3.0
+```
+
+---
+
+#### Monorepo 批量更新
+
+```bash
+mbump all
+```
+
+**Tag 格式**：`{package-name}@{version}`
+- 不使用 `tagPrefix` 配置
+- 为每个更新的**子包**创建独立标签
+- **主项目包**仍然使用 `{tagPrefix}{version}` 格式
+
+**示例**：
+假设有以下包被更新：
+- `default` (主项目): 1.0.0 → 1.0.1
+- `components`: 1.0.0 → 1.0.1
+- `cli`: 2.2.0 → 2.3.0
+- `core`: 0.5.1 → 0.5.2
+
+将创建以下 Tags：
+```
+v1.0.1                    # 主项目包，使用 tagPrefix
+components@1.0.1          # 子包
+cli@2.3.0                 # 子包
+core@0.5.2                # 子包
+```
+
+**优势**：
+- ✅ 清晰区分主项目和子包的版本历史
+- ✅ 主项目保持简洁的 `v1.0.1` 格式
+- ✅ 子包使用明确的 `{包名}@{版本号}` 格式
+- ✅ 便于单独回滚某个包到特定版本
+- ✅ 符合 Monorepo 最佳实践（类似 pnpm、lerna）
+- ✅ 支持独立的 CI/CD 流程
+
+---
+
+### Git 操作示例
+
+```bash
+# 查看所有 tags
+git tag -l
+
+# 查看主项目的 tags
+git tag -l "v*"
+
+# 查看特定子包的 tags
+git tag -l "components@*"
+
+# 查看所有子包的 tags
+git tag -l "*@*"
+
+# 检出主项目的特定版本
+git checkout v1.0.1
+
+# 检出子包的特定版本
+git checkout components@1.0.1
+
+# 推送所有 tags
+git push --tags
+```
+
+---
+
+### 禁用 Tag 创建
+
+如果不需要自动创建 Tag，可以在配置中禁用：
+
+```json
+{
+  "git": {
+    "tag": false
+  }
+}
+```
+
+这将禁用所有包（包括主项目和子包）的自动 Tag 创建。
+
+---
+
+### 注意事项
+
+1. **主项目包识别**：系统通过以下方式判断是否为主项目包：
+   - 包名为 `default`
+   - 或者包路径为 `package.json`（根目录）
+
+2. **子包命名**：子包的 Tag 名称直接来自其 `package.json` 中的 `name` 字段，可能包含 scope（如 `@my-org/components`）
+
+3. **Tag 唯一性**：Git 要求所有 Tag 名称唯一，因此不同包即使版本号相同，也会因为包名不同而产生不同的 Tag
+
+4. **批量更新行为**：使用 `mbump all` 时，所有更改会在一次 commit 中提交，然后为每个包创建独立的 Tag
 
 ## ⚠️ 注意事项
 
