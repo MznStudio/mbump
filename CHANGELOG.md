@@ -5,6 +5,16 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.0-beta.9] - 2026-05-25
+
+🔧 工具变更
+
+- chore(logger): 替换consola为原生console输出
+
+📦 其他变更
+
+- 移除了对consola的依赖，改用原生console打印带标识的日志内容，同时保留了原有接口不破坏调用逻辑
+
 ## [0.1.0-beta.8] - 2026-05-25
 
 🔧 工具变更
