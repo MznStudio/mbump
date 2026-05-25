@@ -21,7 +21,7 @@
     "changelog": true
   },
   "publish": {
-    "command": "pnpm publish --access public --no-git-checks",
-    "skipChecks": true
+    "command": "npm publish",
+    "skipChecks": false
   }
 }

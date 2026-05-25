@@ -1,0 +1,33 @@
+/**
+ * ES Module 配置文件示例（推荐）
+ * 文件名: .mbump.config.mjs.bak
+ * 
+ * 特点: 现代、简洁，使用 export default
+ */
+export default {
+  packagePaths: {
+    components: 'packages/components/package.json',
+    cli: 'packages/cli/package.json',
+    core: 'packages/core/package.json',
+    default: 'package.json',
+  },
+  defaults: {
+    releaseType: 'patch',
+    dryRun: false,
+    verbose: false,
+    allowUncommitted: false,
+    npm: false,
+  },
+  git: {
+    commitMessage: 'chore: bump version to {{newVersion}}',
+    push: true,
+    autoCommit: true,
+    tag: true,
+    tagPrefix: 'v',
+    changelog: true,
+  },
+  publish: {
+    command: 'npm publish',
+    skipChecks: false,
+  },
+}

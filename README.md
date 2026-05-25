@@ -80,21 +80,90 @@ mbump components minor
 
 ## 配置文件
 
-支持多种配置格式：`.mbump.config.json`, `.mbump.config.yaml`, `.mbump.config.toml`, `.mbump.config.js`
+mbump 支持多种配置格式，并提供灵活的加载策略。
 
-### 完整配置示例
+### 支持的配置文件格式
+
+| 格式 | 文件扩展名 | 异步加载 | 同步加载 | 说明 |
+|------|-----------|---------|---------|------|
+| TypeScript | `.ts` | ✅ | ❌ | 需要 tsx，提供类型安全 |
+| ES Module | `.mjs` | ✅ | ❌ | 使用 `export default` |
+| JavaScript | `.js` | ✅ | ⚠️ | 优先 ES Module，兼容 CommonJS |
+| CommonJS | `.cjs` | ✅ | ✅ | 使用 `module.exports` |
+| JSON | `.json`, `.jsonc` | ✅ | ✅ | 标准 JSON 或带注释 JSON |
+| YAML | `.yaml`, `.yml` | ✅ | ✅ | YAML 格式 |
+| TOML | `.toml` | ✅ | ✅ | TOML 格式 |
+| package.json | - | ✅ | ✅ | 在 `mbump` 字段中配置 |
+
+**配置文件前缀**: 支持 `.mbump.config.*` 和 `.zbump.config.*`
+
+### 配置文件优先级
+
+配置加载器会按以下顺序查找配置文件（找到第一个即停止）：
+
+1. TypeScript (`.ts`)
+2. ES Module (`.mjs`)
+3. JavaScript (`.js`)
+4. CommonJS (`.cjs`)
+5. JSON (`.json`, `.jsonc`)
+6. YAML (`.yaml`, `.yml`)
+7. TOML (`.toml`)
+8. package.json
+
+### 配置示例
+
+#### ES Module 格式（推荐）
+
+```javascript
+// .mbump.config.mjs
+export default {
+  packagePaths: {
+    components: 'packages/components/package.json',
+    cli: 'packages/cli/package.json',
+  },
+  defaults: {
+    releaseType: 'patch',
+  },
+}
+```
+
+#### TypeScript 格式
+
+```typescript
+// .mbump.config.ts
+import type { Config } from '@mznjs/mbump'
+
+export default {
+  packagePaths: {
+    components: 'packages/components/package.json',
+  },
+  defaults: {
+    releaseType: 'minor',
+  },
+} satisfies Config
+```
+
+#### CommonJS 格式
+
+```javascript
+// .mbump.config.cjs
+module.exports = {
+  packagePaths: {
+    components: 'packages/components/package.json',
+  },
+}
+```
+
+#### JSON 格式
 
 ```json
 {
   "packagePaths": {
-    "components": "packages/components/package.json"
+    "components": "packages/components/package.json",
+    "cli": "packages/cli/package.json"
   },
   "defaults": {
-    "releaseType": "patch",
-    "dryRun": false,
-    "verbose": false,
-    "allowUncommitted": false,
-    "npm": false
+    "releaseType": "patch"
   },
   "git": {
     "commitMessage": "chore: bump version to {{newVersion}}",
@@ -110,6 +179,36 @@ mbump components minor
   }
 }
 ```
+
+#### 函数导出
+
+配置文件也可以导出一个函数，该函数会被自动调用以获取配置：
+
+```javascript
+// .mbump.config.js
+export default () => ({
+  packagePaths: {
+    components: 'packages/components/package.json',
+  },
+})
+```
+
+### 配置选项
+
+| 选项 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `packagePaths` | `Record<string, string>` | - | 包路径映射（必需） |
+| `defaults.releaseType` | `string` | `'patch'` | 默认版本类型 |
+| `defaults.dryRun` | `boolean` | `false` | 默认试运行模式 |
+| `defaults.verbose` | `boolean` | `false` | 默认详细输出 |
+| `git.commitMessage` | `string` | `'chore: bump version to {{newVersion}}'` | Git 提交消息模板 |
+| `git.push` | `boolean` | `true` | 是否自动推送 |
+| `git.autoCommit` | `boolean` | `true` | 是否自动提交 |
+| `git.tag` | `boolean` | `true` | 是否创建标签 |
+| `git.tagPrefix` | `string` | `'v'` | 标签前缀 |
+| `git.changelog` | `boolean` | `true` | 是否生成 CHANGELOG |
+| `publish.command` | `string` | `'npm publish'` | 发布命令 |
+| `publish.skipChecks` | `boolean` | `false` | 跳过安全检查 |
 
 ## API 使用
 

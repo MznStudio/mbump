@@ -2,7 +2,7 @@ import type { Config } from '@/types'
 import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { join, resolve } from 'node:path'
-// import logger from '@/utils/logger'
+import logger from '@/utils/logger'
 import { BASE_CONFIG, isValidConfig } from './schema'
 
 function removeJsoncComments(jsoncString: string): string {
@@ -208,43 +208,76 @@ function getFileExtension(path: string): string {
 }
 
 async function loadConfigAsyncImpl(rootDir: string): Promise<{ config: Partial<Config>, path: string | null }> {
+  // 定义配置文件优先级列表（从高到低）
   const configPaths = [
+    // TypeScript 配置文件（需要 tsx 支持）
     join(rootDir, '.mbump.config.ts'),
-    join(rootDir, '.mbump.config.js'),
-    join(rootDir, '.mbump.config.cjs'),
+    join(rootDir, '.zbump.config.ts'),
+    // ES Module 配置文件（.mjs 和 .js with export default）
     join(rootDir, '.mbump.config.mjs'),
+    join(rootDir, '.zbump.config.mjs'),
+    join(rootDir, '.mbump.config.js'),
+    join(rootDir, '.zbump.config.js'),
+    // CommonJS 配置文件
+    join(rootDir, '.mbump.config.cjs'),
+    join(rootDir, '.zbump.config.cjs'),
+    // JSON 格式配置文件
     join(rootDir, '.mbump.config.json'),
+    join(rootDir, '.zbump.config.json'),
     join(rootDir, '.mbump.config.jsonc'),
+    join(rootDir, '.zbump.config.jsonc'),
+    // YAML 格式配置文件
     join(rootDir, '.mbump.config.yaml'),
+    join(rootDir, '.zbump.config.yaml'),
     join(rootDir, '.mbump.config.yml'),
+    join(rootDir, '.zbump.config.yml'),
+    // TOML 格式配置文件
     join(rootDir, '.mbump.config.toml'),
+    join(rootDir, '.zbump.config.toml'),
+    // package.json 中的配置
     join(rootDir, 'package.json'),
   ]
 
   for (const configPath of configPaths) {
     try {
-      const content = readFileSync(configPath, 'utf8')
       const ext = getFileExtension(configPath)
-
+      
+      // 处理 JavaScript/TypeScript 类型的配置文件
       if (ext === 'js') {
+        const absPath = resolve(rootDir, configPath)
+        let config: any
+        
         try {
-          const absPath = resolve(rootDir, configPath)
-          let config: any
           if (configPath.endsWith('.ts')) {
-            // 对于 TypeScript 配置文件，使用 tsx 注册器
+            // TypeScript 配置文件：使用 tsx 注册器
             const require = createRequire(import.meta.url)
             require('tsx')
             const tsModule = require(absPath)
             config = tsModule.default || tsModule
           }
-          else if (configPath.endsWith('.mjs') || configPath.endsWith('.js')) {
-            const jsModule = await import(absPath)
+          else if (configPath.endsWith('.mjs')) {
+            // ES Module (.mjs)：使用动态 import
+            const jsModule = await import(`file://${absPath}`)
             config = jsModule.default || jsModule
           }
-          else {
+          else if (configPath.endsWith('.js')) {
+            // .js 文件：优先尝试 ES Module，失败后尝试 CommonJS
+            try {
+              const jsModule = await import(`file://${absPath}`)
+              config = jsModule.default || jsModule
+            }
+            catch {
+              // 如果 ES Module 导入失败，尝试 CommonJS
+              const require = createRequire(import.meta.url)
+              const cjsModule = require(absPath)
+              config = cjsModule.default || cjsModule
+            }
+          }
+          else if (configPath.endsWith('.cjs')) {
+            // CommonJS (.cjs)：使用 require
             const require = createRequire(import.meta.url)
-            const jsModule = require(configPath)
-            config = jsModule.default || jsModule
+            const cjsModule = require(absPath)
+            config = cjsModule.default || cjsModule
           }
 
           // 如果导出的是函数，则调用它获取配置
@@ -252,23 +285,29 @@ async function loadConfigAsyncImpl(rootDir: string): Promise<{ config: Partial<C
             config = config()
           }
 
-          if (config)
+          if (config && typeof config === 'object') {
             return { config, path: configPath }
+          }
         }
         catch {
+          // 记录错误但继续尝试下一个配置文件
           continue
         }
       }
       else {
+        // 处理非 JS 类型的配置文件（JSON, YAML, TOML）
+        const content = readFileSync(configPath, 'utf8')
         const parser = parsers[ext]
         if (parser) {
           const config = parser.parse(content, configPath)
-          if (config)
+          if (config && typeof config === 'object') {
             return { config, path: configPath }
+          }
         }
       }
     }
     catch {
+      // 文件不存在或读取失败，继续尝试下一个
       continue
     }
   }
@@ -277,30 +316,71 @@ async function loadConfigAsyncImpl(rootDir: string): Promise<{ config: Partial<C
 }
 
 function loadConfigSyncImpl(rootDir: string): { config: Partial<Config>, path: string | null } {
+  // 定义配置文件优先级列表（从高到低）
+  // 注意：同步加载不支持 .ts 和 .mjs（因为它们需要异步导入）
   const configPaths = [
-    join(rootDir, '.mbump.config.json'),
-    join(rootDir, '.mbump.config.jsonc'),
-    join(rootDir, '.mbump.config.yaml'),
-    join(rootDir, '.mbump.config.yml'),
-    join(rootDir, '.mbump.config.toml'),
-    join(rootDir, '.mbump.config.js'),
+    // CommonJS 配置文件（优先）
     join(rootDir, '.mbump.config.cjs'),
+    join(rootDir, '.zbump.config.cjs'),
+    // JSON 格式配置文件
+    join(rootDir, '.mbump.config.json'),
+    join(rootDir, '.zbump.config.json'),
+    join(rootDir, '.mbump.config.jsonc'),
+    join(rootDir, '.zbump.config.jsonc'),
+    // YAML 格式配置文件
+    join(rootDir, '.mbump.config.yaml'),
+    join(rootDir, '.zbump.config.yaml'),
+    join(rootDir, '.mbump.config.yml'),
+    join(rootDir, '.zbump.config.yml'),
+    // TOML 格式配置文件
+    join(rootDir, '.mbump.config.toml'),
+    join(rootDir, '.zbump.config.toml'),
+    // CommonJS .js 文件（可能包含 ES Module，会尝试兼容处理）
+    join(rootDir, '.mbump.config.js'),
+    join(rootDir, '.zbump.config.js'),
+    // package.json 中的配置
     join(rootDir, 'package.json'),
   ]
 
   for (const configPath of configPaths) {
     try {
-      const content = readFileSync(configPath, 'utf8')
       const ext = getFileExtension(configPath)
-      const parser = parsers[ext]
+      
+      // 处理 JavaScript 类型的配置文件
+      if (ext === 'js') {
+        try {
+          const require = createRequire(import.meta.url)
+          const jsModule = require(configPath)
+          let config = jsModule.default || jsModule
+          
+          // 如果导出的是函数，则调用它获取配置
+          if (typeof config === 'function') {
+            config = config()
+          }
 
-      if (parser) {
-        const config = parser.parse(content, configPath)
-        if (config)
-          return { config, path: configPath }
+          if (config && typeof config === 'object') {
+            return { config, path: configPath }
+          }
+        }
+        catch {
+          // 加载失败，继续尝试下一个配置文件
+          continue
+        }
+      }
+      else {
+        // 处理非 JS 类型的配置文件（JSON, YAML, TOML）
+        const content = readFileSync(configPath, 'utf8')
+        const parser = parsers[ext]
+        if (parser) {
+          const config = parser.parse(content, configPath)
+          if (config && typeof config === 'object') {
+            return { config, path: configPath }
+          }
+        }
       }
     }
     catch {
+      // 文件不存在或读取失败，继续尝试下一个
       continue
     }
   }
@@ -361,6 +441,14 @@ function mergeConfig(userConfig: Partial<Config>, rootDir: string): Config {
 
 export async function loadConfigAsync(rootDir: string): Promise<Config> {
   const { config: userConfig, path: usedConfigPath } = await loadConfigAsyncImpl(rootDir)
+  
+  if (usedConfigPath) {
+    logger.success(`配置加载完成 (配置文件: ${usedConfigPath})`)
+  }
+  else {
+    logger.warn('未找到配置文件，将使用默认配置')
+  }
+  
   const mergedConfig = mergeConfig(userConfig, rootDir)
   mergedConfig.usedConfigPath = usedConfigPath
   return mergedConfig
@@ -368,6 +456,14 @@ export async function loadConfigAsync(rootDir: string): Promise<Config> {
 
 export function loadConfig(rootDir: string): Config {
   const { config: userConfig, path: usedConfigPath } = loadConfigSyncImpl(rootDir)
+  
+  if (usedConfigPath) {
+    logger.success(`配置加载完成 (配置文件: ${usedConfigPath})`)
+  }
+  else {
+    logger.warn('未找到配置文件，将使用默认配置')
+  }
+  
   const mergedConfig = mergeConfig(userConfig, rootDir)
   mergedConfig.usedConfigPath = usedConfigPath
   return mergedConfig

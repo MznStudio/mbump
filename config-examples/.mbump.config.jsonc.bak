@@ -1,0 +1,34 @@
+{
+  // JSONC 配置文件示例
+  // 文件名: .mbump.config.jsonc.bak
+  // 特点: 支持注释的 JSON 格式
+  
+  "packagePaths": {
+    "components": "packages/components/package.json",
+    "cli": "packages/cli/package.json",
+    "core": "packages/core/package.json",
+    "default": "package.json"
+  },
+  
+  "defaults": {
+    "releaseType": "patch", // 默认版本类型: major, minor, patch
+    "dryRun": false, // 试运行模式
+    "verbose": false, // 详细输出
+    "allowUncommitted": false, // 允许未提交更改
+    "npm": false // NPM 发布
+  },
+  
+  "git": {
+    "commitMessage": "chore: bump version to {{newVersion}}", // 提交消息模板
+    "push": true, // 自动推送
+    "autoCommit": true, // 自动提交
+    "tag": true, // 创建标签
+    "tagPrefix": "v", // 标签前缀
+    "changelog": true // 生成 CHANGELOG
+  },
+  
+  "publish": {
+    "command": "npm publish", // 发布命令
+    "skipChecks": false // 跳过安全检查
+  }
+}

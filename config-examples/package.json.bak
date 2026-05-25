@@ -1,0 +1,91 @@
+{
+  "name": "@mznjs/mbump",
+  "version": "1.0.0-beta.0",
+  "type": "module",
+  "description": "企业级版本管理工具，支持单包和monorepo场景",
+  "main": "dist/index.js",
+  "bin": {
+    "mbump": "./bin/index.js"
+  },
+  "types": "./dist/index.d.ts",
+  
+  "_comment_mbump_config_example": "以下是 mbump 在 package.json 中的配置示例",
+  "mbump": {
+    "packagePaths": {
+      "components": "packages/components/package.json",
+      "cli": "packages/cli/package.json",
+      "core": "packages/core/package.json",
+      "default": "package.json"
+    },
+    "defaults": {
+      "releaseType": "patch",
+      "dryRun": false,
+      "verbose": false,
+      "allowUncommitted": false,
+      "npm": false
+    },
+    "git": {
+      "commitMessage": "chore: bump version to {{newVersion}}",
+      "push": true,
+      "autoCommit": true,
+      "tag": true,
+      "tagPrefix": "v",
+      "changelog": true
+    },
+    "publish": {
+      "command": "npm publish",
+      "skipChecks": false
+    }
+  },
+  
+  "files": [
+    "bin/",
+    "dist/",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "rimraf dist && tsdown",
+    "dev": "tsx src/cli/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "pnpm exec tsc --noEmit",
+    "lint": "eslint .",
+    "release": "pnpm publish --access public",
+    "default": "tsx src/cli/index.ts default -h"
+  },
+  "keywords": [
+    "version",
+    "bump",
+    "changelog",
+    "git",
+    "tag",
+    "monorepo",
+    "semver"
+  ],
+  "author": "mznjs",
+  "license": "MIT",
+  "dependencies": {
+    "consola": "^3.4.2",
+    "inquirer": "^9.2.16",
+    "ora": "^8.2.0",
+    "semver": "^7.5.4"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^9.0.0",
+    "@mznjs/eslint-config": "^0.0.5",
+    "@mznjs/tsconfig": "^1.0.1",
+    "@types/inquirer": "^9.0.9",
+    "@types/node": "^20.11.0",
+    "@types/semver": "^7.5.6",
+    "eslint": "^9.0.0",
+    "rimraf": "^5.0.10",
+    "tsdown": "^0.10.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.9.3",
+    "vitest": "^1.5.0"
+  }
+}
