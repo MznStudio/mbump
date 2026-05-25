@@ -28,7 +28,7 @@
   },
   
   "publish": {
-    "command": "npm publish", // 发布命令
-    "skipChecks": false // 跳过安全检查
+    "command": "pnpm publish --access public --no-git-checks", // 发布命令
+    "skipChecks": true // 跳过安全检查
   }
 }

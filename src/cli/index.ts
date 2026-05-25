@@ -133,6 +133,12 @@ async function main(): Promise<void> {
       log.info(`  tag: ${(config.git as any).tag}`)
       log.info(`  changelog: ${(config.git as any).changelog}`)
 
+      // 显示 Publish 选项
+      log.info('')
+      log.info('🚀 发布选项:')
+      log.info(`  command: ${(config.publish as any).command}`)
+      log.info(`  skipChecks: ${(config.publish as any).skipChecks}`)
+
       log.info('')
       process.exit(0)
     }

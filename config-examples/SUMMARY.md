@@ -50,8 +50,8 @@
     changelog: true,
   },
   publish: {
-    command: 'npm publish',
-    skipChecks: false,
+    command: 'pnpm publish --access public --no-git-checks',
+    skipChecks: true,
   },
 }
 ```

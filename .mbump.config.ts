@@ -1,10 +1,12 @@
 /**
- * CommonJS 配置文件示例
- * 文件名: .mbump.config.cjs.bak
- * 
- * 特点: 使用 module.exports，支持同步和异步加载
+ * TypeScript 配置文件示例
+ * 文件名: .mbump.config.ts.bak
+ *
+ * 注意: TypeScript 配置需要安装 tsx，并使用异步加载
  */
-module.exports = {
+import type { Config } from './src/index'
+
+export default {
   packagePaths: {
     components: 'packages/components/package.json',
     cli: 'packages/cli/package.json',
@@ -27,7 +29,7 @@ module.exports = {
     changelog: true,
   },
   publish: {
-    command: 'pnpm publish --access public --no-git-checks',
-    skipChecks: true,
+    command: 'npm publish',
+    skipChecks: false,
   },
-}
+} satisfies Config

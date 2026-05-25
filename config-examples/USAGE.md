@@ -128,11 +128,13 @@ Git 相关配置：
 ```javascript
 {
   publish: {
-    command: 'npm publish',        // 发布命令
-    skipChecks: false,             // 是否跳过安全检查
+    command: 'pnpm publish --access public --no-git-checks',  // 默认发布命令
+    skipChecks: true,              // 默认跳过安全检查
   }
 }
 ```
+
+**注意**: 默认使用 `pnpm` 作为包管理器，如果你的项目使用 `npm` 或 `yarn`，请相应修改 `command` 字段。
 
 ## 🔧 高级用法
 
@@ -158,7 +160,7 @@ export default () => {
 
 ### 条件配置
 
-```typescript
+``typescript
 // .mbump.config.ts
 import type { Config } from '@mznjs/mbump'
 
