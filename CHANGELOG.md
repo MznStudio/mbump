@@ -5,6 +5,10 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.0-beta.10] - 2026-05-25
+
+### 待补充
+
 ## [0.1.0-beta.9] - 2026-05-25
 
 🔧 工具变更
