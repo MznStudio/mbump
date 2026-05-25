@@ -409,40 +409,6 @@ mbump all
 mbump components patch --changelog
 ```
 
-#### 手动输入变更描述
-
-当未找到自上一个 Tag 以来的 commits 时，mbump 会提示您手动输入变更描述：
-
-```bash
-mbump components patch
-# → 未找到自上一个 Tag 以来的 commits，是否手动输入变更描述？ (Y/n)
-```
-
-**交互选项**：
-- **Y 或回车**（默认）：进入手动输入模式
-  ```
-  ? 请输入变更描述：修复了登录页面的样式问题
-  # → 已更新 CHANGELOG.md ✅
-  ```
-- **N**：跳过 CHANGELOG 生成
-  ```
-  # → 跳过 CHANGELOG 生成
-  ```
-
-**使用场景**：
-- 首次初始化项目，还没有任何 commits
-- 手动修改了版本号，没有相关的 commit 记录
-- 需要添加额外的变更说明
-
-**示例输出**：
-```markdown
-## [@mznjs/components@1.0.1] - 2024-01-15
-
-### 🩹 Bug 修复
-
-- 修复了登录页面的样式问题
-```
-
 #### publish 选项
 
 | 选项 | 类型 | 默认值 | 说明 |
