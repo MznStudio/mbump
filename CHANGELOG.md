@@ -5,6 +5,16 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.0-beta.11] - 2026-05-25
+
+♻️ 代码重构
+
+- refactor(logger): 替换原生console为consola日志库
+
+📦 其他变更
+
+- 统一项目日志输出工具，将原有的console打印替换为consola，同时保留原有日志接口不变，调整了日志级别配置逻辑，优化空行输出的代码写法
+
 ## [0.1.0-beta.10] - 2026-05-25
 
 ### 待补充
