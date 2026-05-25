@@ -1,33 +1,35 @@
 import type { Ora } from 'ora'
+import { consola } from 'consola'
 import ora from 'ora'
 
-// 简单的日志函数，直接输出到控制台
-export function setLevel(_level: string): void {
-  // 保留接口，但不实际使用
+const logger = consola
+
+export function setLevel(level: string): void {
+  logger.level = level === 'debug' ? 4 : 3
 }
 
 export function debug(message: string): void {
-  console.log(`🐛 ${message}`)
+  logger.debug(message)
 }
 
 export function info(message: string): void {
-  console.log(`ℹ ${message}`)
+  logger.info(message)
 }
 
 export function success(message: string): void {
-  console.log(`✔ ${message}`)
+  logger.success(message)
 }
 
 export function warn(message: string): void {
-  console.log(`⚠ ${message}`)
+  logger.warn(message)
 }
 
 export function error(message: string): void {
-  console.log(`✖ ${message}`)
+  logger.error(message)
 }
 
 export function dryRun(message: string): void {
-  console.log(`[dry-run] ${message}`)
+  logger.info(`[dry-run] ${message}`)
 }
 
 export async function withSpinner<T>(
@@ -35,17 +37,17 @@ export async function withSpinner<T>(
   fn: () => Promise<T>,
   options: { succeedText?: string, failText?: string } = {},
 ): Promise<T> {
-  const spinner = ora(text).start()
+  const spinner: Ora = ora(text).start()
 
   try {
     const result = await fn()
     spinner.succeed(options.succeedText || text)
-    console.log('') // 空行分隔
+    console.log() // 添加空行，确保后续日志换行
     return result
   }
   catch (error) {
     spinner.fail(options.failText || text)
-    console.log('') // 空行分隔
+    console.log() // 添加空行
     throw error
   }
 }
