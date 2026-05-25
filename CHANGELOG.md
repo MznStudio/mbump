@@ -5,6 +5,35 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.0.0-beta.1] - 2026-05-25
+
+🚀 新增功能
+
+- feat: 新增TypeScript格式配置文件支持，优化配置加载逻辑
+
+🔧 工具变更
+
+- chore: 更新默认发布配置为pnpm相关参数
+- chore: 整理配置文件示例并优化配置加载逻辑
+
+📦 其他变更
+
+- 1. 替换所有示例配置文件中的npm publish为pnpm publish --access public --no-git-checks，同步更新skipChecks为true
+- 2. 新增.mbump.config.mjsx和.ts根配置文件，修改原有.mbump.config.mjs为删除
+- 3. 在cli输出中新增发布选项的打印逻辑
+- 4. 更新USAGE.md文档说明默认包管理器为pnpm，新增注意事项
+- 5. 新增配置示例的CHANGELOG.md记录本次更新
+- 1. 新增根目录基础配置文件示例
+- 2. 新增完整配置示例目录config-examples，包含所有支持的配置格式备份
+- 3. 重构配置加载器，调整配置文件加载优先级，完善不同格式配置的加载逻辑
+- 4. 为配置加载添加日志提示，优化加载体验
+- 1. 新增defineConfig工具函数并导出，支持类型提示
+- 2. 扩展配置文件识别，支持.ts后缀的配置文件
+- 3. 重构配置加载逻辑，支持调用导出的配置函数
+- 4. 优化showConfig命令的输出展示，增加emoji和格式化排版
+- 5. 新增多个示例配置文件，包含不同格式和场景
+- 6. 替换旧的zbump配置文件为mbump配置文件格式
+
 ## [1.0.0-beta.0] - 2026-05-25
 
 🔧 工具变更
