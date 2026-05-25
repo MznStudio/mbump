@@ -49,7 +49,8 @@ export class VersionManager {
 
   async updateVersion(pkgName: string, releaseType: ReleaseType = 'patch', options: UpdateOptions = {}): Promise<UpdateResult> {
     return log.withSpinner(
-      `正在更新${pkgName === 'all' ? '所有包' : `包 ${pkgName}`}的版本...`,
+      `正在更新${pkgName === 'all' ? '所有包' : `包${pkgName}`}的版本...`,
+
       async () => {
         const {
           dryRun = false,
