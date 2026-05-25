@@ -5,6 +5,16 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.0-beta.12] - 2026-05-25
+
+🔧 工具变更
+
+- chore(logger): 配置logger实例禁用时间戳
+
+📦 其他变更
+
+- 通过create方法自定义consola实例，关闭日志的时间戳显示，优化日志输出格式
+
 ## [0.1.0-beta.11] - 2026-05-25
 
 ♻️ 代码重构
