@@ -5,6 +5,20 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [@mznjs/mbump@1.0.0-beta.9] - 2026-05-25
+
+🚀 新增功能
+
+- feat(core): 添加批量更新模式支持并优化CHANGELOG生成逻辑
+
+📦 其他变更
+
+- - 在VersionManager中添加isBatchMode选项，默认为false
+- - 修改CHANGELOG生成逻辑，使用isBatchMode标识来控制批量更新时的行为
+- - 在批量更新模式下，只有主项目包才会生成CHANGELOG
+- - CLI调用时设置isBatchMode为true，标识批量更新模式
+- - 更新类型定义，添加isBatchMode可选属性
+
 ## [core@2.1.0-beta.1] - 2026-05-25
 
 🚀 新增功能
