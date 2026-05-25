@@ -2,7 +2,12 @@ import type { Ora } from 'ora'
 import { consola } from 'consola'
 import ora from 'ora'
 
-const logger = consola
+// 创建 consola 实例，禁用时间戳
+const logger = consola.create({
+  formatOptions: {
+    date: false, // 禁用时间戳
+  },
+})
 
 export function setLevel(level: string): void {
   logger.level = level === 'debug' ? 4 : 3
