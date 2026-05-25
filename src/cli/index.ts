@@ -234,29 +234,45 @@ async function main(): Promise<void> {
 
     if (parsedArgs.package === 'all' && Object.keys(packageVersionSelections).length > 0) {
       const updatedPackagesInfo: Array<{ name: string, newVersion: string, pkgKey: string }> = []
+      const errors: Array<{ packageName: string, error: Error }> = []
 
       for (const [packageName, selection] of Object.entries(packageVersionSelections)) {
-        const result = await log.withSpinner(`正在更新包...${packageName}...`, async () => {
-          return await versionManager.updateVersion(packageName, selection.type, {
-            dryRun: parsedArgs.dryRun,
-            verbose: parsedArgs.verbose,
-            customVersion: selection.customVersion,
-            autoCommit: false,
-            push: false,
-            isBatchMode: true, // 标识这是批量更新模式
+        try {
+          const result = await log.withSpinner(`正在更新包...${packageName}...`, async () => {
+            return await versionManager.updateVersion(packageName, selection.type, {
+              dryRun: parsedArgs.dryRun,
+              verbose: parsedArgs.verbose,
+              customVersion: selection.customVersion,
+              autoCommit: false,
+              push: false,
+              isBatchMode: true, // 标识这是批量更新模式
+            })
+          }, {
+            succeedText: `包 ${packageName} 更新完成`,
+            failText: `包 ${packageName} 更新失败`,
           })
-        }, {
-          succeedText: `包 ${packageName} 更新完成`,
-          failText: `包 ${packageName} 更新失败`,
-        })
 
-        // 收集更新的包信息，同时记录包名 key
-        if (result.success && result.updatedPackages.length > 0) {
-          updatedPackagesInfo.push(...result.updatedPackages.map(pkg => ({
-            ...pkg,
-            pkgKey: packageName,
-          })))
+          // 收集更新的包信息，同时记录包名 key
+          if (result.success && result.updatedPackages.length > 0) {
+            updatedPackagesInfo.push(...result.updatedPackages.map(pkg => ({
+              ...pkg,
+              pkgKey: packageName,
+            })))
+          }
         }
+        catch (error) {
+          errors.push({ packageName, error: error as Error })
+          log.warn(`⚠️ 包 ${packageName} 更新失败: ${(error as Error).message}`)
+        }
+      }
+
+      // 报告所有错误
+      if (errors.length > 0) {
+        log.error(`\n❌ 批量更新完成，但有 ${errors.length} 个包更新失败:`)
+        errors.forEach(({ packageName, error }) => {
+          log.error(`   - ${packageName}: ${error.message}`)
+        })
+        log.info('\n💡 提示: 可以单独重试失败的包，或检查错误信息后重新运行')
       }
 
       if (!parsedArgs.dryRun && parsedArgs.autoCommit && updatedPackagesInfo.length > 0) {
@@ -269,19 +285,35 @@ async function main(): Promise<void> {
       }
 
       if (parsedArgs.npm && !parsedArgs.dryRun) {
+        const npmErrors: Array<{ packageName: string, error: Error }> = []
+
         for (const [packageName, selection] of Object.entries(packageVersionSelections)) {
-          await log.withSpinner(`正在发布包 ${packageName}...`, async () => {
-            await versionManager.updateVersion(packageName, selection.type, {
-              dryRun: false,
-              verbose: parsedArgs.verbose,
-              customVersion: selection.customVersion,
-              autoCommit: false,
-              push: false,
-              npm: true,
+          try {
+            await log.withSpinner(`正在发布包 ${packageName}...`, async () => {
+              await versionManager.updateVersion(packageName, selection.type, {
+                dryRun: false,
+                verbose: parsedArgs.verbose,
+                customVersion: selection.customVersion,
+                autoCommit: false,
+                push: false,
+                npm: true,
+              })
+            }, {
+              succeedText: `包 ${packageName} 发布完成`,
+              failText: `包 ${packageName} 发布失败`,
             })
-          }, {
-            succeedText: `包 ${packageName} 发布完成`,
-            failText: `包 ${packageName} 发布失败`,
+          }
+          catch (error) {
+            npmErrors.push({ packageName, error: error as Error })
+            log.warn(`⚠️ 包 ${packageName} 发布失败: ${(error as Error).message}`)
+          }
+        }
+
+        // 报告 NPM 发布错误
+        if (npmErrors.length > 0) {
+          log.error(`\n❌ NPM 发布完成，但有 ${npmErrors.length} 个包发布失败:`)
+          npmErrors.forEach(({ packageName, error }) => {
+            log.error(`   - ${packageName}: ${error.message}`)
           })
         }
       }
