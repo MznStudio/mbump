@@ -5,6 +5,12 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.0-beta.3] - 2026-05-25
+
+♻️ 代码重构
+
+- refactor(VersionManager): 将日志输出改为收集更新消息
+
 ## [0.1.0-beta.2] - 2026-05-25
 
 ♻️ 代码重构
