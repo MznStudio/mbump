@@ -5,6 +5,16 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.0-beta.6] - 2026-05-25
+
+♻️ 代码重构
+
+- refactor(logger): 移除日志消息缓冲机制
+
+📦 其他变更
+
+- 移除了原有的消息收集缓存逻辑，直接调用logger输出日志，简化了日志工具的实现流程，删除了不再需要的buffer相关辅助函数
+
 ## [0.1.0-beta.5] - 2026-05-25
 
 ♻️ 代码重构
