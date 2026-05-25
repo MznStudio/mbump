@@ -114,6 +114,46 @@ function displayError(error: Error, context?: { packageName?: string, operation?
   }
 }
 
+/**
+ * 渲染进度条
+ * @param current 当前进度
+ * @param total 总数量
+ * @param width 进度条宽度（字符数）
+ * @returns 进度条字符串
+ */
+function renderProgressBar(current: number, total: number, width: number = 30): string {
+  const percentage = Math.round((current / total) * 100)
+  const filledLength = Math.round((width * current) / total)
+  const emptyLength = width - filledLength
+
+  const filled = '█'.repeat(filledLength)
+  const empty = '░'.repeat(emptyLength)
+
+  return `[${filled}${empty}] ${percentage}% | ${current}/${total}`
+}
+
+/**
+ * 显示批量更新进度
+ */
+function updateProgress(
+  current: number,
+  total: number,
+  packageName: string,
+  status: 'processing' | 'success' | 'failed',
+): void {
+  const progressBar = renderProgressBar(current, total)
+  const statusIcon = status === 'success' ? '✓' : status === 'failed' ? '✗' : '⟳'
+  const statusText = status === 'processing' ? '处理中' : status === 'success' ? '完成' : '失败'
+
+  // 清除当前行并显示新进度
+  process.stdout.write(`\r${progressBar} | ${statusIcon} ${packageName} - ${statusText}   `)
+
+  // 如果是最后一个或失败/成功，换行
+  if (current === total || status !== 'processing') {
+    process.stdout.write('\n')
+  }
+}
+
 for (const packageJsonPath of possiblePaths) {
   try {
     if (existsSync(packageJsonPath)) {
@@ -353,21 +393,26 @@ async function main(): Promise<void> {
 
       const updatedPackagesInfo: Array<{ name: string, newVersion: string, pkgKey: string }> = []
       const errors: Array<{ packageName: string, error: Error }> = []
+      const packages = Object.entries(packageVersionSelections)
+      const total = packages.length
 
-      for (const [packageName, selection] of Object.entries(packageVersionSelections)) {
+      log.info(`\n📦 开始批量更新 ${total} 个包...\n`)
+
+      for (let i = 0; i < packages.length; i++) {
+        const [packageName, selection] = packages[i]
+        const current = i + 1
+
+        // 显示进度
+        updateProgress(current, total, packageName, 'processing')
+
         try {
-          const result = await log.withSpinner(`正在更新包...${packageName}...`, async () => {
-            return await versionManager.updateVersion(packageName, selection.type, {
-              dryRun: parsedArgs.dryRun,
-              verbose: parsedArgs.verbose,
-              customVersion: selection.customVersion,
-              autoCommit: false,
-              push: false,
-              isBatchMode: true, // 标识这是批量更新模式
-            })
-          }, {
-            succeedText: `包 ${packageName} 更新完成`,
-            failText: `包 ${packageName} 更新失败`,
+          const result = await versionManager.updateVersion(packageName, selection.type, {
+            dryRun: parsedArgs.dryRun,
+            verbose: parsedArgs.verbose,
+            customVersion: selection.customVersion,
+            autoCommit: false,
+            push: false,
+            isBatchMode: true, // 标识这是批量更新模式
           })
 
           // 收集更新的包信息，同时记录包名 key
@@ -376,13 +421,20 @@ async function main(): Promise<void> {
               ...pkg,
               pkgKey: packageName,
             })))
+            updateProgress(current, total, packageName, 'success')
+          }
+          else {
+            updateProgress(current, total, packageName, 'failed')
           }
         }
         catch (error) {
           errors.push({ packageName, error: error as Error })
           displayError(error as Error, { packageName, operation: '更新' })
+          updateProgress(current, total, packageName, 'failed')
         }
       }
+
+      log.info('') // 空行分隔
 
       // 报告所有错误
       if (errors.length > 0) {
@@ -404,28 +456,38 @@ async function main(): Promise<void> {
 
       if (parsedArgs.npm && !parsedArgs.dryRun) {
         const npmErrors: Array<{ packageName: string, error: Error }> = []
+        const npmPackages = Object.entries(packageVersionSelections)
+        const npmTotal = npmPackages.length
 
-        for (const [packageName, selection] of Object.entries(packageVersionSelections)) {
+        log.info(`\n🚀 开始发布 ${npmTotal} 个包到 NPM...\n`)
+
+        for (let i = 0; i < npmPackages.length; i++) {
+          const [packageName, selection] = npmPackages[i]
+          const npmCurrent = i + 1
+
+          // 显示进度
+          updateProgress(npmCurrent, npmTotal, packageName, 'processing')
+
           try {
-            await log.withSpinner(`正在发布包 ${packageName}...`, async () => {
-              await versionManager.updateVersion(packageName, selection.type, {
-                dryRun: false,
-                verbose: parsedArgs.verbose,
-                customVersion: selection.customVersion,
-                autoCommit: false,
-                push: false,
-                npm: true,
-              })
-            }, {
-              succeedText: `包 ${packageName} 发布完成`,
-              failText: `包 ${packageName} 发布失败`,
+            await versionManager.updateVersion(packageName, selection.type, {
+              dryRun: false,
+              verbose: parsedArgs.verbose,
+              customVersion: selection.customVersion,
+              autoCommit: false,
+              push: false,
+              npm: true,
             })
+
+            updateProgress(npmCurrent, npmTotal, packageName, 'success')
           }
           catch (error) {
             npmErrors.push({ packageName, error: error as Error })
             displayError(error as Error, { packageName, operation: '发布' })
+            updateProgress(npmCurrent, npmTotal, packageName, 'failed')
           }
         }
+
+        log.info('') // 空行分隔
 
         // 报告 NPM 发布错误
         if (npmErrors.length > 0) {
