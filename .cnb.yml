@@ -7,6 +7,5 @@
           image: docker.cnb.cool/mznjs/docker/npm-sync
           settings:
             token: $NPM_TOKEN
-            folder: ./
             build: build
             dry_run: true
