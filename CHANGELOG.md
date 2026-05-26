@@ -5,6 +5,13 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.0.2-beta.1] - 2026-05-26
+
+🔧 工具变更
+
+- chore(package): 更新@mznjs/eslint-config依赖到0.0.6版本 (package.json, pnpm-lock.yaml)
+- chore(.cnb.yml): 添加build配置项 (.cnb.yml)
+
 ## [2.0.2-beta.0] - 2026-05-26
 
 🔧 工具变更
