@@ -5,6 +5,16 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.0.2-beta.2] - 2026-05-26
+
+🔧 工具变更
+
+- chore(.cnb.yml): 移除不必要的folder配置项 (.cnb.yml)
+- chore(.cnb.yml): 修正npm同步配置的邮箱和目录参数 (.cnb.yml)
+- chore(.cnb.yml): 移除多余的folder配置项 (.cnb.yml)
+- chore(.cnb.yml): add folder configuration for npm publish (.cnb.yml)
+- chore(.cnb.yml): 配置dry_run为true并调整部署目录 (.cnb.yml)
+
 ## [2.0.2-beta.1] - 2026-05-26
 
 🔧 工具变更
