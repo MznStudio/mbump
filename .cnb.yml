@@ -1,6 +1,6 @@
 # 匹配所有分支名
 '**':
-  npm_publish:
+  web_trigger_npm_publish:
     - imports: https://cnb.cool/qingshuPrivate/setting/-/blob/main/envs.yml
       stages:
         - name: helper发布到npmjs

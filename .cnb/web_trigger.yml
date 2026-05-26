@@ -2,4 +2,4 @@ branch:
   - buttons:
       - name: 发布npm包
         description: 发布npm包
-        event: npm_publish
+        event: web_trigger_npm_publish
