@@ -8,4 +8,3 @@
           settings:
             token: $NPM_TOKEN
             build: build
-            dry_run: true
