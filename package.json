@@ -46,7 +46,7 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^9.0.0",
-    "@mznjs/eslint-config": "^0.0.5",
+    "@mznjs/eslint-config": "^0.0.6",
     "@mznjs/tsconfig": "^1.0.1",
     "@types/inquirer": "^9.0.9",
     "@types/node": "^25.9.1",
