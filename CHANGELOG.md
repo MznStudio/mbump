@@ -5,6 +5,12 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [core@0.0.1-beta.2] - 2026-05-26
+
+🔧 工具变更
+
+- chore(core): 发布版本0.0.1-beta.1 (CHANGELOG.md, package.json)
+
 ## [core@0.0.1-beta.1] - 2026-05-26
 
 ### 待补充
