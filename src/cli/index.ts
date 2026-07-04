@@ -293,12 +293,26 @@ async function main(): Promise<void> {
         process.exit(1)
       }
 
+      let selectedType = parsedArgs.type
+      let customVersion: string | null = null
+
+      if (!parsedArgs.type) {
+        const config = {
+          defaults: { releaseType: 'patch' },
+          packagePaths: {},
+        } as any
+        const selection = await selectVersionInteractive(config, 'rust', currentVersion)
+        selectedType = selection.type
+        customVersion = selection.customVersion
+      }
+
       try {
-        rustManager.updateVersion(parsedArgs.type, {
+        rustManager.updateVersion(selectedType, {
           dryRun: parsedArgs.dryRun,
           verbose: parsedArgs.verbose,
           autoCommit: parsedArgs.autoCommit,
           push: parsedArgs.push,
+          customVersion,
         })
         process.exit(0)
       }

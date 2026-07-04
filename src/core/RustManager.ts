@@ -9,6 +9,7 @@ export interface RustUpdateOptions {
   verbose?: boolean
   autoCommit?: boolean
   push?: boolean
+  customVersion?: string | null
 }
 
 export class RustManager {
@@ -36,8 +37,8 @@ export class RustManager {
     }
   }
 
-  updateVersion(releaseType: string, options: RustUpdateOptions = {}): { success: boolean; oldVersion: string; newVersion: string } {
-    const { dryRun = false, verbose = false } = options
+  updateVersion(releaseType: string, options: RustUpdateOptions = {}): { success: boolean, oldVersion: string, newVersion: string } {
+    const { dryRun = false, verbose = false, customVersion = null } = options
 
     if (!this.exists()) {
       throw new Error(`Cargo.toml 文件不存在: ${this.cargoTomlPath}`)
@@ -48,9 +49,19 @@ export class RustManager {
       throw new Error(`Cargo.toml 文件中未找到 [package] 部分的 version 字段`)
     }
 
-    const newVersion = semver.inc(oldVersion, releaseType as semver.ReleaseType)
-    if (!newVersion) {
-      throw new Error(`无法计算新版本，当前版本 "${oldVersion}"，版本类型 "${releaseType}"`)
+    let newVersion: string | null = null
+
+    if (customVersion) {
+      if (!semver.valid(customVersion)) {
+        throw new Error(`无效的自定义版本号: ${customVersion}`)
+      }
+      newVersion = customVersion
+    }
+    else {
+      newVersion = semver.inc(oldVersion, releaseType as semver.ReleaseType)
+      if (!newVersion) {
+        throw new Error(`无法计算新版本，当前版本 "${oldVersion}"，版本类型 "${releaseType}"`)
+      }
     }
 
     if (!semver.valid(newVersion)) {
