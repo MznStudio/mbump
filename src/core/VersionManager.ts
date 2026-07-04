@@ -36,9 +36,6 @@ export class VersionManager {
       throw new Error('配置错误：未找到有效的包路径配置')
     }
 
-    this._resolvePackagePaths(rootDir)
-
-    // 性能优化：预加载所有包信息到缓存
     this._preloadPackageCache()
   }
 
@@ -89,14 +86,6 @@ export class VersionManager {
     return {
       size: this.packageCache.size,
       packages: Array.from(this.packageCache.keys()),
-    }
-  }
-
-  private _resolvePackagePaths(rootDir: string): void {
-    for (const [name, path] of Object.entries(this.packagePaths)) {
-      if (path && typeof path === 'string' && !path.startsWith('/') && !/^[a-z]:\\/i.test(path)) {
-        this.packagePaths[name] = `${rootDir}/${path}`
-      }
     }
   }
 

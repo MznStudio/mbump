@@ -244,8 +244,7 @@ async function main(): Promise<void> {
       log.info('')
       log.info('📦 包路径:')
       for (const [name, path] of Object.entries(config.packagePaths)) {
-        const relativePath = path.split(/[/\\]/).pop()
-        log.info(`  ${name}: ${relativePath}`)
+        log.info(`  ${name}: ${path}`)
       }
 
       // 显示默认选项

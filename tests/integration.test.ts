@@ -163,6 +163,8 @@ describe('Integration Tests', () => {
   describe('批量版本更新', () => {
     it('应该成功更新多个包的版本号', async () => {
       // 创建测试环境
+      createPackageFile('test-root', '1.0.0')
+
       const packagesDir = join(tempDir, 'packages')
       mkdirSync(packagesDir, { recursive: true })
 
@@ -215,7 +217,7 @@ describe('Integration Tests', () => {
       expect(pkgB.version).toBe('2.0.1')
     })
 
-    it('应该支持部分包更新失败时的容错', async () => {
+    it('应该在配置加载时检测到不存在的包路径', () => {
       // 创建测试环境
       const pkgADir = join(tempDir, 'pkg-a')
       mkdirSync(pkgADir, { recursive: true })
@@ -224,33 +226,15 @@ describe('Integration Tests', () => {
       // 故意创建错误的配置（指向不存在的文件）
       createConfigFile({
         'pkg-a': 'pkg-a/package.json',
-        'pkg-b': 'non-existent/package.json', // 这个包不存在
+        'pkg-b': 'non-existent/package.json',
       })
 
       createInitialCommit()
 
-      const manager = new VersionManager({ rootDir: tempDir })
-
-      // 更新存在的包应该成功
-      const result1 = await manager.updateVersion('pkg-a', 'patch', {
-        dryRun: false,
-        autoCommit: false,
-        npm: false,
-        changelog: false,
-      })
-
-      expect(result1.success).toBe(true)
-
-      // 更新不存在的包应该失败
-      const result2 = await manager.updateVersion('pkg-b', 'patch', {
-        dryRun: false,
-        autoCommit: false,
-        npm: false,
-        changelog: false,
-      })
-
-      expect(result2.success).toBe(false)
-      expect(result2.error).toBeDefined()
+      // 创建 VersionManager 时应该抛出错误，因为配置中有不存在的路径
+      expect(() => {
+        new VersionManager({ rootDir: tempDir })
+      }).toThrow('配置错误：以下包路径指向的文件不存在')
     })
   })
 

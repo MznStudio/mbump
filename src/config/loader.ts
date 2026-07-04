@@ -1,7 +1,7 @@
 import type { Config } from '@/types'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { join, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import logger from '@/utils/logger'
 import { BASE_CONFIG, isValidConfig } from './schema'
 
@@ -439,9 +439,10 @@ function mergeConfig(userConfig: Partial<Config>, rootDir: string): Config {
   const mergedConfig: Config = {
     ...BASE_CONFIG,
     ...(userConfig || {}),
-    packagePaths: hasUserPackagePaths
-      ? { ...BASE_CONFIG.packagePaths, ...userPackagePaths }
-      : BASE_CONFIG.packagePaths,
+    packagePaths: {
+      ...BASE_CONFIG.packagePaths,
+      ...(hasUserPackagePaths ? userPackagePaths : {}),
+    },
     defaults: {
       ...BASE_CONFIG.defaults,
       ...(userConfig?.defaults || {}),
@@ -470,21 +471,45 @@ function mergeConfig(userConfig: Partial<Config>, rootDir: string): Config {
   }
 
   const resolvedPackagePaths: Record<string, string> = {}
+  const missingPaths: Array<{ name: string, path: string, resolvedPath: string }> = []
+
   for (const [name, path] of Object.entries(mergedConfig.packagePaths)) {
-    if (path && typeof path === 'string' && !path.startsWith('/') && !/^[a-z]:\\/i.test(path)) {
-      resolvedPackagePaths[name] = join(rootDir, path)
+    let resolvedPath: string
+    if (path && typeof path === 'string') {
+      if (!path.startsWith('/') && !/^[a-z]:\\/i.test(path)) {
+        resolvedPath = resolve(rootDir, path)
+      }
+      else {
+        resolvedPath = resolve(path)
+      }
+      resolvedPackagePaths[name] = resolvedPath
+
+      if (!existsSync(resolvedPath)) {
+        missingPaths.push({ name, path, resolvedPath })
+      }
     }
     else {
       resolvedPackagePaths[name] = path
     }
   }
+
+  if (missingPaths.length > 0) {
+    const errorLines = missingPaths.map(({ name, path, resolvedPath }) =>
+      `  - ${name}: "${path}" -> 解析为 "${resolvedPath}"（文件不存在）`,
+    ).join('\n')
+    throw new Error(
+      `配置错误：以下包路径指向的文件不存在\n${
+        errorLines
+      }\n\n请检查配置文件中的 packagePaths 是否正确`,
+    )
+  }
+
   mergedConfig.packagePaths = resolvedPackagePaths
 
   return mergedConfig
 }
 
 export async function loadConfigAsync(rootDir: string): Promise<Config> {
-  // 检查缓存
   const cached = getCachedConfig(rootDir)
   if (cached) {
     logger.debug('使用缓存的配置')
@@ -500,17 +525,16 @@ export async function loadConfigAsync(rootDir: string): Promise<Config> {
     logger.warn('未找到配置文件，将使用默认配置')
   }
 
-  const mergedConfig = mergeConfig(userConfig, rootDir)
+  const configDir = usedConfigPath ? dirname(resolve(rootDir, usedConfigPath)) : rootDir
+  const mergedConfig = mergeConfig(userConfig, configDir)
   mergedConfig.usedConfigPath = usedConfigPath
 
-  // 设置缓存
   setCachedConfig(rootDir, mergedConfig)
 
   return mergedConfig
 }
 
 export function loadConfig(rootDir: string): Config {
-  // 检查缓存
   const cached = getCachedConfig(rootDir)
   if (cached) {
     logger.debug('使用缓存的配置')
@@ -526,10 +550,10 @@ export function loadConfig(rootDir: string): Config {
     logger.warn('未找到配置文件，将使用默认配置')
   }
 
-  const mergedConfig = mergeConfig(userConfig, rootDir)
+  const configDir = usedConfigPath ? dirname(resolve(rootDir, usedConfigPath)) : rootDir
+  const mergedConfig = mergeConfig(userConfig, configDir)
   mergedConfig.usedConfigPath = usedConfigPath
 
-  // 设置缓存
   setCachedConfig(rootDir, mergedConfig)
 
   return mergedConfig

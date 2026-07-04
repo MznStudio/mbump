@@ -42,7 +42,8 @@
     "consola": "^3.4.2",
     "inquirer": "^9.2.16",
     "ora": "^8.2.0",
-    "semver": "^7.5.4"
+    "semver": "^7.5.4",
+    "tsx": "^4.7.0"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^9.0.0",
@@ -55,7 +56,6 @@
     "eslint-plugin-format": "^2.0.1",
     "rimraf": "^5.0.10",
     "tsdown": "^0.10.0",
-    "tsx": "^4.7.0",
     "typescript": "^5.9.3",
     "vitest": "^1.5.0"
   },
