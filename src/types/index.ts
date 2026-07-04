@@ -140,6 +140,7 @@ export interface PackageVersionSelections {
 }
 
 export interface ChangelogCommit {
+  hash: string
   message: string
   files: string[]
 }

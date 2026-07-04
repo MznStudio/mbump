@@ -80,7 +80,7 @@ export class ChangelogManager {
       { config: ChangelogTypeConfig, items: { message: string, files: string[] }[] }
     > = {}
 
-    for (const { message, files } of commits) {
+    for (const { hash, message, files } of commits) {
       const typeConfig = this.getTypeConfig(message)
       const typeKey = typeConfig.title
 
@@ -92,7 +92,7 @@ export class ChangelogManager {
       const fileTag = fileNames.length > 0 ? ` (${fileNames.join(', ')})` : ''
 
       categorized[typeKey].items.push({
-        message: message + fileTag,
+        message: `${hash} ${message}${fileTag}`,
         files,
       })
     }

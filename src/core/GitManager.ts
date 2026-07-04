@@ -36,14 +36,14 @@ export class GitManager {
     }
   }
 
-  getCommitsSinceLastTag(): { message: string, files: string[] }[] {
+  getCommitsSinceLastTag(): { hash: string, message: string, files: string[] }[] {
     try {
       const lastTag = this.getLastTag()
       const range = lastTag ? `${lastTag}..HEAD` : '--max-count=50'
 
-      // 使用 --format 和 --name-only 同时获取 commit message 和文件列表
+      // 使用 --format 和 --name-only 同时获取 commit hash、message 和文件列表
       const output = execSync(
-        `git log ${range} --format="COMMIT_START%n%s" --name-only`,
+        `git log ${range} --format="COMMIT_START%n%H%n%s" --name-only`,
         {
           cwd: this.rootDir,
           encoding: 'utf8',
@@ -51,7 +51,7 @@ export class GitManager {
         },
       )
 
-      const commits: { message: string, files: string[] }[] = []
+      const commits: { hash: string, message: string, files: string[] }[] = []
       const blocks = output.split('COMMIT_START').filter(Boolean)
 
       for (const block of blocks) {
@@ -59,20 +59,20 @@ export class GitManager {
         if (lines.length === 0)
           continue
 
-        // 第一行是 commit message（去掉空行）
-        const messageLines = lines.filter(line => line.trim())
-        if (messageLines.length === 0)
+        // 第一行是 commit hash，第二行是 commit message
+        const hash = lines[0]?.trim() || ''
+        const message = lines[1]?.trim() || ''
+
+        if (!hash || !message)
           continue
 
-        const message = messageLines[0].trim()
-
-        // 其余行是文件列表（跳过空行和 message 行）
+        // 其余行是文件列表
         const files = lines
-          .slice(1)
+          .slice(2)
           .map(f => f.trim())
           .filter(f => f && !f.startsWith('COMMIT_START'))
 
-        commits.push({ message, files })
+        commits.push({ hash, message, files })
       }
 
       return commits

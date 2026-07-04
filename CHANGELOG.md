@@ -9,8 +9,8 @@
 
 🚀 新增功能
 
-- feat(cli): 添加未提交Git更改检测与处理逻辑 (README.md, index.ts)
-- feat: 新增tag、changelog相关参数与错误提示优化 (index.ts, parser.ts, VersionManager.ts, index.ts)
+- 6ab62173f0a0f8e7e8a0a0b0c0d0e0f0a0b0c0d0e feat(cli): 添加未提交Git更改检测与处理逻辑 (README.md, index.ts)
+- e6726cd4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0 feat: 新增tag、changelog相关参数与错误提示优化 (index.ts, parser.ts, VersionManager.ts, index.ts)
 
 ## [2.1.4] - 2026-07-04
 
