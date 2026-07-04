@@ -195,9 +195,11 @@ mbump components patch --npm
   mbump ./packages/my-pkg patch       # 指定版本类型
 
   # Rust 项目模式
-  mbump --rust patch                  # 更新 Rust 项目的补丁版本
-  mbump -r minor                      # 更新 Rust 项目的小版本
-  mbump -r major --dry-run            # 试运行升级 Rust 项目的主版本
+  mbump --rust patch                  # 更新当前目录 Rust 项目的补丁版本
+  mbump -r minor                      # 更新当前目录 Rust 项目的小版本
+  mbump -r major --dry-run            # 试运行升级当前目录 Rust 项目的主版本
+  mbump ./backend -r patch            # 更新指定目录下的 Rust 项目
+  mbump ./backend -r -d               # 试运行模式更新指定目录下的 Rust 项目
   mbump ../other-project minor        # 更新上级目录的项目
   mbump /path/to/project major        # 使用绝对路径
   mbump ./packages/my-pkg --dry-run   # 试运行模式

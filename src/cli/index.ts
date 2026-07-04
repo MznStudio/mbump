@@ -207,9 +207,11 @@ export function showHelp(): void {
   mbump ../other-project minor  # 更新上级目录的项目
 
   # Rust 项目模式（更新 Cargo.toml）
-  mbump --rust patch         # 更新 Rust 项目的补丁版本
-  mbump -r minor             # 更新 Rust 项目的小版本
-  mbump -r major --dry-run   # 试运行升级 Rust 项目的主版本
+  mbump --rust patch         # 更新当前目录 Rust 项目的补丁版本
+  mbump -r minor             # 更新当前目录 Rust 项目的小版本
+  mbump -r major --dry-run   # 试运行升级当前目录 Rust 项目的主版本
+  mbump ./backend -r patch   # 更新指定目录下的 Rust 项目
+  mbump ./backend -r -d      # 试运行模式更新指定目录下的 Rust 项目
 `
   log.info(helpText)
 }
@@ -241,13 +243,28 @@ async function main(): Promise<void> {
     const parsedArgs = parseArgs(args)
 
     if (parsedArgs.rust) {
-      const rustManager = new RustManager(process.cwd())
+      const rootDir = parsedArgs.projectPath
+        ? resolve(process.cwd(), parsedArgs.projectPath)
+        : process.cwd()
+
+      if (parsedArgs.projectPath && !existsSync(rootDir)) {
+        displayError(new Error(`路径 "${parsedArgs.projectPath}" 不存在`), {
+          operation: '路径验证',
+        })
+        process.exit(1)
+      }
+
+      const rustManager = new RustManager(rootDir)
+
+      if (parsedArgs.projectPath) {
+        log.info(`切换到项目路径: ${rootDir}`)
+      }
 
       if (!rustManager.exists()) {
-        displayError(new Error(`Cargo.toml 文件不存在于当前目录`), {
+        displayError(new Error(`Cargo.toml 文件不存在于路径 "${rootDir}"`), {
           operation: 'Rust 项目检测',
         })
-        log.info(`💡 请确保当前目录是 Rust 项目根目录`)
+        log.info(`💡 请确保指定的路径是 Rust 项目根目录`)
         process.exit(1)
       }
 
