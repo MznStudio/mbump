@@ -326,17 +326,6 @@ async function main(): Promise<void> {
       const projectVersionManager = new VersionManager({ config: projectConfig, rootDir: resolvedProjectPath })
       log.setLevel(parsedArgs.verbose ? 'debug' : 'info')
 
-      const pkgPath = projectConfig.packagePaths[parsedArgs.package!]
-      const pkg = projectVersionManager.getPackageInfo(pkgPath)
-      const newVersion = semver.inc(pkg.version, parsedArgs.type as semver.ReleaseType)
-
-      if (!newVersion) {
-        displayError(new Error(`无法计算新版本，当前版本 "${pkg.version}"，版本类型 "${parsedArgs.type}"`), {
-          operation: '版本计算',
-        })
-        process.exit(1)
-      }
-
       if (parsedArgs.dryRun) {
         const preview = await projectVersionManager.previewUpdate(parsedArgs.package!, parsedArgs.type, {
           autoCommit: parsedArgs.autoCommit,
@@ -438,17 +427,6 @@ async function main(): Promise<void> {
 
           const projectVersionManager = new VersionManager({ config: projectConfig, rootDir: resolvedPath })
           log.setLevel(parsedArgsWithDefaults.verbose ? 'debug' : 'info')
-
-          const pkgPath = projectConfig.packagePaths.default
-          const pkg = projectVersionManager.getPackageInfo(pkgPath)
-          const newVersion = semver.inc(pkg.version, parsedArgsWithDefaults.type as semver.ReleaseType)
-
-          if (!newVersion) {
-            displayError(new Error(`无法计算新版本，当前版本 "${pkg.version}"，版本类型 "${parsedArgsWithDefaults.type}"`), {
-              operation: '版本计算',
-            })
-            process.exit(1)
-          }
 
           if (parsedArgsWithDefaults.dryRun) {
             const preview = await projectVersionManager.previewUpdate('default', parsedArgsWithDefaults.type, {
