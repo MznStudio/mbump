@@ -80,6 +80,7 @@ export interface UpdatedPackage {
   name: string
   oldVersion: string
   newVersion: string
+  pkgKey?: string
 }
 
 export interface UpdateResult {
@@ -119,6 +120,9 @@ export interface ParsedArgs {
   npm: boolean
   showConfig: boolean
   rust: boolean
+  tag: boolean
+  tagPrefix: string
+  changelog: boolean
 }
 
 export interface SpinnerOptions {

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import type { Config, PackageVersionSelections, PreviewResult } from '@/types'
+import type { Config, PackageVersionSelections, PreviewResult, ReleaseType } from '@/types'
 import { execSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
@@ -100,6 +100,102 @@ function getFriendlyErrorMessage(error: Error): { message: string, solution?: st
     return {
       message: '❌ 无效的包名',
       solution: '💡 请检查配置文件中的 packagePaths 是否正确设置',
+    }
+  }
+
+  // 不支持的版本类型
+  if (errorMessage.includes('不支持的版本类型')) {
+    return {
+      message: '❌ 不支持的版本类型',
+      solution: '💡 支持的版本类型: major, minor, patch, pre-patch, pre-minor, pre-major, next, as-is, conventional',
+    }
+  }
+
+  // 无效的自定义版本号
+  if (errorMessage.includes('无效的自定义版本号')) {
+    return {
+      message: '❌ 无效的自定义版本号',
+      solution: '💡 请使用符合 semver 规范的版本号，如 1.0.0, 1.0.1-beta.1',
+    }
+  }
+
+  // 版本计算失败
+  if (errorMessage.includes('版本计算失败')) {
+    return {
+      message: '❌ 版本计算失败',
+      solution: '💡 请检查当前版本号是否符合 semver 规范，或使用 --verbose 模式查看详细错误',
+    }
+  }
+
+  // 无法计算新版本号
+  if (errorMessage.includes('无法计算新版本号')) {
+    return {
+      message: '❌ 无法计算新版本号',
+      solution: '💡 请检查当前版本号是否符合 semver 规范，或尝试使用不同的版本类型',
+    }
+  }
+
+  // 文件读取失败
+  if (errorMessage.includes('读取文件失败')) {
+    return {
+      message: '📁 文件读取失败',
+      solution: '💡 请检查文件路径是否正确，文件是否存在且有读取权限',
+    }
+  }
+
+  // 文件写入失败
+  if (errorMessage.includes('写入文件失败')) {
+    return {
+      message: '📁 文件写入失败',
+      solution: '💡 请检查文件路径是否正确，是否有写入权限，磁盘空间是否充足',
+    }
+  }
+
+  // Git 操作失败
+  if (errorMessage.includes('Git') && errorMessage.includes('失败')) {
+    return {
+      message: '🔧 Git 操作失败',
+      solution: '💡 请检查 Git 仓库状态，确保有提交权限，或使用 --verbose 模式查看详细错误',
+    }
+  }
+
+  // NPM 发布失败
+  if (errorMessage.includes('发布失败')) {
+    return {
+      message: '🚀 NPM 发布失败',
+      solution: '💡 请检查 NPM 配置、认证状态和网络连接，或使用 --verbose 模式查看详细错误',
+    }
+  }
+
+  // Cargo.toml 相关错误
+  if (errorMessage.includes('Cargo.toml')) {
+    return {
+      message: '🦀 Cargo.toml 操作失败',
+      solution: '💡 请检查 Cargo.toml 文件是否存在，格式是否正确，或使用 --verbose 模式查看详细错误',
+    }
+  }
+
+  // 不存在 package.json
+  if (errorMessage.includes('不存在 package.json')) {
+    return {
+      message: '📦 package.json 不存在',
+      solution: '💡 请确保指定的路径是一个有效的 Node.js 项目目录',
+    }
+  }
+
+  // 路径不存在（放在 package.json 检查之后，避免误匹配）
+  if (errorMessage.includes('路径') && errorMessage.includes('不存在') && !errorMessage.includes('package.json')) {
+    return {
+      message: '📂 路径不存在',
+      solution: '💡 请检查路径是否正确，确保目录存在',
+    }
+  }
+
+  // 配置错误
+  if (errorMessage.includes('配置错误')) {
+    return {
+      message: '⚙️ 配置错误',
+      solution: '💡 请检查配置文件是否正确，或使用 --show-config 查看当前配置',
     }
   }
 
@@ -307,7 +403,7 @@ async function main(): Promise<void> {
       }
 
       try {
-        rustManager.updateVersion(selectedType, {
+        rustManager.updateVersion(selectedType as ReleaseType, {
           dryRun: parsedArgs.dryRun,
           verbose: parsedArgs.verbose,
           autoCommit: parsedArgs.autoCommit,
@@ -329,11 +425,14 @@ async function main(): Promise<void> {
     if (parsedArgs.projectPath) {
       const resolvedProjectPath = resolve(process.cwd(), parsedArgs.projectPath)
       if (!existsSync(resolvedProjectPath)) {
-        throw new Error(`路径 "${parsedArgs.projectPath}" 不存在`)
+        displayError(new Error(`路径 "${parsedArgs.projectPath}" 不存在`), { operation: '路径验证' })
+        process.exit(1)
       }
       const pkgJsonPath = join(resolvedProjectPath, 'package.json')
       if (!existsSync(pkgJsonPath)) {
-        throw new Error(`路径 "${parsedArgs.projectPath}" 中不存在 package.json`)
+        displayError(new Error(`路径 "${parsedArgs.projectPath}" 中不存在 package.json`), { operation: 'package.json 检测' })
+        log.info(`💡 请确保指定的路径是一个有效的 Node.js 项目目录`)
+        process.exit(1)
       }
 
       log.info(`切换到项目路径: ${resolvedProjectPath}`)

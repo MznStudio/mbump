@@ -187,7 +187,7 @@ export class VersionManager {
           throw new Error(`无法计算新版本号，当前版本: ${pkg.version}，类型: ${selection.type}`)
         }
 
-        const isDefaultPackage = packageName === 'default' || pkgPath === 'package.json'
+        const isDefaultPackage = packageName === 'default' || packagePaths[packageName] === 'package.json'
         const tagName = isDefaultPackage ? `${tagPrefix}${newVersion}` : `${pkg.name}@${newVersion}`
 
         packages.push({
@@ -285,7 +285,7 @@ export class VersionManager {
           throw new Error(`无法计算新版本号，当前版本: ${pkg.version}，类型: ${releaseType}`)
         }
 
-        const isDefaultPackage = pkgPath === 'package.json' || (pkgName === 'default' && this.config.packagePaths[pkgName] === pkgPath)
+        const isDefaultPackage = pkgName === 'default' || packagePaths[pkgName] === 'package.json'
         const tagName = isDefaultPackage ? `${tagPrefix}${newVersion}` : `${pkg.name}@${newVersion}`
 
         packages.push({

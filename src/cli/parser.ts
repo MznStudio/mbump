@@ -16,6 +16,9 @@ export function parseArgs(args: string[], defaults: DefaultsConfig = {}): Parsed
     npm: defaults.npm || false,
     showConfig: false,
     rust: false,
+    tag: (defaults as any).git?.tag !== false,
+    tagPrefix: (defaults as any).git?.tagPrefix || 'v',
+    changelog: (defaults as any).git?.changelog !== false,
   }
 
   const allowedTypes: ReleaseType[] = [
