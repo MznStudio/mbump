@@ -321,9 +321,6 @@ export class VersionManager {
       isBatchMode = false, // 默认不是批量模式
     } = options
 
-    log.debug(`updateVersion: pkgName=${pkgName}, releaseType=${releaseType}, dryRun=${dryRun}, packagePaths keys=${Object.keys(packagePaths).join(',')}`)
-    log.debug(`updateVersion: packagePaths[${pkgName}]=${packagePaths[pkgName]}`)
-
     const result: UpdateResult = {
       success: false,
       updatedPackages: [],
@@ -338,8 +335,6 @@ export class VersionManager {
         try {
           const targets = pkgName === 'all' ? Object.values(packagePaths) : [packagePaths[pkgName]]
 
-          log.debug(`updateVersion: targets=${JSON.stringify(targets)}`)
-
           if (!targets.length || targets.some(path => !path)) {
             throw new Error(`无效的包名: ${pkgName}`)
           }
@@ -347,9 +342,7 @@ export class VersionManager {
           // 检查版本是否存在
           let finalVersion: string | null = null
           for (const pkgPath of targets) {
-            log.debug(`updateVersion loop: pkgPath=${pkgPath}`)
             const pkg = this.getPackageInfo(pkgPath)
-            log.debug(`updateVersion loop: pkg.name=${pkg.name}, pkg.version=${pkg.version}`)
             let newVersion: string | null = null
 
             if (customVersion) {
@@ -365,7 +358,6 @@ export class VersionManager {
                   case 'minor':
                   case 'patch':
                     newVersion = incrementVersion(pkg.version, releaseType)
-                    log.debug(`updateVersion loop: incrementVersion result=${newVersion}`)
                     break
                   case 'next':
                     newVersion = incrementVersion(pkg.version, 'patch')
@@ -432,20 +424,16 @@ export class VersionManager {
               finalVersion = newVersion
               const isDefaultPackage = pkgName === 'default' || this.config.packagePaths[pkgName] === 'package.json'
               const versionTag = isDefaultPackage ? `${tagPrefix}${newVersion}` : `${pkg.name}@${newVersion}`
-              log.debug(`updateVersion: checking if version exists, dryRun=${dryRun}, newVersion=${newVersion}, versionTag=${versionTag}`)
               if (!dryRun && this.gitManager.checkVersionExists(newVersion, tagPrefix, isDefaultPackage ? undefined : pkg.name)) {
                 throw new Error(`版本 ${versionTag} 已存在，请使用其他版本`)
               }
-              log.debug(`updateVersion: version check passed`)
             }
 
             if (dryRun) {
               log.dryRun(`将更新 ${pkg.name} 从 v${pkg.version} 到 v${newVersion}`)
             }
             else {
-              log.debug(`updateVersion: dryRun=false, calling savePackageInfo`)
               const updatedPkg = { ...pkg, version: newVersion }
-              log.debug(`updateVersion: updatedPkg=${JSON.stringify(updatedPkg)}`)
               this.savePackageInfo(pkgPath, updatedPkg)
               log.info(`已更新 ${pkg.name} 到 v${newVersion}`)
             }
@@ -683,17 +671,12 @@ export class VersionManager {
   }
 
   private savePackageInfo(pkgPath: string, pkg: PackageInfo): void {
-    log.debug(`savePackageInfo: pkgPath=${pkgPath}, rootDir=${this.rootDir}`)
-    const isValid = validatePath(pkgPath, this.rootDir)
-    log.debug(`savePackageInfo: validatePath result=${isValid}`)
-
-    if (!isValid) {
+    if (!validatePath(pkgPath, this.rootDir)) {
       throw new Error(`不安全的文件路径: ${pkgPath}`)
     }
 
     try {
       writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`)
-      log.debug(`savePackageInfo: 文件写入成功 ${pkgPath}`)
       // 更新缓存
       this.packageCache.set(pkgPath, pkg)
     }
