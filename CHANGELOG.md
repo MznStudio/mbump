@@ -5,6 +5,12 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.1.6-1] - 2026-07-04
+
+🚀 新增功能
+
+- 9caac19a80e8decb7b94bee5a28ab27fd120c75e feat(semver): 为版本递增函数添加预发布标识符参数 (VersionManager.ts, semver.ts)
+
 ## [2.1.6-0] - 2026-07-04
 
 🚀 新增功能
