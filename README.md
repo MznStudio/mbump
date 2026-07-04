@@ -99,12 +99,28 @@ mbump /path/to/project
 mbump C:\projects\my-app
 ```
 
+**支持的路径格式**：
+
+| 格式类型 | 示例 | 说明 |
+|----------|------|------|
+| Unix 相对路径 | `./packages/theme` | 以 `./` 开头 |
+| Windows 相对路径 | `.\frontend` | 以 `.\` 开头 |
+| 当前目录 | `.` | 单个点 |
+| 上级目录 | `../other-project` | 以 `../` 或 `..\` 开头 |
+| 简单目录名 | `frontend` | 直接使用目录名（会自动检测） |
+| Unix 绝对路径 | `/usr/local/project` | 以 `/` 开头 |
+| Windows 绝对路径 | `\Windows\System32` | 以 `\` 开头 |
+| Windows 驱动器 | `C:\Projects\app` | 驱动器字母 + `:\` |
+| 用户主目录 | `~/projects/my-app` | 以 `~` 开头 |
+| UNC 网络路径 | `\\server\share\project` | 以 `\\` 开头 |
+
 **路径模式特性**：
-- ✅ 支持相对路径（`./`, `../`）和绝对路径（`/path`, `C:\path`）
+- ✅ 支持多种路径格式（相对路径、绝对路径、驱动器路径、UNC 路径等）
 - ✅ 自动检测路径下是否存在 `package.json`
 - ✅ 使用默认配置 `{ default: 'package.json' }`
 - ✅ 支持所有命令行选项（`--dry-run`, `--verbose`, `--npm` 等）
 - ✅ 适合快速更新独立的子包或临时项目
+- ✅ 智能回退：如果包名在配置中找不到，会自动检查是否为有效目录路径
 
 ### Monorepo 项目
 
@@ -158,8 +174,9 @@ mbump components patch --npm
   --no-commit, -n        禁用自动git提交
   --no-push, -p          禁用自动推送到远程仓库
   --allow-uncommitted, -u  允许在有未提交更改的情况下继续操作
-  --npm                  启用npm/pnpm包发布功能（默认不发布）
-  --show-config          显示当前加载的完整配置信息
+  --npm, -N              启用npm/pnpm包发布功能（默认不发布）
+  --show-config, -c      显示当前加载的完整配置信息
+  --version, -V          显示当前版本号
   --help, -h             显示此帮助信息
 
 示例:
@@ -170,6 +187,7 @@ mbump components patch --npm
   mbump components patch --npm        # 更新版本并发布到npm/pnpm
   mbump                               # 交互式选择包和版本类型
   mbump --show-config                 # 查看当前配置
+  mbump --version                     # 查看当前版本号
 
   # 路径模式
   mbump ./packages/my-pkg             # 更新 ./packages/my-pkg 目录下的 package.json
@@ -177,6 +195,9 @@ mbump components patch --npm
   mbump ../other-project minor        # 更新上级目录的项目
   mbump /path/to/project major        # 使用绝对路径
   mbump ./packages/my-pkg --dry-run   # 试运行模式
+  mbump .\frontend\                   # Windows 风格路径（PowerShell）
+  mbump frontend                      # 直接使用目录名（自动检测）
+  mbump ~/projects/my-app             # 使用用户主目录路径
 ```
 
 ## ⚙️ 配置文件

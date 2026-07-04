@@ -187,8 +187,8 @@ export function showHelp(): void {
   --no-commit, -n  禁用自动git提交
   --no-push, -p    禁用自动推送到远程仓库
   --allow-uncommitted, -u  允许在有未提交更改的情况下继续操作
-  --npm, -npm    启用npm包发布功能（默认不发布）
-  --show-config  显示当前加载的完整配置信息
+  --npm, -N      启用npm包发布功能（默认不发布）
+  --show-config, -c  显示当前加载的完整配置信息
   --version, -V  显示版本信息
   --help, -h     显示此帮助信息
 
@@ -253,7 +253,14 @@ async function main(): Promise<void> {
 
       const pkgPath = projectConfig.packagePaths[parsedArgs.package!]
       const pkg = projectVersionManager.getPackageInfo(pkgPath)
-      const newVersion = semver.inc(pkg.version, parsedArgs.type)!
+      const newVersion = semver.inc(pkg.version, parsedArgs.type as semver.ReleaseType)
+
+      if (!newVersion) {
+        displayError(new Error(`无法计算新版本，当前版本 "${pkg.version}"，版本类型 "${parsedArgs.type}"`), {
+          operation: '版本计算',
+        })
+        process.exit(1)
+      }
 
       const isDefaultPackage = parsedArgs.package === 'default' || pkgPath === 'package.json'
       const tagPrefix = projectConfig.git?.tagPrefix || 'v'
@@ -349,15 +356,77 @@ async function main(): Promise<void> {
         parsedArgsWithDefaults.package = packageNames[0]
       }
       else {
-        throw new Error(
-          '未指定包名\n' + `请指定要更新的包名，可选包: ${packageNames.join(', ')} 或使用 "all" 更新所有包`,
-        )
+        displayError(new Error(`未指定包名\n可用的包名: ${packageNames.join(', ')} 或使用 "all" 更新所有包`))
+        process.exit(1)
       }
     }
     else if (parsedArgsWithDefaults.package !== 'all' && !packageNames.includes(parsedArgsWithDefaults.package)) {
-      throw new Error(
-        `包名 "${parsedArgsWithDefaults.package}" 未在配置中找到\n` + `可用的包名: ${packageNames.join(', ')} 或使用 "all" 更新所有包`,
-      )
+      const maybePath = parsedArgsWithDefaults.package
+      if (maybePath) {
+        const resolvedPath = resolve(process.cwd(), maybePath)
+        const pkgJsonPath = join(resolvedPath, 'package.json')
+        if (existsSync(resolvedPath) && existsSync(pkgJsonPath)) {
+          log.info(`切换到项目路径: ${resolvedPath}`)
+          const projectConfig = await loadConfigAsync(resolvedPath)
+
+          const projectVersionManager = new VersionManager({ config: projectConfig, rootDir: resolvedPath })
+          log.setLevel(parsedArgsWithDefaults.verbose ? 'debug' : 'info')
+
+          const pkgPath = projectConfig.packagePaths.default
+          const pkg = projectVersionManager.getPackageInfo(pkgPath)
+          const newVersion = semver.inc(pkg.version, parsedArgsWithDefaults.type as semver.ReleaseType)
+
+          if (!newVersion) {
+            displayError(new Error(`无法计算新版本，当前版本 "${pkg.version}"，版本类型 "${parsedArgsWithDefaults.type}"`), {
+              operation: '版本计算',
+            })
+            process.exit(1)
+          }
+
+          const tagPrefix = projectConfig.git?.tagPrefix || 'v'
+          const tagName = `${tagPrefix}${newVersion}`
+
+          if (parsedArgsWithDefaults.dryRun) {
+            log.info('🔍 Dry-run 模式 - 以下操作将被执行:\n')
+            log.info(`  📦 default`)
+            log.info(`     当前版本: ${pkg.version}`)
+            log.info(`     新版本:   ${newVersion}`)
+            log.info(`     Tag:      ${tagName}`)
+            log.info(`     CHANGELOG: ${projectConfig.git?.changelog !== false ? '是' : '否（配置禁用）'}`)
+            log.info(`     Git Commit: ${parsedArgsWithDefaults.autoCommit ? '是' : '否'}`)
+            log.info(`     Git Push: ${parsedArgsWithDefaults.push ? '是' : '否'}`)
+            log.info(`     NPM Publish: ${parsedArgsWithDefaults.npm ? '是' : '否'}`)
+            log.info('\n✅ 以上为预览，未执行任何实际操作')
+            process.exit(0)
+          }
+
+          await projectVersionManager.updateVersion('default', parsedArgsWithDefaults.type, {
+            dryRun: parsedArgsWithDefaults.dryRun,
+            verbose: parsedArgsWithDefaults.verbose,
+            autoCommit: parsedArgsWithDefaults.autoCommit,
+            push: parsedArgsWithDefaults.push,
+            npm: parsedArgsWithDefaults.npm,
+          })
+
+          log.success(`版本更新完成`)
+          process.exit(0)
+        }
+        else {
+          displayError(new Error(`包名 "${parsedArgsWithDefaults.package}" 未在配置中找到，且路径 "${resolvedPath}" 不是有效的项目目录`), {
+            operation: '包名/路径解析',
+          })
+          log.info(`💡 可用的包名: ${packageNames.join(', ')} 或使用 "all" 更新所有包`)
+          log.info(`💡 也可以使用路径模式: mbump ./packages/my-pkg`)
+          process.exit(1)
+        }
+      }
+
+      displayError(new Error(`包名 "${parsedArgsWithDefaults.package}" 未在配置中找到`), {
+        operation: '包名解析',
+      })
+      log.info(`💡 可用的包名: ${packageNames.join(', ')} 或使用 "all" 更新所有包`)
+      log.info(`💡 也可以使用路径模式: mbump ./packages/my-pkg`)
+      process.exit(1)
     }
 
     const versionManager = new VersionManager({ config, rootDir })

@@ -4,9 +4,18 @@ function isPathLike(arg: string): boolean {
   return (
     arg.startsWith('./') ||
     arg.startsWith('../') ||
+    arg.startsWith('.\\') ||
+    arg.startsWith('..\\') ||
     arg.startsWith('/') ||
-    /^[A-Za-z]:\\/.test(arg) ||
-    /^[A-Za-z]:\//.test(arg)
+    arg.startsWith('\\') ||
+    /^[A-Za-z]:[\\/].*/.test(arg) ||
+    arg.startsWith('~') ||
+    arg === '.' ||
+    arg.startsWith('\\\\') ||
+    arg.startsWith('//') ||
+    arg.includes('/') ||
+    arg.includes('\\') ||
+    arg.includes('.')
   )
 }
 
@@ -62,11 +71,11 @@ export function parseArgs(args: string[], defaults: DefaultsConfig = {}): Parsed
       parsed.allowUncommitted = true
       i++
     }
-    else if (arg === '--npm' || arg === '-npm') {
+    else if (arg === '--npm' || arg === '-N') {
       parsed.npm = true
       i++
     }
-    else if (arg === '--show-config') {
+    else if (arg === '--show-config' || arg === '-c') {
       parsed.showConfig = true
       i++
     }
