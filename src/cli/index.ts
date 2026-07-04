@@ -225,13 +225,7 @@ async function main(): Promise<void> {
       process.exit(0)
     }
 
-    const rootDir = process.cwd()
-    const config: Config = await log.withSpinner('正在加载配置...', () => loadConfigAsync(rootDir), {
-      succeedText: '配置加载完成',
-      failText: '配置加载失败',
-    })
-
-    const parsedArgs = parseArgs(args, config.defaults)
+    const parsedArgs = parseArgs(args)
 
     if (parsedArgs.projectPath) {
       const resolvedProjectPath = resolve(process.cwd(), parsedArgs.projectPath)
@@ -246,51 +240,54 @@ async function main(): Promise<void> {
       log.info(`切换到项目路径: ${resolvedProjectPath}`)
       const projectConfig = await loadConfigAsync(resolvedProjectPath)
 
-      const projectParsedArgs = parseArgs(args, projectConfig.defaults)
-      projectParsedArgs.package = projectParsedArgs.package || 'default'
-
-      if (!projectParsedArgs.package || !Object.keys(projectConfig.packagePaths).includes(projectParsedArgs.package)) {
-        projectParsedArgs.package = 'default'
-      }
+      parsedArgs.package = 'default'
 
       const projectVersionManager = new VersionManager({ config: projectConfig, rootDir: resolvedProjectPath })
-      log.setLevel(projectParsedArgs.verbose ? 'debug' : 'info')
+      log.setLevel(parsedArgs.verbose ? 'debug' : 'info')
 
-      const pkgPath = projectConfig.packagePaths[projectParsedArgs.package!]
+      const pkgPath = projectConfig.packagePaths[parsedArgs.package!]
       const pkg = projectVersionManager.getPackageInfo(pkgPath)
-      const newVersion = semver.inc(pkg.version, projectParsedArgs.type)!
+      const newVersion = semver.inc(pkg.version, parsedArgs.type)!
 
-      const isDefaultPackage = projectParsedArgs.package === 'default' || pkgPath === 'package.json'
+      const isDefaultPackage = parsedArgs.package === 'default' || pkgPath === 'package.json'
       const tagPrefix = projectConfig.git?.tagPrefix || 'v'
       const tagName = isDefaultPackage ? `${tagPrefix}${newVersion}` : `${pkg.name}@${newVersion}`
 
-      if (projectParsedArgs.dryRun) {
+      if (parsedArgs.dryRun) {
         log.info('🔍 Dry-run 模式 - 以下操作将被执行:\n')
-        log.info(`  📦 ${projectParsedArgs.package}`)
+        log.info(`  📦 ${parsedArgs.package}`)
         log.info(`     当前版本: ${pkg.version}`)
         log.info(`     新版本:   ${newVersion}`)
         log.info(`     Tag:      ${tagName}`)
         log.info(`     CHANGELOG: ${projectConfig.git?.changelog !== false ? '是' : '否（配置禁用）'}`)
-        log.info(`     Git Commit: ${projectParsedArgs.autoCommit ? '是' : '否'}`)
-        log.info(`     Git Push: ${projectParsedArgs.push ? '是' : '否'}`)
-        log.info(`     NPM Publish: ${projectParsedArgs.npm ? '是' : '否'}`)
+        log.info(`     Git Commit: ${parsedArgs.autoCommit ? '是' : '否'}`)
+        log.info(`     Git Push: ${parsedArgs.push ? '是' : '否'}`)
+        log.info(`     NPM Publish: ${parsedArgs.npm ? '是' : '否'}`)
         log.info('\n✅ 以上为预览，未执行任何实际操作')
         process.exit(0)
       }
 
-      await projectVersionManager.updateVersion(projectParsedArgs.package!, projectParsedArgs.type, {
-        dryRun: projectParsedArgs.dryRun,
-        verbose: projectParsedArgs.verbose,
-        autoCommit: projectParsedArgs.autoCommit,
-        push: projectParsedArgs.push,
-        npm: projectParsedArgs.npm,
+      await projectVersionManager.updateVersion(parsedArgs.package!, parsedArgs.type, {
+        dryRun: parsedArgs.dryRun,
+        verbose: parsedArgs.verbose,
+        autoCommit: parsedArgs.autoCommit,
+        push: parsedArgs.push,
+        npm: parsedArgs.npm,
       })
 
       log.success(`版本更新完成`)
       process.exit(0)
     }
 
-    if (parsedArgs.showConfig) {
+    const rootDir = process.cwd()
+    const config: Config = await log.withSpinner('正在加载配置...', () => loadConfigAsync(rootDir), {
+      succeedText: '配置加载完成',
+      failText: '配置加载失败',
+    })
+
+    const parsedArgsWithDefaults = parseArgs(args, config.defaults)
+
+    if (parsedArgsWithDefaults.showConfig) {
       log.info('📋 当前加载的配置:')
       log.info('')
 
@@ -338,12 +335,12 @@ async function main(): Promise<void> {
     }
 
     const packageNames = Object.keys(config.packagePaths)
-    if (!parsedArgs.package) {
+    if (!parsedArgsWithDefaults.package) {
       if (packageNames.includes('default')) {
-        parsedArgs.package = 'default'
+        parsedArgsWithDefaults.package = 'default'
       }
       else if (packageNames.length === 1) {
-        parsedArgs.package = packageNames[0]
+        parsedArgsWithDefaults.package = packageNames[0]
       }
       else {
         throw new Error(
@@ -351,17 +348,17 @@ async function main(): Promise<void> {
         )
       }
     }
-    else if (parsedArgs.package !== 'all' && !packageNames.includes(parsedArgs.package)) {
+    else if (parsedArgsWithDefaults.package !== 'all' && !packageNames.includes(parsedArgsWithDefaults.package)) {
       throw new Error(
-        `包名 "${parsedArgs.package}" 未在配置中找到\n` + `可用的包名: ${packageNames.join(', ')} 或使用 "all" 更新所有包`,
+        `包名 "${parsedArgsWithDefaults.package}" 未在配置中找到\n` + `可用的包名: ${packageNames.join(', ')} 或使用 "all" 更新所有包`,
       )
     }
 
     const versionManager = new VersionManager({ config, rootDir })
-    log.setLevel(parsedArgs.verbose ? 'debug' : 'info')
+    log.setLevel(parsedArgsWithDefaults.verbose ? 'debug' : 'info')
 
     if (hasUncommittedChanges()) {
-      if (!parsedArgs.allowUncommitted) {
+      if (!parsedArgsWithDefaults.allowUncommitted) {
         log.warn('警告: 检测到未提交的Git更改')
 
         const inquirer = await import('inquirer')
@@ -369,7 +366,7 @@ async function main(): Promise<void> {
           {
             type: 'confirm',
             name: 'continue',
-            message: parsedArgs.dryRun
+            message: parsedArgsWithDefaults.dryRun
               ? '是否继续（dry-run模式不会实际提交更改）?'
               : '是否提交这些更改并继续?',
             default: true,
@@ -381,7 +378,7 @@ async function main(): Promise<void> {
           process.exit(0)
         }
 
-        if (!parsedArgs.dryRun) {
+        if (!parsedArgsWithDefaults.dryRun) {
           const commitMessage = 'chore: update mbump config and settings'
           execSync(`git add . && git commit -m "${commitMessage}"`, { encoding: 'utf8', stdio: 'pipe' })
           log.success(`已提交更改: ${commitMessage}`)
@@ -395,27 +392,27 @@ async function main(): Promise<void> {
       }
     }
 
-    if (parsedArgs.verbose) {
+    if (parsedArgsWithDefaults.verbose) {
       if (config.usedConfigPath) {
         const fileName = config.usedConfigPath.split('\\').pop() || config.usedConfigPath
         log.info(`使用配置文件: ${fileName}`)
       }
-      log.info(`更新信息: 包=${parsedArgs.package}, 类型=${parsedArgs.type}${parsedArgs.dryRun ? ' (试运行)' : ''}`)
+      log.info(`更新信息: 包=${parsedArgsWithDefaults.package}, 类型=${parsedArgsWithDefaults.type}${parsedArgsWithDefaults.dryRun ? ' (试运行)' : ''}`)
     }
 
-    let selectedType = parsedArgs.type
+    let selectedType = parsedArgsWithDefaults.type
     let customVersion: string | null = null
     const packageVersionSelections: PackageVersionSelections = {}
 
     if (
       !args.some(arg => arg === '--type' || arg.startsWith('--type=') || arg === '-t' || arg.startsWith('-t='))
     ) {
-      if (parsedArgs.package === 'all') {
+      if (parsedArgsWithDefaults.package === 'all') {
         const selections = await selectAllVersionsInteractive(config, rootDir)
         Object.assign(packageVersionSelections, selections)
       }
       else {
-        const packageName = parsedArgs.package!
+        const packageName = parsedArgsWithDefaults.package!
         const currentVersion = versionManager.getPackageVersion(packageName)
 
         if (currentVersion) {
@@ -426,9 +423,9 @@ async function main(): Promise<void> {
       }
     }
 
-    if (parsedArgs.package === 'all' && Object.keys(packageVersionSelections).length > 0) {
+    if (parsedArgsWithDefaults.package === 'all' && Object.keys(packageVersionSelections).length > 0) {
       // Dry-run 模式：显示详细预览
-      if (parsedArgs.dryRun) {
+      if (parsedArgsWithDefaults.dryRun) {
         log.info('🔍 Dry-run 模式 - 以下操作将被执行:\n')
 
         for (const [packageName, selection] of Object.entries(packageVersionSelections)) {
@@ -470,8 +467,8 @@ async function main(): Promise<void> {
 
         try {
           const result = await versionManager.updateVersion(packageName, selection.type, {
-            dryRun: parsedArgs.dryRun,
-            verbose: parsedArgs.verbose,
+            dryRun: parsedArgsWithDefaults.dryRun,
+            verbose: parsedArgsWithDefaults.verbose,
             customVersion: selection.customVersion,
             autoCommit: false,
             push: false,
@@ -508,16 +505,16 @@ async function main(): Promise<void> {
         log.info('\n💡 提示: 可以单独重试失败的包，或检查错误信息后重新运行')
       }
 
-      if (!parsedArgs.dryRun && parsedArgs.autoCommit && updatedPackagesInfo.length > 0) {
+      if (!parsedArgsWithDefaults.dryRun && parsedArgsWithDefaults.autoCommit && updatedPackagesInfo.length > 0) {
         await versionManager.gitCommitAndPush(
-          parsedArgs.push,
+          parsedArgsWithDefaults.push,
           updatedPackagesInfo,
           config.git?.tag !== false,
           config.git?.tagPrefix || 'v',
         )
       }
 
-      if (parsedArgs.npm && !parsedArgs.dryRun) {
+      if (parsedArgsWithDefaults.npm && !parsedArgsWithDefaults.dryRun) {
         const npmErrors: Array<{ packageName: string, error: Error }> = []
         const npmPackages = Object.entries(packageVersionSelections)
         const npmTotal = npmPackages.length
@@ -534,7 +531,7 @@ async function main(): Promise<void> {
           try {
             await versionManager.updateVersion(packageName, selection.type, {
               dryRun: false,
-              verbose: parsedArgs.verbose,
+              verbose: parsedArgsWithDefaults.verbose,
               customVersion: selection.customVersion,
               autoCommit: false,
               push: false,
@@ -563,41 +560,41 @@ async function main(): Promise<void> {
     }
     else {
       // 单包更新的 dry-run 预览
-      if (parsedArgs.dryRun && parsedArgs.package) {
-        const pkgPath = config.packagePaths[parsedArgs.package]
+      if (parsedArgsWithDefaults.dryRun && parsedArgsWithDefaults.package) {
+        const pkgPath = config.packagePaths[parsedArgsWithDefaults.package]
         const pkg = versionManager.getPackageInfo(pkgPath)
         // 使用 as any 绕过类型检查
         const newVersion = customVersion || semver.inc(pkg.version, selectedType as any)!
 
         // 判断是否为主项目包
-        const isDefaultPackage = parsedArgs.package === 'default' || pkgPath === 'package.json'
+        const isDefaultPackage = parsedArgsWithDefaults.package === 'default' || pkgPath === 'package.json'
         const tagPrefix = config.git?.tagPrefix || 'v'
         const tagName = isDefaultPackage ? `${tagPrefix}${newVersion}` : `${pkg.name}@${newVersion}`
 
         log.info('🔍 Dry-run 模式 - 以下操作将被执行:\n')
-        log.info(`  📦 ${parsedArgs.package}`)
+        log.info(`  📦 ${parsedArgsWithDefaults.package}`)
         log.info(`     当前版本: ${pkg.version}`)
         log.info(`     新版本:   ${newVersion}`)
         log.info(`     Tag:      ${tagName}`)
         log.info(`     CHANGELOG: ${config.git?.changelog !== false ? '是' : '否（配置禁用）'}`)
-        log.info(`     Git Commit: ${parsedArgs.autoCommit ? '是' : '否'}`)
-        log.info(`     Git Push: ${parsedArgs.push ? '是' : '否'}`)
-        log.info(`     NPM Publish: ${parsedArgs.npm ? '是' : '否'}`)
+        log.info(`     Git Commit: ${parsedArgsWithDefaults.autoCommit ? '是' : '否'}`)
+        log.info(`     Git Push: ${parsedArgsWithDefaults.push ? '是' : '否'}`)
+        log.info(`     NPM Publish: ${parsedArgsWithDefaults.npm ? '是' : '否'}`)
         log.info('\n✅ 以上为预览，未执行任何实际操作')
         process.exit(0)
       }
 
-      await versionManager.updateVersion(parsedArgs.package!, selectedType, {
-        dryRun: parsedArgs.dryRun,
-        verbose: parsedArgs.verbose,
+      await versionManager.updateVersion(parsedArgsWithDefaults.package!, selectedType, {
+        dryRun: parsedArgsWithDefaults.dryRun,
+        verbose: parsedArgsWithDefaults.verbose,
         customVersion,
-        autoCommit: parsedArgs.autoCommit,
-        push: parsedArgs.push,
-        npm: parsedArgs.npm,
+        autoCommit: parsedArgsWithDefaults.autoCommit,
+        push: parsedArgsWithDefaults.push,
+        npm: parsedArgsWithDefaults.npm,
       })
     }
 
-    log.success(`版本更新完成${parsedArgs.dryRun ? ' (试运行模式)' : ''}`)
+    log.success(`版本更新完成${parsedArgsWithDefaults.dryRun ? ' (试运行模式)' : ''}`)
     process.exit(0)
   }
   catch (error: any) {
