@@ -7,7 +7,27 @@ export async function selectVersionInteractive(
   config: Config,
   packageName: string,
   currentVersion: string,
+  rootDir?: string,
 ): Promise<{ type: ReleaseType, customVersion: string | null }> {
+  let displayName = packageName
+
+  if (rootDir && packageName !== 'default') {
+    const pkgPath = config.packagePaths[packageName]
+    if (pkgPath) {
+      const { readFileSync } = require('node:fs')
+      const { join, resolve } = require('node:path')
+      try {
+        const fullPath = resolve(rootDir, pkgPath)
+        const pkgContent = JSON.parse(readFileSync(fullPath, 'utf8'))
+        if (pkgContent.name) {
+          displayName = pkgContent.name
+        }
+      }
+      catch {
+      }
+    }
+  }
+
   const choices = [
     { name: `major ${semver.inc(currentVersion, 'major')}`, value: 'major' },
     { name: `minor ${semver.inc(currentVersion, 'minor')}`, value: 'minor' },
@@ -38,7 +58,7 @@ export async function selectVersionInteractive(
     {
       type: 'list',
       name: 'versionType',
-      message: `[${packageName}] Current version ${currentVersion} »`,
+      message: `[${displayName}] Current version ${currentVersion} »`,
       choices,
       default: config.defaults?.releaseType || 'patch',
     },
@@ -73,7 +93,7 @@ export async function selectAllVersionsInteractive(
   for (const packageName of allPackageNames) {
     const currentVersion = versionManager.getPackageVersion(packageName)
     if (currentVersion) {
-      const selection = await selectVersionInteractive(config, packageName, currentVersion)
+      const selection = await selectVersionInteractive(config, packageName, currentVersion, rootDir)
       selections[packageName] = selection
     }
   }

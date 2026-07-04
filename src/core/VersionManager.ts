@@ -440,6 +440,7 @@ export class VersionManager {
               name: pkg.name,
               oldVersion: pkg.version,
               newVersion,
+              pkgKey: pkgName,
             })
           }
 

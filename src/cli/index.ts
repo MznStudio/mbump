@@ -332,7 +332,7 @@ async function main(): Promise<void> {
       if (!parsedArgs.type) {
         const currentVersion = projectVersionManager.getPackageVersion('default')
         if (currentVersion) {
-          const selection = await selectVersionInteractive(projectConfig, 'default', currentVersion)
+          const selection = await selectVersionInteractive(projectConfig, 'default', currentVersion, resolvedProjectPath)
           selectedType = selection.type
           customVersion = selection.customVersion
         }
@@ -448,7 +448,7 @@ async function main(): Promise<void> {
           if (!parsedArgsWithDefaults.type) {
             const currentVersion = projectVersionManager.getPackageVersion('default')
             if (currentVersion) {
-              const selection = await selectVersionInteractive(projectConfig, 'default', currentVersion)
+              const selection = await selectVersionInteractive(projectConfig, 'default', currentVersion, resolvedPath)
               selectedType = selection.type
               customVersion = selection.customVersion
             }
