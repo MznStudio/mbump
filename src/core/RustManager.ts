@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import * as toml from '@iarna/toml'
@@ -15,6 +16,7 @@ export interface RustUpdateOptions {
   tag?: boolean
   tagPrefix?: string
   changelog?: boolean
+  allowUncommitted?: boolean
 }
 
 export class RustManager {
@@ -48,6 +50,20 @@ export class RustManager {
     }
   }
 
+  getPackageName(): string | null {
+    try {
+      const content = readFileSync(this.cargoTomlPath, 'utf8')
+      const parsed = toml.parse(content) as Record<string, any>
+      if (parsed.package && typeof parsed.package.name === 'string') {
+        return parsed.package.name
+      }
+      return null
+    }
+    catch {
+      return null
+    }
+  }
+
   updateVersion(releaseType: string, options: RustUpdateOptions = {}): { success: boolean, oldVersion: string, newVersion: string } {
     const {
       dryRun = false,
@@ -58,6 +74,7 @@ export class RustManager {
       tag = true,
       tagPrefix = 'v',
       changelog = true,
+      allowUncommitted = false,
     } = options
 
     if (!this.exists()) {
@@ -68,6 +85,8 @@ export class RustManager {
     if (!oldVersion) {
       throw new Error(`Cargo.toml 文件中未找到 [package] 部分的 version 字段`)
     }
+
+    const packageName = this.getPackageName() || 'rust'
 
     let newVersion: string | null = null
 
@@ -94,11 +113,16 @@ export class RustManager {
       log.info(`新版本: ${newVersion}`)
     }
 
+    if (!dryRun && autoCommit && !allowUncommitted && this.gitManager.hasUncommittedChanges()) {
+      throw new Error('存在未提交的更改，请先提交或使用 --allow-uncommitted 选项')
+    }
+
     if (dryRun) {
+      const tagName = `${packageName}@${newVersion}`
       log.info(`\n🔍 Dry-run 模式 - Cargo.toml 版本更新预览:`)
       log.info(`   当前版本: ${oldVersion}`)
       log.info(`   新版本:   ${newVersion}`)
-      log.info(`   Tag:      ${tag ? `${tagPrefix}${newVersion}` : '跳过'}`)
+      log.info(`   Tag:      ${tag ? tagName : '跳过'}`)
       log.info(`   CHANGELOG: ${changelog ? '是' : '跳过'}`)
       log.info(`   Git Commit: ${autoCommit ? '是' : '否'}`)
       log.info(`   Git Push: ${push ? '是' : '否'}`)
@@ -137,9 +161,12 @@ export class RustManager {
       }
 
       if (tag) {
-        const tagName = `${tagPrefix}${newVersion}`
+        const tagName = `${packageName}@${newVersion}`
         try {
-          this.gitManager.createTag(newVersion, tagPrefix)
+          execSync(`git tag -a ${tagName} -m "Release ${tagName}"`, {
+            cwd: this.rootDir,
+            stdio: 'pipe',
+          })
           log.success(`已创建 tag: ${tagName}`)
         }
         catch (error) {

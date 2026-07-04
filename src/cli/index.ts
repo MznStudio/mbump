@@ -316,6 +316,7 @@ async function main(): Promise<void> {
           tag: parsedArgs.tag,
           tagPrefix: parsedArgs.tagPrefix,
           changelog: parsedArgs.changelog,
+          allowUncommitted: parsedArgs.allowUncommitted,
         })
         process.exit(0)
       }
