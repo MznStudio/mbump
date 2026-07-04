@@ -9,7 +9,10 @@ export function parseVersion(version: string): SemVer | null {
   return semver.parse(version)
 }
 
-export function incrementVersion(currentVersion: string, releaseType: string): string | null {
+export function incrementVersion(currentVersion: string, releaseType: string, identifier?: string): string | null {
+  if (identifier) {
+    return semver.inc(currentVersion, releaseType as semver.ReleaseType, identifier)
+  }
   return semver.inc(currentVersion, releaseType as semver.ReleaseType)
 }
 

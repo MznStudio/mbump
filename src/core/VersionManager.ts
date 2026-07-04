@@ -132,40 +132,40 @@ export class VersionManager {
                 break
               case 'pre-patch':
                 if (isPrerelease(pkg.version)) {
-                  newVersion = incrementVersion(pkg.version, 'prerelease')
+                  newVersion = incrementVersion(pkg.version, 'prerelease', 'beta')
                 }
                 else {
-                  newVersion = incrementVersion(pkg.version, 'prepatch')
+                  newVersion = incrementVersion(pkg.version, 'prepatch', 'beta')
                 }
                 break
               case 'pre-minor':
                 if (isPrerelease(pkg.version)) {
                   const currentMinor = getMinor(pkg.version) ?? 0
-                  const potentialVersion = incrementVersion(pkg.version, 'preminor')
+                  const potentialVersion = incrementVersion(pkg.version, 'preminor', 'beta')
                   if (potentialVersion && (getMinor(potentialVersion) ?? 0) > currentMinor) {
                     newVersion = potentialVersion
                   }
                   else {
-                    newVersion = incrementVersion(pkg.version, 'prerelease')
+                    newVersion = incrementVersion(pkg.version, 'prerelease', 'beta')
                   }
                 }
                 else {
-                  newVersion = incrementVersion(pkg.version, 'preminor')
+                  newVersion = incrementVersion(pkg.version, 'preminor', 'beta')
                 }
                 break
               case 'pre-major':
                 if (isPrerelease(pkg.version)) {
                   const currentMajor = getMajor(pkg.version) ?? 0
-                  const potentialVersion = incrementVersion(pkg.version, 'premajor')
+                  const potentialVersion = incrementVersion(pkg.version, 'premajor', 'beta')
                   if (potentialVersion && (getMajor(potentialVersion) ?? 0) > currentMajor) {
                     newVersion = potentialVersion
                   }
                   else {
-                    newVersion = incrementVersion(pkg.version, 'prerelease')
+                    newVersion = incrementVersion(pkg.version, 'prerelease', 'beta')
                   }
                 }
                 else {
-                  newVersion = incrementVersion(pkg.version, 'premajor')
+                  newVersion = incrementVersion(pkg.version, 'premajor', 'beta')
                 }
                 break
               case 'as-is':
@@ -230,40 +230,40 @@ export class VersionManager {
                 break
               case 'pre-patch':
                 if (isPrerelease(pkg.version)) {
-                  newVersion = incrementVersion(pkg.version, 'prerelease')
+                  newVersion = incrementVersion(pkg.version, 'prerelease', 'beta')
                 }
                 else {
-                  newVersion = incrementVersion(pkg.version, 'prepatch')
+                  newVersion = incrementVersion(pkg.version, 'prepatch', 'beta')
                 }
                 break
               case 'pre-minor':
                 if (isPrerelease(pkg.version)) {
                   const currentMinor = getMinor(pkg.version) ?? 0
-                  const potentialVersion = incrementVersion(pkg.version, 'preminor')
+                  const potentialVersion = incrementVersion(pkg.version, 'preminor', 'beta')
                   if (potentialVersion && (getMinor(potentialVersion) ?? 0) > currentMinor) {
                     newVersion = potentialVersion
                   }
                   else {
-                    newVersion = incrementVersion(pkg.version, 'prerelease')
+                    newVersion = incrementVersion(pkg.version, 'prerelease', 'beta')
                   }
                 }
                 else {
-                  newVersion = incrementVersion(pkg.version, 'preminor')
+                  newVersion = incrementVersion(pkg.version, 'preminor', 'beta')
                 }
                 break
               case 'pre-major':
                 if (isPrerelease(pkg.version)) {
                   const currentMajor = getMajor(pkg.version) ?? 0
-                  const potentialVersion = incrementVersion(pkg.version, 'premajor')
+                  const potentialVersion = incrementVersion(pkg.version, 'premajor', 'beta')
                   if (potentialVersion && (getMajor(potentialVersion) ?? 0) > currentMajor) {
                     newVersion = potentialVersion
                   }
                   else {
-                    newVersion = incrementVersion(pkg.version, 'prerelease')
+                    newVersion = incrementVersion(pkg.version, 'prerelease', 'beta')
                   }
                 }
                 else {
-                  newVersion = incrementVersion(pkg.version, 'premajor')
+                  newVersion = incrementVersion(pkg.version, 'premajor', 'beta')
                 }
                 break
               case 'as-is':
