@@ -73,6 +73,7 @@ export interface UpdateOptions {
   tag?: boolean
   tagPrefix?: string
   isBatchMode?: boolean // 标识是否是 mbump all 批量更新模式
+  packageVersionSelections?: PackageVersionSelections // 批量更新时的版本选择
 }
 
 export interface UpdatedPackage {
@@ -86,6 +87,22 @@ export interface UpdateResult {
   updatedPackages: UpdatedPackage[]
   publishedPackages: string[]
   error: string | null
+}
+
+export interface PreviewPackage {
+  name: string
+  oldVersion: string
+  newVersion: string
+  tagName: string
+  changelogEnabled: boolean
+  isDefaultPackage: boolean
+}
+
+export interface PreviewResult {
+  packages: PreviewPackage[]
+  autoCommit: boolean
+  push: boolean
+  npm: boolean
 }
 
 export interface ParsedArgs {

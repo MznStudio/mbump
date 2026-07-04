@@ -1,11 +1,10 @@
 #!/usr/bin/env node
-import type { Config, PackageVersionSelections } from '@/types'
+import type { Config, PackageVersionSelections, PreviewResult } from '@/types'
 import { execSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
-import semver from 'semver'
 import { loadConfigAsync } from '@/config/loader'
 import { RustManager } from '@/core/RustManager'
 import { VersionManager } from '@/core/VersionManager'
@@ -15,6 +14,24 @@ import { parseArgs } from './parser'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
+
+function renderPreview(preview: PreviewResult): void {
+  log.info('🔍 Dry-run 模式 - 以下操作将被执行:\n')
+
+  for (const pkg of preview.packages) {
+    log.info(`  📦 ${pkg.name}`)
+    log.info(`     当前版本: ${pkg.oldVersion}`)
+    log.info(`     新版本:   ${pkg.newVersion}`)
+    log.info(`     Tag:      ${pkg.tagName}`)
+    log.info(`     CHANGELOG: ${pkg.changelogEnabled ? '是' : pkg.isDefaultPackage ? '否（配置禁用）' : '跳过（子包）'}`)
+    log.info('')
+  }
+
+  log.info(`     Git Commit: ${preview.autoCommit ? '是' : '否'}`)
+  log.info(`     Git Push: ${preview.push ? '是' : '否'}`)
+  log.info(`     NPM Publish: ${preview.npm ? '是' : '否'}`)
+  log.info('\n✅ 以上为预览，未执行任何实际操作')
+}
 
 let packageVersion = '1.0.0'
 // 尝试多个可能的路径查找package.json
@@ -320,21 +337,13 @@ async function main(): Promise<void> {
         process.exit(1)
       }
 
-      const isDefaultPackage = parsedArgs.package === 'default' || pkgPath === 'package.json'
-      const tagPrefix = projectConfig.git?.tagPrefix || 'v'
-      const tagName = isDefaultPackage ? `${tagPrefix}${newVersion}` : `${pkg.name}@${newVersion}`
-
       if (parsedArgs.dryRun) {
-        log.info('🔍 Dry-run 模式 - 以下操作将被执行:\n')
-        log.info(`  📦 ${parsedArgs.package}`)
-        log.info(`     当前版本: ${pkg.version}`)
-        log.info(`     新版本:   ${newVersion}`)
-        log.info(`     Tag:      ${tagName}`)
-        log.info(`     CHANGELOG: ${projectConfig.git?.changelog !== false ? '是' : '否（配置禁用）'}`)
-        log.info(`     Git Commit: ${parsedArgs.autoCommit ? '是' : '否'}`)
-        log.info(`     Git Push: ${parsedArgs.push ? '是' : '否'}`)
-        log.info(`     NPM Publish: ${parsedArgs.npm ? '是' : '否'}`)
-        log.info('\n✅ 以上为预览，未执行任何实际操作')
+        const preview = await projectVersionManager.previewUpdate(parsedArgs.package!, parsedArgs.type, {
+          autoCommit: parsedArgs.autoCommit,
+          push: parsedArgs.push,
+          npm: parsedArgs.npm,
+        })
+        renderPreview(preview)
         process.exit(0)
       }
 
@@ -441,20 +450,13 @@ async function main(): Promise<void> {
             process.exit(1)
           }
 
-          const tagPrefix = projectConfig.git?.tagPrefix || 'v'
-          const tagName = `${tagPrefix}${newVersion}`
-
           if (parsedArgsWithDefaults.dryRun) {
-            log.info('🔍 Dry-run 模式 - 以下操作将被执行:\n')
-            log.info(`  📦 default`)
-            log.info(`     当前版本: ${pkg.version}`)
-            log.info(`     新版本:   ${newVersion}`)
-            log.info(`     Tag:      ${tagName}`)
-            log.info(`     CHANGELOG: ${projectConfig.git?.changelog !== false ? '是' : '否（配置禁用）'}`)
-            log.info(`     Git Commit: ${parsedArgsWithDefaults.autoCommit ? '是' : '否'}`)
-            log.info(`     Git Push: ${parsedArgsWithDefaults.push ? '是' : '否'}`)
-            log.info(`     NPM Publish: ${parsedArgsWithDefaults.npm ? '是' : '否'}`)
-            log.info('\n✅ 以上为预览，未执行任何实际操作')
+            const preview = await projectVersionManager.previewUpdate('default', parsedArgsWithDefaults.type, {
+              autoCommit: parsedArgsWithDefaults.autoCommit,
+              push: parsedArgsWithDefaults.push,
+              npm: parsedArgsWithDefaults.npm,
+            })
+            renderPreview(preview)
             process.exit(0)
           }
 
@@ -557,30 +559,14 @@ async function main(): Promise<void> {
     }
 
     if (parsedArgsWithDefaults.package === 'all' && Object.keys(packageVersionSelections).length > 0) {
-      // Dry-run 模式：显示详细预览
       if (parsedArgsWithDefaults.dryRun) {
-        log.info('🔍 Dry-run 模式 - 以下操作将被执行:\n')
-
-        for (const [packageName, selection] of Object.entries(packageVersionSelections)) {
-          const pkgPath = config.packagePaths[packageName]
-          const pkg = versionManager.getPackageInfo(pkgPath)
-          // 使用 as any 绕过类型检查，因为我们的 ReleaseType 包含额外的选项
-          const newVersion = selection.customVersion || semver.inc(pkg.version, selection.type as any)!
-
-          // 判断是否为主项目包
-          const isDefaultPackage = packageName === 'default' || pkgPath === 'package.json'
-          const tagPrefix = config.git?.tagPrefix || 'v'
-          const tagName = isDefaultPackage ? `${tagPrefix}${newVersion}` : `${pkg.name}@${newVersion}`
-
-          log.info(`  📦 ${packageName}`)
-          log.info(`     当前版本: ${pkg.version}`)
-          log.info(`     新版本:   ${newVersion}`)
-          log.info(`     Tag:      ${tagName}`)
-          log.info(`     CHANGELOG: ${isDefaultPackage && config.git?.changelog !== false ? '是' : '跳过（子包或配置禁用）'}`)
-          log.info('')
-        }
-
-        log.info('✅ 以上为预览，未执行任何实际操作')
+        const preview = await versionManager.previewUpdate('all', 'patch', {
+          packageVersionSelections,
+          autoCommit: parsedArgsWithDefaults.autoCommit,
+          push: parsedArgsWithDefaults.push,
+          npm: parsedArgsWithDefaults.npm,
+        })
+        renderPreview(preview)
         process.exit(0)
       }
 
@@ -692,28 +678,14 @@ async function main(): Promise<void> {
       }
     }
     else {
-      // 单包更新的 dry-run 预览
       if (parsedArgsWithDefaults.dryRun && parsedArgsWithDefaults.package) {
-        const pkgPath = config.packagePaths[parsedArgsWithDefaults.package]
-        const pkg = versionManager.getPackageInfo(pkgPath)
-        // 使用 as any 绕过类型检查
-        const newVersion = customVersion || semver.inc(pkg.version, selectedType as any)!
-
-        // 判断是否为主项目包
-        const isDefaultPackage = parsedArgsWithDefaults.package === 'default' || pkgPath === 'package.json'
-        const tagPrefix = config.git?.tagPrefix || 'v'
-        const tagName = isDefaultPackage ? `${tagPrefix}${newVersion}` : `${pkg.name}@${newVersion}`
-
-        log.info('🔍 Dry-run 模式 - 以下操作将被执行:\n')
-        log.info(`  📦 ${parsedArgsWithDefaults.package}`)
-        log.info(`     当前版本: ${pkg.version}`)
-        log.info(`     新版本:   ${newVersion}`)
-        log.info(`     Tag:      ${tagName}`)
-        log.info(`     CHANGELOG: ${config.git?.changelog !== false ? '是' : '否（配置禁用）'}`)
-        log.info(`     Git Commit: ${parsedArgsWithDefaults.autoCommit ? '是' : '否'}`)
-        log.info(`     Git Push: ${parsedArgsWithDefaults.push ? '是' : '否'}`)
-        log.info(`     NPM Publish: ${parsedArgsWithDefaults.npm ? '是' : '否'}`)
-        log.info('\n✅ 以上为预览，未执行任何实际操作')
+        const preview = await versionManager.previewUpdate(parsedArgsWithDefaults.package, selectedType, {
+          customVersion,
+          autoCommit: parsedArgsWithDefaults.autoCommit,
+          push: parsedArgsWithDefaults.push,
+          npm: parsedArgsWithDefaults.npm,
+        })
+        renderPreview(preview)
         process.exit(0)
       }
 

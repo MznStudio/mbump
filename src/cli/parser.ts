@@ -1,23 +1,5 @@
 import type { DefaultsConfig, ParsedArgs, ReleaseType } from '@/types'
-
-function isPathLike(arg: string): boolean {
-  return (
-    arg.startsWith('./') ||
-    arg.startsWith('../') ||
-    arg.startsWith('.\\') ||
-    arg.startsWith('..\\') ||
-    arg.startsWith('/') ||
-    arg.startsWith('\\') ||
-    /^[A-Za-z]:[\\/].*/.test(arg) ||
-    arg.startsWith('~') ||
-    arg === '.' ||
-    arg.startsWith('\\\\') ||
-    arg.startsWith('//') ||
-    arg.includes('/') ||
-    arg.includes('\\') ||
-    arg.includes('.')
-  )
-}
+import { isPathLike } from '@/utils/path'
 
 export function parseArgs(args: string[], defaults: DefaultsConfig = {}): ParsedArgs {
   const parsed: ParsedArgs = {

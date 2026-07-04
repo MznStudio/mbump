@@ -39,3 +39,18 @@ export function coerceVersion(version: string): string | null {
   const coerced = semver.coerce(version)
   return coerced?.version || null
 }
+
+export function getMajor(version: string): number | null {
+  const parsed = semver.parse(version)
+  return parsed?.major ?? null
+}
+
+export function getMinor(version: string): number | null {
+  const parsed = semver.parse(version)
+  return parsed?.minor ?? null
+}
+
+export function getPatch(version: string): number | null {
+  const parsed = semver.parse(version)
+  return parsed?.patch ?? null
+}

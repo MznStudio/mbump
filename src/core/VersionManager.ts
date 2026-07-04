@@ -1,11 +1,11 @@
-import type { Config, GitConfig, PackageInfo, PackagePaths, PublishConfig, ReleaseType, UpdateOptions, UpdateResult, VersionManagerOptions } from '@/types'
+import type { Config, GitConfig, PackageInfo, PackagePaths, PreviewPackage, PreviewResult, PublishConfig, ReleaseType, UpdateOptions, UpdateResult, VersionManagerOptions } from '@/types'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 import process from 'node:process'
-import semver from 'semver'
 import { loadConfig } from '@/config/loader'
 import log from '@/utils/logger'
 import { validateCommand, validatePath } from '@/utils/security'
+import { incrementVersion, isValidVersion, isPrerelease, getMajor, getMinor, getPatch } from '@/utils/semver'
 import { ChangelogManager } from './ChangelogManager'
 import { GitManager } from './GitManager'
 
@@ -89,6 +89,224 @@ export class VersionManager {
     }
   }
 
+  async previewUpdate(pkgName: string, releaseType: ReleaseType = 'patch', options: UpdateOptions = {}): Promise<PreviewResult> {
+    const {
+      packagePaths = this.packagePaths,
+      customVersion = null,
+      autoCommit = this.gitConfig.autoCommit !== false,
+      push = this.gitConfig.push !== false,
+      npm = false,
+      changelog = this.gitConfig.changelog !== false,
+      tagPrefix = this.gitConfig.tagPrefix || 'v',
+      packageVersionSelections,
+    } = options
+
+    const packages: PreviewPackage[] = []
+
+    if (pkgName === 'all' && packageVersionSelections) {
+      for (const [packageName, selection] of Object.entries(packageVersionSelections)) {
+        const pkgPath = packagePaths[packageName]
+        if (!pkgPath) {
+          throw new Error(`无效的包名: ${packageName}`)
+        }
+
+        const pkg = this.getPackageInfo(pkgPath)
+        let newVersion: string | null = null
+
+        if (selection.customVersion) {
+          if (!isValidVersion(selection.customVersion)) {
+            throw new Error(`无效的自定义版本号: ${selection.customVersion}`)
+          }
+          newVersion = selection.customVersion
+        }
+        else {
+          try {
+            switch (selection.type) {
+              case 'major':
+              case 'minor':
+              case 'patch':
+                newVersion = incrementVersion(pkg.version, selection.type)
+                break
+              case 'next':
+                newVersion = incrementVersion(pkg.version, 'patch')
+                break
+              case 'pre-patch':
+                if (isPrerelease(pkg.version)) {
+                  newVersion = incrementVersion(pkg.version, 'prerelease')
+                }
+                else {
+                  newVersion = incrementVersion(pkg.version, 'prepatch')
+                }
+                break
+              case 'pre-minor':
+                if (isPrerelease(pkg.version)) {
+                  const currentMinor = getMinor(pkg.version) ?? 0
+                  const potentialVersion = incrementVersion(pkg.version, 'preminor')
+                  if (potentialVersion && (getMinor(potentialVersion) ?? 0) > currentMinor) {
+                    newVersion = potentialVersion
+                  }
+                  else {
+                    newVersion = incrementVersion(pkg.version, 'prerelease')
+                  }
+                }
+                else {
+                  newVersion = incrementVersion(pkg.version, 'preminor')
+                }
+                break
+              case 'pre-major':
+                if (isPrerelease(pkg.version)) {
+                  const currentMajor = getMajor(pkg.version) ?? 0
+                  const potentialVersion = incrementVersion(pkg.version, 'premajor')
+                  if (potentialVersion && (getMajor(potentialVersion) ?? 0) > currentMajor) {
+                    newVersion = potentialVersion
+                  }
+                  else {
+                    newVersion = incrementVersion(pkg.version, 'prerelease')
+                  }
+                }
+                else {
+                  newVersion = incrementVersion(pkg.version, 'premajor')
+                }
+                break
+              case 'as-is':
+                newVersion = pkg.version
+                break
+              case 'conventional':
+                newVersion = incrementVersion(pkg.version, 'patch')
+                break
+              default:
+                throw new Error(`不支持的版本类型: ${selection.type}`)
+            }
+          }
+          catch (error: any) {
+            throw new Error(`版本计算失败: ${error.message}`)
+          }
+        }
+
+        if (!newVersion) {
+          throw new Error(`无法计算新版本号，当前版本: ${pkg.version}，类型: ${selection.type}`)
+        }
+
+        const isDefaultPackage = packageName === 'default' || pkgPath === 'package.json'
+        const tagName = isDefaultPackage ? `${tagPrefix}${newVersion}` : `${pkg.name}@${newVersion}`
+
+        packages.push({
+          name: packageName,
+          oldVersion: pkg.version,
+          newVersion,
+          tagName,
+          changelogEnabled: changelog && isDefaultPackage,
+          isDefaultPackage,
+        })
+      }
+    }
+    else {
+      const targets = pkgName === 'all' ? Object.values(packagePaths) : [packagePaths[pkgName]]
+
+      if (!targets.length || targets.some(path => !path)) {
+        throw new Error(`无效的包名: ${pkgName}`)
+      }
+
+      for (const pkgPath of targets) {
+        const pkg = this.getPackageInfo(pkgPath)
+        let newVersion: string | null = null
+
+        if (customVersion) {
+          if (!isValidVersion(customVersion)) {
+            throw new Error(`无效的自定义版本号: ${customVersion}`)
+          }
+          newVersion = customVersion
+        }
+        else {
+          try {
+            switch (releaseType) {
+              case 'major':
+              case 'minor':
+              case 'patch':
+                newVersion = incrementVersion(pkg.version, releaseType)
+                break
+              case 'next':
+                newVersion = incrementVersion(pkg.version, 'patch')
+                break
+              case 'pre-patch':
+                if (isPrerelease(pkg.version)) {
+                  newVersion = incrementVersion(pkg.version, 'prerelease')
+                }
+                else {
+                  newVersion = incrementVersion(pkg.version, 'prepatch')
+                }
+                break
+              case 'pre-minor':
+                if (isPrerelease(pkg.version)) {
+                  const currentMinor = getMinor(pkg.version) ?? 0
+                  const potentialVersion = incrementVersion(pkg.version, 'preminor')
+                  if (potentialVersion && (getMinor(potentialVersion) ?? 0) > currentMinor) {
+                    newVersion = potentialVersion
+                  }
+                  else {
+                    newVersion = incrementVersion(pkg.version, 'prerelease')
+                  }
+                }
+                else {
+                  newVersion = incrementVersion(pkg.version, 'preminor')
+                }
+                break
+              case 'pre-major':
+                if (isPrerelease(pkg.version)) {
+                  const currentMajor = getMajor(pkg.version) ?? 0
+                  const potentialVersion = incrementVersion(pkg.version, 'premajor')
+                  if (potentialVersion && (getMajor(potentialVersion) ?? 0) > currentMajor) {
+                    newVersion = potentialVersion
+                  }
+                  else {
+                    newVersion = incrementVersion(pkg.version, 'prerelease')
+                  }
+                }
+                else {
+                  newVersion = incrementVersion(pkg.version, 'premajor')
+                }
+                break
+              case 'as-is':
+                newVersion = pkg.version
+                break
+              case 'conventional':
+                newVersion = incrementVersion(pkg.version, 'patch')
+                break
+              default:
+                throw new Error(`不支持的版本类型: ${releaseType}`)
+            }
+          }
+          catch (error: any) {
+            throw new Error(`版本计算失败: ${error.message}`)
+          }
+        }
+
+        if (!newVersion) {
+          throw new Error(`无法计算新版本号，当前版本: ${pkg.version}，类型: ${releaseType}`)
+        }
+
+        const isDefaultPackage = pkgPath === 'package.json' || (pkgName === 'default' && this.config.packagePaths[pkgName] === pkgPath)
+        const tagName = isDefaultPackage ? `${tagPrefix}${newVersion}` : `${pkg.name}@${newVersion}`
+
+        packages.push({
+          name: pkg.name,
+          oldVersion: pkg.version,
+          newVersion,
+          tagName,
+          changelogEnabled: changelog && isDefaultPackage,
+          isDefaultPackage,
+        })
+      }
+    }
+
+    return {
+      packages,
+      autoCommit,
+      push,
+      npm,
+    }
+  }
+
   async updateVersion(pkgName: string, releaseType: ReleaseType = 'patch', options: UpdateOptions = {}): Promise<UpdateResult> {
     const {
       dryRun = false,
@@ -128,7 +346,7 @@ export class VersionManager {
             let newVersion: string | null = null
 
             if (customVersion) {
-              if (!semver.valid(customVersion)) {
+              if (!isValidVersion(customVersion)) {
                 throw new Error(`无效的自定义版本号: ${customVersion}`)
               }
               newVersion = customVersion
@@ -139,54 +357,54 @@ export class VersionManager {
                   case 'major':
                   case 'minor':
                   case 'patch':
-                    newVersion = semver.inc(pkg.version, releaseType)
+                    newVersion = incrementVersion(pkg.version, releaseType)
                     break
                   case 'next':
-                    newVersion = semver.inc(pkg.version, 'patch')
+                    newVersion = incrementVersion(pkg.version, 'patch')
                     break
                   case 'pre-patch':
-                    if (semver.prerelease(pkg.version)) {
-                      newVersion = semver.inc(pkg.version, 'prerelease')
+                    if (isPrerelease(pkg.version)) {
+                      newVersion = incrementVersion(pkg.version, 'prerelease')
                     }
                     else {
-                      newVersion = semver.inc(pkg.version, 'prepatch', 'beta')
+                      newVersion = incrementVersion(pkg.version, 'prepatch')
                     }
                     break
                   case 'pre-minor':
-                    if (semver.prerelease(pkg.version)) {
-                      const currentMinor = semver.minor(pkg.version)
-                      const potentialVersion = semver.inc(pkg.version, 'preminor', 'beta')
-                      if (potentialVersion && semver.minor(potentialVersion) > currentMinor) {
+                    if (isPrerelease(pkg.version)) {
+                      const currentMinor = getMinor(pkg.version) ?? 0
+                      const potentialVersion = incrementVersion(pkg.version, 'preminor')
+                      if (potentialVersion && (getMinor(potentialVersion) ?? 0) > currentMinor) {
                         newVersion = potentialVersion
                       }
                       else {
-                        newVersion = semver.inc(pkg.version, 'prerelease')
+                        newVersion = incrementVersion(pkg.version, 'prerelease')
                       }
                     }
                     else {
-                      newVersion = semver.inc(pkg.version, 'preminor', 'beta')
+                      newVersion = incrementVersion(pkg.version, 'preminor')
                     }
                     break
                   case 'pre-major':
-                    if (semver.prerelease(pkg.version)) {
-                      const currentMajor = semver.major(pkg.version)
-                      const potentialVersion = semver.inc(pkg.version, 'premajor', 'beta')
-                      if (potentialVersion && semver.major(potentialVersion) > currentMajor) {
+                    if (isPrerelease(pkg.version)) {
+                      const currentMajor = getMajor(pkg.version) ?? 0
+                      const potentialVersion = incrementVersion(pkg.version, 'premajor')
+                      if (potentialVersion && (getMajor(potentialVersion) ?? 0) > currentMajor) {
                         newVersion = potentialVersion
                       }
                       else {
-                        newVersion = semver.inc(pkg.version, 'prerelease')
+                        newVersion = incrementVersion(pkg.version, 'prerelease')
                       }
                     }
                     else {
-                      newVersion = semver.inc(pkg.version, 'premajor', 'beta')
+                      newVersion = incrementVersion(pkg.version, 'premajor')
                     }
                     break
                   case 'as-is':
                     newVersion = pkg.version
                     break
                   case 'conventional':
-                    newVersion = semver.inc(pkg.version, 'patch')
+                    newVersion = incrementVersion(pkg.version, 'patch')
                     break
                   default:
                     throw new Error(`不支持的版本类型: ${releaseType}`)
@@ -479,19 +697,19 @@ export class VersionManager {
   }
 
   isValidVersion(version: string): boolean {
-    return semver.valid(version) !== null
+    return isValidVersion(version)
   }
 
   getVersionDiff(oldVersion: string, newVersion: string): string | null {
-    if (!semver.valid(oldVersion) || !semver.valid(newVersion)) {
+    if (!isValidVersion(oldVersion) || !isValidVersion(newVersion)) {
       return null
     }
 
-    if (semver.major(newVersion) > semver.major(oldVersion))
+    if ((getMajor(newVersion) ?? 0) > (getMajor(oldVersion) ?? 0))
       return 'major'
-    if (semver.minor(newVersion) > semver.minor(oldVersion))
+    if ((getMinor(newVersion) ?? 0) > (getMinor(oldVersion) ?? 0))
       return 'minor'
-    if (semver.patch(newVersion) > semver.patch(oldVersion))
+    if ((getPatch(newVersion) ?? 0) > (getPatch(oldVersion) ?? 0))
       return 'patch'
     return null
   }

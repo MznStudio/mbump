@@ -603,15 +603,114 @@ export default {
 
 ## 🔌 API 使用
 
+mbump 提供了完整的公共 API，支持在代码中灵活调用版本管理功能。
+
+### 导出项列表
+
 ```typescript
-import { VersionManager, loadConfig, loadConfigAsync } from '@mznjs/mbump'
+import {
+  // 核心类
+  VersionManager,      // 版本管理核心类
+  RustManager,         // Rust 项目版本管理（更新 Cargo.toml）
+  GitManager,          // Git 操作管理器
+  ChangelogManager,    // 更新日志管理器
 
-// 异步加载配置（推荐）
+  // 配置加载
+  loadConfig,          // 同步加载配置
+  loadConfigAsync,     // 异步加载配置（推荐）
+  defineConfig,        // 配置定义辅助函数（提供类型提示）
+  clearConfigCache,    // 清除配置缓存
+
+  // 工具模块
+  log,                 // 日志工具（基于 consola）
+  pathUtils,           // 路径工具函数
+  semverUtils,         // Semver 工具函数
+  securityUtils,       // 安全验证工具
+} from '@mznjs/mbump'
+```
+
+### 工具模块详解
+
+#### pathUtils - 路径工具
+
+```typescript
+import { pathUtils } from '@mznjs/mbump'
+
+// 判断字符串是否为路径格式
+pathUtils.isPathLike('./packages/my-pkg') // true
+pathUtils.isPathLike('../other-project')  // true
+pathUtils.isPathLike('C:\\Projects\\app') // true
+pathUtils.isPathLike('my-package')        // false
+
+// 解析路径
+pathUtils.resolvePath('/project', './packages/core') // '/project/packages/core'
+
+// 判断是否为绝对路径
+pathUtils.isAbsolutePath('/usr/local/project') // true
+pathUtils.isAbsolutePath('./src')             // false
+```
+
+#### semverUtils - Semver 工具
+
+```typescript
+import { semverUtils } from '@mznjs/mbump'
+
+// 验证版本格式
+semverUtils.isValidVersion('1.0.0')      // true
+semverUtils.isValidVersion('v1.0.0')     // false
+
+// 解析版本
+semverUtils.parseVersion('1.2.3')        // { major: 1, minor: 2, patch: 3 }
+
+// 递增版本
+semverUtils.incrementVersion('1.0.0', 'patch')   // '1.0.1'
+semverUtils.incrementVersion('1.0.0', 'minor')   // '1.1.0'
+semverUtils.incrementVersion('1.0.0', 'major')   // '2.0.0'
+
+// 比较版本
+semverUtils.compareVersions('1.0.0', '1.1.0')    // -1
+semverUtils.compareVersions('1.1.0', '1.0.0')    // 1
+semverUtils.compareVersions('1.0.0', '1.0.0')    // 0
+
+// 获取版本差异
+semverUtils.getVersionDiff('1.0.0', '1.0.1')    // 'patch'
+semverUtils.getVersionDiff('1.0.0', '1.1.0')    // 'minor'
+semverUtils.getVersionDiff('1.0.0', '2.0.0')    // 'major'
+
+// 判断预发布版本
+semverUtils.isPrerelease('1.0.0-beta.1')        // true
+semverUtils.isPrerelease('1.0.0')               // false
+
+// 获取版本号各部分
+semverUtils.getMajor('1.2.3')     // 1
+semverUtils.getMinor('1.2.3')     // 2
+semverUtils.getPatch('1.2.3')     // 3
+```
+
+#### securityUtils - 安全验证
+
+```typescript
+import { securityUtils } from '@mznjs/mbump'
+
+// 验证路径是否在项目目录内（防止路径遍历攻击）
+securityUtils.validatePath('/project/src', '/project')   // true
+securityUtils.validatePath('/etc/passwd', '/project')    // throws Error
+
+// 验证命令是否包含危险字符（防止命令注入）
+securityUtils.validateCommand('npm publish')             // true
+securityUtils.validateCommand('npm publish && rm -rf /') // throws Error
+
+// 清理文件名中的非法字符
+securityUtils.sanitizeFileName('my/path/file.js')        // 'my_path_file.js'
+```
+
+### VersionManager - 版本管理核心
+
+```typescript
+import { VersionManager, loadConfigAsync } from '@mznjs/mbump'
+
+// 初始化版本管理器
 const config = await loadConfigAsync(process.cwd())
-const manager = new VersionManager({ config, rootDir: process.cwd() })
-
-// 同步加载配置
-const config = loadConfig(process.cwd())
 const manager = new VersionManager({ config, rootDir: process.cwd() })
 
 // 更新单个包版本
@@ -632,12 +731,188 @@ console.log(result.updatedPackages)
 //   }
 // ]
 
+// 预览版本更新（不实际执行）
+const preview = await manager.previewUpdate('my-package', 'patch')
+console.log(preview)
+// {
+//   packages: [
+//     {
+//       name: 'my-package',
+//       oldVersion: '1.0.0',
+//       newVersion: '1.0.1',
+//       tagName: '@my-org/my-package@1.0.1',
+//       changelogEnabled: true,
+//       isDefaultPackage: false
+//     }
+//   ],
+//   autoCommit: true,
+//   push: true,
+//   npm: false
+// }
+
 // 获取包当前版本
 const version = manager.getPackageVersion('my-package')
 console.log(version) // '1.0.0'
 
+// 获取包信息（带缓存）
+const pkgInfo = manager.getPackageInfo('packages/my-pkg/package.json')
+console.log(pkgInfo.name, pkgInfo.version)
+
+// 验证版本有效性
+manager.isValidVersion('1.0.0') // true
+
+// 获取版本差异
+manager.getVersionDiff('1.0.0', '1.1.0') // 'minor'
+
+// 缓存管理
+manager.clearPackageCache()           // 清除所有包缓存
+manager.refreshPackageCache('packages/core/package.json') // 刷新指定包缓存
+const stats = manager.getCacheStats() // 获取缓存统计
+console.log(stats) // { size: 5, packages: [...] }
+
 // 手动提交和推送
 await manager.gitCommitAndPush(true) // true = 推送到远程
+```
+
+### RustManager - Rust 项目版本管理
+
+```typescript
+import { RustManager } from '@mznjs/mbump'
+
+// 创建 Rust 管理器
+const rustManager = new RustManager('/path/to/rust-project')
+
+// 检查 Cargo.toml 是否存在
+rustManager.exists() // true
+
+// 获取当前版本
+const version = rustManager.getCurrentVersion()
+console.log(version) // '0.1.0'
+
+// 更新版本
+const result = rustManager.updateVersion('patch')
+console.log(result)
+// {
+//   success: true,
+//   oldVersion: '0.1.0',
+//   newVersion: '0.1.1',
+//   error: null
+// }
+
+// 使用自定义版本
+rustManager.updateVersion('as-is', { customVersion: '1.0.0' })
+```
+
+### GitManager - Git 操作管理
+
+```typescript
+import { GitManager } from '@mznjs/mbump'
+
+const gitManager = new GitManager('/path/to/project')
+
+// 检查未提交更改
+const hasChanges = gitManager.hasUncommittedChanges()
+
+// 获取最后一个 Tag
+const lastTag = gitManager.getLastTag()
+
+// 获取上次 Tag 后的提交记录
+const commits = await gitManager.getCommitsSinceLastTag()
+
+// 检查版本是否已存在
+const exists = await gitManager.checkVersionExists('1.0.0', 'v')
+
+// Git 操作
+gitManager.addFiles(['package.json', 'CHANGELOG.md'])
+await gitManager.commit('chore: bump version')
+await gitManager.createTag('1.0.0', 'v')
+await gitManager.push(true) // true = 包含 tags
+
+// 一站式提交和推送
+await gitManager.commitAndPush(
+  'chore: bump version',
+  true,  // push
+  true,  // createTag
+  '1.0.0',
+  'v'    // tagPrefix
+)
+```
+
+### ChangelogManager - 更新日志管理
+
+```typescript
+import { ChangelogManager } from '@mznjs/mbump'
+
+const changelogManager = new ChangelogManager('/path/to/project')
+
+// 更新 CHANGELOG
+await changelogManager.updateChangelog(
+  '1.0.1',
+  [
+    { hash: 'abc123', message: 'feat: add new feature' },
+    { hash: 'def456', message: 'fix: resolve bug' }
+  ],
+  '@my-org/my-package' // 可选：包名（用于子包）
+)
+
+// 根据提交信息识别类型
+const typeConfig = changelogManager.getTypeConfig('feat: add feature')
+console.log(typeConfig.type) // 'feature'
+console.log(typeConfig.section) // 'Features'
+
+// 检测现有 CHANGELOG 格式
+const format = changelogManager.detectChangelogFormat(content)
+```
+
+### 配置加载
+
+```typescript
+import { loadConfig, loadConfigAsync, defineConfig, clearConfigCache } from '@mznjs/mbump'
+
+// 异步加载配置（推荐）
+const config = await loadConfigAsync(process.cwd())
+
+// 同步加载配置
+const config = loadConfig(process.cwd())
+
+// 使用 defineConfig 定义配置（提供类型提示）
+const config = defineConfig({
+  packagePaths: {
+    components: 'packages/components/package.json',
+  },
+  defaults: {
+    releaseType: 'patch',
+  },
+})
+
+// 清除配置缓存
+clearConfigCache()              // 清除所有缓存
+clearConfigCache('/project')    // 清除指定项目的缓存
+```
+
+### 日志工具
+
+```typescript
+import { log } from '@mznjs/mbump'
+
+// 设置日志级别
+log.setLevel('debug') // 'debug' | 'info' | 'warn' | 'error'
+
+// 日志输出
+log.debug('debug message')
+log.info('info message')
+log.success('success message')
+log.warn('warn message')
+log.error('error message')
+
+// 试运行模式日志
+log.dryRun('would update version')
+
+// 带加载动画的异步操作
+const result = await log.withSpinner('Processing...', async () => {
+  // 异步操作
+  return await someAsyncTask()
+})
 ```
 
 ## 🛡️ 批量更新容错处理
