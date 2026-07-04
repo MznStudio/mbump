@@ -5,6 +5,12 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.2.0-beta.0] - 2026-07-04
+
+🔧 工具变更
+
+- a7f01f3cef3bc14ac1e4ce37216d2e958cab5863 chore(VersionManager): 为所有预发布版本升级添加beta标识 (VersionManager.ts)
+
 ## [2.1.7-0] - 2026-07-04
 
 ### 待补充
