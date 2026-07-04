@@ -5,6 +5,13 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.1.5] - 2026-07-04
+
+🚀 新增功能
+
+- feat(cli): 添加未提交Git更改检测与处理逻辑 (README.md, index.ts)
+- feat: 新增tag、changelog相关参数与错误提示优化 (index.ts, parser.ts, VersionManager.ts, index.ts)
+
 ## [2.1.4] - 2026-07-04
 
 ### 待补充
