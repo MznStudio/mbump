@@ -101,6 +101,7 @@ export interface ParsedArgs {
   allowUncommitted: boolean
   npm: boolean
   showConfig: boolean
+  rust: boolean
 }
 
 export interface SpinnerOptions {

@@ -33,6 +33,7 @@ export function parseArgs(args: string[], defaults: DefaultsConfig = {}): Parsed
     allowUncommitted: defaults.allowUncommitted || false,
     npm: defaults.npm || false,
     showConfig: false,
+    rust: false,
   }
 
   const allowedTypes: ReleaseType[] = [
@@ -77,6 +78,10 @@ export function parseArgs(args: string[], defaults: DefaultsConfig = {}): Parsed
     }
     else if (arg === '--show-config' || arg === '-c') {
       parsed.showConfig = true
+      i++
+    }
+    else if (arg === '--rust' || arg === '-r') {
+      parsed.rust = true
       i++
     }
     else if (arg === '--version' || arg === '-V') {

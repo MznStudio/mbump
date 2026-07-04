@@ -7,6 +7,7 @@ import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import semver from 'semver'
 import { loadConfigAsync } from '@/config/loader'
+import { RustManager } from '@/core/RustManager'
 import { VersionManager } from '@/core/VersionManager'
 import log from '@/utils/logger'
 import { selectAllVersionsInteractive, selectVersionInteractive } from './interactive'
@@ -189,6 +190,7 @@ export function showHelp(): void {
   --allow-uncommitted, -u  允许在有未提交更改的情况下继续操作
   --npm, -N      启用npm包发布功能（默认不发布）
   --show-config, -c  显示当前加载的完整配置信息
+  --rust, -r     启用 Rust 项目模式，更新 Cargo.toml 中的版本号
   --version, -V  显示版本信息
   --help, -h     显示此帮助信息
 
@@ -203,6 +205,11 @@ export function showHelp(): void {
   mbump ./packages/my-pkg    # 更新 ./packages/my-pkg 目录下的 package.json
   mbump ./packages/my-pkg patch  # 指定版本类型
   mbump ../other-project minor  # 更新上级目录的项目
+
+  # Rust 项目模式（更新 Cargo.toml）
+  mbump --rust patch         # 更新 Rust 项目的补丁版本
+  mbump -r minor             # 更新 Rust 项目的小版本
+  mbump -r major --dry-run   # 试运行升级 Rust 项目的主版本
 `
   log.info(helpText)
 }
@@ -232,6 +239,40 @@ async function main(): Promise<void> {
     }
 
     const parsedArgs = parseArgs(args)
+
+    if (parsedArgs.rust) {
+      const rustManager = new RustManager(process.cwd())
+
+      if (!rustManager.exists()) {
+        displayError(new Error(`Cargo.toml 文件不存在于当前目录`), {
+          operation: 'Rust 项目检测',
+        })
+        log.info(`💡 请确保当前目录是 Rust 项目根目录`)
+        process.exit(1)
+      }
+
+      const currentVersion = rustManager.getCurrentVersion()
+      if (!currentVersion) {
+        displayError(new Error(`Cargo.toml 文件中未找到 [package] 部分的 version 字段`), {
+          operation: '版本读取',
+        })
+        process.exit(1)
+      }
+
+      try {
+        rustManager.updateVersion(parsedArgs.type, {
+          dryRun: parsedArgs.dryRun,
+          verbose: parsedArgs.verbose,
+          autoCommit: parsedArgs.autoCommit,
+          push: parsedArgs.push,
+        })
+        process.exit(0)
+      }
+      catch (error: any) {
+        displayError(error, { operation: 'Rust 版本更新' })
+        process.exit(1)
+      }
+    }
 
     if (parsedArgs.projectPath) {
       const resolvedProjectPath = resolve(process.cwd(), parsedArgs.projectPath)

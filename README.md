@@ -176,6 +176,7 @@ mbump components patch --npm
   --allow-uncommitted, -u  允许在有未提交更改的情况下继续操作
   --npm, -N              启用npm/pnpm包发布功能（默认不发布）
   --show-config, -c      显示当前加载的完整配置信息
+  --rust, -r             启用 Rust 项目模式，更新 Cargo.toml 中的版本号
   --version, -V          显示当前版本号
   --help, -h             显示此帮助信息
 
@@ -192,6 +193,11 @@ mbump components patch --npm
   # 路径模式
   mbump ./packages/my-pkg             # 更新 ./packages/my-pkg 目录下的 package.json
   mbump ./packages/my-pkg patch       # 指定版本类型
+
+  # Rust 项目模式
+  mbump --rust patch                  # 更新 Rust 项目的补丁版本
+  mbump -r minor                      # 更新 Rust 项目的小版本
+  mbump -r major --dry-run            # 试运行升级 Rust 项目的主版本
   mbump ../other-project minor        # 更新上级目录的项目
   mbump /path/to/project major        # 使用绝对路径
   mbump ./packages/my-pkg --dry-run   # 试运行模式
