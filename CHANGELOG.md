@@ -5,6 +5,12 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.1.1-beta.0] - 2026-07-04
+
+🚀 新增功能
+
+- feat(cli): 新增 Rust 项目版本更新支持 (README.md, package.json, pnpm-lock.yaml, index.ts, parser.ts, RustManager.ts, index.ts)
+
 ## [2.1.0] - 2026-07-04
 
 🚀 新增功能
