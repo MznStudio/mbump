@@ -5,6 +5,12 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.1.1-beta.2] - 2026-07-04
+
+📝 文档更新
+
+- docs(cli): 更新文档并实现Rust项目指定目录支持 (README.md, index.ts)
+
 ## [2.1.1-beta.1] - 2026-07-04
 
 ### 待补充
