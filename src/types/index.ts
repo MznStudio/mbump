@@ -108,7 +108,7 @@ export interface PreviewResult {
 export interface ParsedArgs {
   package: string | null
   projectPath: string | null
-  type: ReleaseType
+  type: ReleaseType | undefined
   dryRun: boolean
   help: boolean
   version: boolean

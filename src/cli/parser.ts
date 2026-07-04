@@ -5,7 +5,7 @@ export function parseArgs(args: string[], defaults: DefaultsConfig = {}): Parsed
   const parsed: ParsedArgs = {
     package: null,
     projectPath: null,
-    type: (defaults.releaseType || defaults.type || 'patch') as ReleaseType,
+    type: undefined,
     dryRun: defaults.dryRun || false,
     help: false,
     version: false,

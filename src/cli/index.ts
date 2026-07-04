@@ -326,8 +326,21 @@ async function main(): Promise<void> {
       const projectVersionManager = new VersionManager({ config: projectConfig, rootDir: resolvedProjectPath })
       log.setLevel(parsedArgs.verbose ? 'debug' : 'info')
 
+      let selectedType = parsedArgs.type
+      let customVersion: string | null = null
+
+      if (!parsedArgs.type) {
+        const currentVersion = projectVersionManager.getPackageVersion('default')
+        if (currentVersion) {
+          const selection = await selectVersionInteractive(projectConfig, 'default', currentVersion)
+          selectedType = selection.type
+          customVersion = selection.customVersion
+        }
+      }
+
       if (parsedArgs.dryRun) {
-        const preview = await projectVersionManager.previewUpdate(parsedArgs.package!, parsedArgs.type, {
+        const preview = await projectVersionManager.previewUpdate(parsedArgs.package!, selectedType, {
+          customVersion,
           autoCommit: parsedArgs.autoCommit,
           push: parsedArgs.push,
           npm: parsedArgs.npm,
@@ -336,12 +349,13 @@ async function main(): Promise<void> {
         process.exit(0)
       }
 
-      await projectVersionManager.updateVersion(parsedArgs.package!, parsedArgs.type, {
+      await projectVersionManager.updateVersion(parsedArgs.package!, selectedType, {
         dryRun: parsedArgs.dryRun,
         verbose: parsedArgs.verbose,
         autoCommit: parsedArgs.autoCommit,
         push: parsedArgs.push,
         npm: parsedArgs.npm,
+        customVersion,
       })
 
       log.success(`版本更新完成`)
@@ -428,8 +442,21 @@ async function main(): Promise<void> {
           const projectVersionManager = new VersionManager({ config: projectConfig, rootDir: resolvedPath })
           log.setLevel(parsedArgsWithDefaults.verbose ? 'debug' : 'info')
 
+          let selectedType = parsedArgsWithDefaults.type
+          let customVersion: string | null = null
+
+          if (!parsedArgsWithDefaults.type) {
+            const currentVersion = projectVersionManager.getPackageVersion('default')
+            if (currentVersion) {
+              const selection = await selectVersionInteractive(projectConfig, 'default', currentVersion)
+              selectedType = selection.type
+              customVersion = selection.customVersion
+            }
+          }
+
           if (parsedArgsWithDefaults.dryRun) {
-            const preview = await projectVersionManager.previewUpdate('default', parsedArgsWithDefaults.type, {
+            const preview = await projectVersionManager.previewUpdate('default', selectedType, {
+              customVersion,
               autoCommit: parsedArgsWithDefaults.autoCommit,
               push: parsedArgsWithDefaults.push,
               npm: parsedArgsWithDefaults.npm,
@@ -438,12 +465,13 @@ async function main(): Promise<void> {
             process.exit(0)
           }
 
-          await projectVersionManager.updateVersion('default', parsedArgsWithDefaults.type, {
+          await projectVersionManager.updateVersion('default', selectedType, {
             dryRun: parsedArgsWithDefaults.dryRun,
             verbose: parsedArgsWithDefaults.verbose,
             autoCommit: parsedArgsWithDefaults.autoCommit,
             push: parsedArgsWithDefaults.push,
             npm: parsedArgsWithDefaults.npm,
+            customVersion,
           })
 
           log.success(`版本更新完成`)
