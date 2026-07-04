@@ -339,7 +339,7 @@ async function main(): Promise<void> {
       let customVersion: string | null = null
 
       if (!parsedArgs.type) {
-        const currentVersion = projectVersionManager.getPackageVersion('default')
+        const currentVersion = projectVersionManager.getPackageVersion(packageName)
         if (currentVersion) {
           const selection = await selectVersionInteractive(projectConfig, packageName, currentVersion, resolvedProjectPath)
           selectedType = selection.type
@@ -464,7 +464,7 @@ async function main(): Promise<void> {
           let customVersion: string | null = null
 
           if (!parsedArgsWithDefaults.type) {
-            const currentVersion = projectVersionManager.getPackageVersion('default')
+            const currentVersion = projectVersionManager.getPackageVersion(packageName)
             if (currentVersion) {
               const selection = await selectVersionInteractive(projectConfig, packageName, currentVersion, resolvedPath)
               selectedType = selection.type
