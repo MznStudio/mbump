@@ -5,6 +5,13 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.1.1] - 2026-07-04
+
+♻️ 代码重构
+
+- refactor(cli): 移除重复的版本计算逻辑 (index.ts)
+- refactor: 重构版本管理逻辑，新增预览更新功能 (README.md, Cargo.toml, index.ts, parser.ts, VersionManager.ts, index.ts, index.ts, path.ts, semver.ts)
+
 ## [2.1.1-beta.2] - 2026-07-04
 
 📝 文档更新
