@@ -97,7 +97,33 @@ export class RustManager {
       newVersion = customVersion
     }
     else {
-      newVersion = semver.inc(oldVersion, releaseType as semver.ReleaseType)
+      let semverType: semver.ReleaseType = releaseType as semver.ReleaseType
+      let prerelease: string | undefined
+
+      if (releaseType === 'pre-patch') {
+        semverType = 'prepatch'
+        prerelease = 'beta'
+      }
+      else if (releaseType === 'pre-minor') {
+        semverType = 'preminor'
+        prerelease = 'beta'
+      }
+      else if (releaseType === 'pre-major') {
+        semverType = 'premajor'
+        prerelease = 'beta'
+      }
+      else if (releaseType === 'prerelease') {
+        semverType = 'prerelease'
+        prerelease = 'beta'
+      }
+
+      if (prerelease) {
+        newVersion = semver.inc(oldVersion, semverType, prerelease)
+      }
+      else {
+        newVersion = semver.inc(oldVersion, semverType)
+      }
+
       if (!newVersion) {
         throw new Error(`无法计算新版本，当前版本 "${oldVersion}"，版本类型 "${releaseType}"`)
       }
