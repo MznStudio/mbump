@@ -5,6 +5,12 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.1.0] - 2026-07-04
+
+🚀 新增功能
+
+- feat(cli): 优化路径支持与命令行参数，新增更多路径格式和快捷参数 (README.md, index.ts, parser.ts)
+
 ## [2.0.4] - 2026-07-04
 
 🚀 新增功能
