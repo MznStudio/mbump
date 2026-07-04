@@ -1,8 +1,19 @@
 import type { DefaultsConfig, ParsedArgs, ReleaseType } from '@/types'
 
+function isPathLike(arg: string): boolean {
+  return (
+    arg.startsWith('./') ||
+    arg.startsWith('../') ||
+    arg.startsWith('/') ||
+    /^[A-Za-z]:\\/.test(arg) ||
+    /^[A-Za-z]:\//.test(arg)
+  )
+}
+
 export function parseArgs(args: string[], defaults: DefaultsConfig = {}): ParsedArgs {
   const parsed: ParsedArgs = {
     package: null,
+    projectPath: null,
     type: (defaults.releaseType || defaults.type || 'patch') as ReleaseType,
     dryRun: defaults.dryRun || false,
     help: false,
@@ -84,11 +95,19 @@ export function parseArgs(args: string[], defaults: DefaultsConfig = {}): Parsed
       i++
     }
     else if (!arg.startsWith('-')) {
-      if (!parsed.package) {
-        parsed.package = arg
+      if (!parsed.projectPath && !parsed.package) {
+        if (isPathLike(arg)) {
+          parsed.projectPath = arg
+        }
+        else {
+          parsed.package = arg
+        }
       }
       else if (allowedTypes.includes(arg as ReleaseType)) {
         parsed.type = arg as ReleaseType
+      }
+      else if (!parsed.package && !isPathLike(arg)) {
+        parsed.package = arg
       }
       i++
     }

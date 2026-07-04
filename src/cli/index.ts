@@ -2,7 +2,7 @@
 import type { Config, PackageVersionSelections } from '@/types'
 import { execSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import semver from 'semver'
@@ -174,10 +174,11 @@ export function showHelp(): void {
 ========================
 企业级版本管理工具，支持单包和monorepo场景
 
-用法: mbump [package] [type] [options]
+用法: mbump [package|path] [type] [options]
 
 参数:
   [package]      要更新的包名称或 "all" 更新所有包
+  [path]         项目目录路径（支持 ./path, ../path, /path, C:\\path），自动查找该目录下的 package.json
   [type]         版本升级类型: major, minor, patch, pre-patch, pre-minor, pre-major
 
 选项:
@@ -196,6 +197,11 @@ export function showHelp(): void {
   mbump plugins major --dry-run  # 试运行升级plugins包主版本
   mbump core patch --no-push  # 更新版本并提交到本地，但不推送到远程
   mbump components patch --npm  # 更新版本并发布到npm
+
+  # 路径模式（直接指定项目目录）
+  mbump ./packages/my-pkg    # 更新 ./packages/my-pkg 目录下的 package.json
+  mbump ./packages/my-pkg patch  # 指定版本类型
+  mbump ../other-project minor  # 更新上级目录的项目
 `
   log.info(helpText)
 }
@@ -226,6 +232,63 @@ async function main(): Promise<void> {
     })
 
     const parsedArgs = parseArgs(args, config.defaults)
+
+    if (parsedArgs.projectPath) {
+      const resolvedProjectPath = resolve(process.cwd(), parsedArgs.projectPath)
+      if (!existsSync(resolvedProjectPath)) {
+        throw new Error(`路径 "${parsedArgs.projectPath}" 不存在`)
+      }
+      const pkgJsonPath = join(resolvedProjectPath, 'package.json')
+      if (!existsSync(pkgJsonPath)) {
+        throw new Error(`路径 "${parsedArgs.projectPath}" 中不存在 package.json`)
+      }
+
+      log.info(`切换到项目路径: ${resolvedProjectPath}`)
+      const projectConfig = await loadConfigAsync(resolvedProjectPath)
+
+      const projectParsedArgs = parseArgs(args, projectConfig.defaults)
+      projectParsedArgs.package = projectParsedArgs.package || 'default'
+
+      if (!projectParsedArgs.package || !Object.keys(projectConfig.packagePaths).includes(projectParsedArgs.package)) {
+        projectParsedArgs.package = 'default'
+      }
+
+      const projectVersionManager = new VersionManager({ config: projectConfig, rootDir: resolvedProjectPath })
+      log.setLevel(projectParsedArgs.verbose ? 'debug' : 'info')
+
+      const pkgPath = projectConfig.packagePaths[projectParsedArgs.package!]
+      const pkg = projectVersionManager.getPackageInfo(pkgPath)
+      const newVersion = semver.inc(pkg.version, projectParsedArgs.type)!
+
+      const isDefaultPackage = projectParsedArgs.package === 'default' || pkgPath === 'package.json'
+      const tagPrefix = projectConfig.git?.tagPrefix || 'v'
+      const tagName = isDefaultPackage ? `${tagPrefix}${newVersion}` : `${pkg.name}@${newVersion}`
+
+      if (projectParsedArgs.dryRun) {
+        log.info('🔍 Dry-run 模式 - 以下操作将被执行:\n')
+        log.info(`  📦 ${projectParsedArgs.package}`)
+        log.info(`     当前版本: ${pkg.version}`)
+        log.info(`     新版本:   ${newVersion}`)
+        log.info(`     Tag:      ${tagName}`)
+        log.info(`     CHANGELOG: ${projectConfig.git?.changelog !== false ? '是' : '否（配置禁用）'}`)
+        log.info(`     Git Commit: ${projectParsedArgs.autoCommit ? '是' : '否'}`)
+        log.info(`     Git Push: ${projectParsedArgs.push ? '是' : '否'}`)
+        log.info(`     NPM Publish: ${projectParsedArgs.npm ? '是' : '否'}`)
+        log.info('\n✅ 以上为预览，未执行任何实际操作')
+        process.exit(0)
+      }
+
+      await projectVersionManager.updateVersion(projectParsedArgs.package!, projectParsedArgs.type, {
+        dryRun: projectParsedArgs.dryRun,
+        verbose: projectParsedArgs.verbose,
+        autoCommit: projectParsedArgs.autoCommit,
+        push: projectParsedArgs.push,
+        npm: projectParsedArgs.npm,
+      })
+
+      log.success(`版本更新完成`)
+      process.exit(0)
+    }
 
     if (parsedArgs.showConfig) {
       log.info('📋 当前加载的配置:')

@@ -90,6 +90,7 @@ export interface UpdateResult {
 
 export interface ParsedArgs {
   package: string | null
+  projectPath: string | null
   type: ReleaseType
   dryRun: boolean
   help: boolean
