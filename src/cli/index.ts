@@ -5,7 +5,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
-import { loadConfigAsync } from '@/config/loader'
+import { clearConfigCache, loadConfigAsync } from '@/config/loader'
 import { RustManager } from '@/core/RustManager'
 import { VersionManager } from '@/core/VersionManager'
 import log from '@/utils/logger'
@@ -319,9 +319,18 @@ async function main(): Promise<void> {
       }
 
       log.info(`切换到项目路径: ${resolvedProjectPath}`)
+
+      const pkgJsonContent = JSON.parse(readFileSync(pkgJsonPath, 'utf8'))
+      const packageName = pkgJsonContent.name || 'default'
+
+      parsedArgs.package = packageName
+
+      clearConfigCache(resolvedProjectPath)
       const projectConfig = await loadConfigAsync(resolvedProjectPath)
 
-      parsedArgs.package = 'default'
+      projectConfig.packagePaths = {
+        [packageName]: pkgJsonPath,
+      }
 
       const projectVersionManager = new VersionManager({ config: projectConfig, rootDir: resolvedProjectPath })
       log.setLevel(parsedArgs.verbose ? 'debug' : 'info')
@@ -332,7 +341,7 @@ async function main(): Promise<void> {
       if (!parsedArgs.type) {
         const currentVersion = projectVersionManager.getPackageVersion('default')
         if (currentVersion) {
-          const selection = await selectVersionInteractive(projectConfig, 'default', currentVersion, resolvedProjectPath)
+          const selection = await selectVersionInteractive(projectConfig, packageName, currentVersion, resolvedProjectPath)
           selectedType = selection.type
           customVersion = selection.customVersion
         }
@@ -437,7 +446,16 @@ async function main(): Promise<void> {
         const pkgJsonPath = join(resolvedPath, 'package.json')
         if (existsSync(resolvedPath) && existsSync(pkgJsonPath)) {
           log.info(`切换到项目路径: ${resolvedPath}`)
+
+          const pkgJsonContent = JSON.parse(readFileSync(pkgJsonPath, 'utf8'))
+          const packageName = pkgJsonContent.name || 'default'
+
+          clearConfigCache(resolvedPath)
           const projectConfig = await loadConfigAsync(resolvedPath)
+
+          projectConfig.packagePaths = {
+            [packageName]: pkgJsonPath,
+          }
 
           const projectVersionManager = new VersionManager({ config: projectConfig, rootDir: resolvedPath })
           log.setLevel(parsedArgsWithDefaults.verbose ? 'debug' : 'info')
@@ -448,14 +466,14 @@ async function main(): Promise<void> {
           if (!parsedArgsWithDefaults.type) {
             const currentVersion = projectVersionManager.getPackageVersion('default')
             if (currentVersion) {
-              const selection = await selectVersionInteractive(projectConfig, 'default', currentVersion, resolvedPath)
+              const selection = await selectVersionInteractive(projectConfig, packageName, currentVersion, resolvedPath)
               selectedType = selection.type
               customVersion = selection.customVersion
             }
           }
 
           if (parsedArgsWithDefaults.dryRun) {
-            const preview = await projectVersionManager.previewUpdate('default', selectedType, {
+            const preview = await projectVersionManager.previewUpdate(packageName, selectedType, {
               customVersion,
               autoCommit: parsedArgsWithDefaults.autoCommit,
               push: parsedArgsWithDefaults.push,
@@ -465,7 +483,7 @@ async function main(): Promise<void> {
             process.exit(0)
           }
 
-          await projectVersionManager.updateVersion('default', selectedType, {
+          await projectVersionManager.updateVersion(packageName, selectedType, {
             dryRun: parsedArgsWithDefaults.dryRun,
             verbose: parsedArgsWithDefaults.verbose,
             autoCommit: parsedArgsWithDefaults.autoCommit,
