@@ -373,6 +373,41 @@ async function main(): Promise<void> {
         log.info(`切换到项目路径: ${rootDir}`)
       }
 
+      if (hasUncommittedChanges()) {
+        if (!parsedArgs.allowUncommitted) {
+          log.warn('警告: 检测到未提交的Git更改')
+
+          const inquirer = await import('inquirer')
+          const answers = await inquirer.default.prompt([
+            {
+              type: 'confirm',
+              name: 'continue',
+              message: parsedArgs.dryRun
+                ? '是否继续（dry-run模式不会实际提交更改）?'
+                : '是否提交这些更改并继续?',
+              default: true,
+            },
+          ])
+
+          if (!answers.continue) {
+            log.info('操作已取消')
+            process.exit(0)
+          }
+
+          if (!parsedArgs.dryRun) {
+            const commitMessage = 'chore: update mbump config and settings'
+            execSync(`git add . && git commit -m "${commitMessage}"`, { encoding: 'utf8', stdio: 'pipe' })
+            log.success(`已提交更改: ${commitMessage}`)
+          }
+          else {
+            log.info('dry-run模式: 跳过实际提交操作')
+          }
+        }
+        else {
+          log.warn('警告: 存在未提交的Git更改，您选择了忽略此检查。请注意这可能导致不一致的版本状态。')
+        }
+      }
+
       if (!rustManager.exists()) {
         displayError(new Error(`Cargo.toml 文件不存在于路径 "${rootDir}"`), {
           operation: 'Rust 项目检测',
@@ -451,6 +486,41 @@ async function main(): Promise<void> {
 
       const projectVersionManager = new VersionManager({ config: projectConfig, rootDir: resolvedProjectPath })
       log.setLevel(parsedArgs.verbose ? 'debug' : 'info')
+
+      if (hasUncommittedChanges()) {
+        if (!parsedArgs.allowUncommitted) {
+          log.warn('警告: 检测到未提交的Git更改')
+
+          const inquirer = await import('inquirer')
+          const answers = await inquirer.default.prompt([
+            {
+              type: 'confirm',
+              name: 'continue',
+              message: parsedArgs.dryRun
+                ? '是否继续（dry-run模式不会实际提交更改）?'
+                : '是否提交这些更改并继续?',
+              default: true,
+            },
+          ])
+
+          if (!answers.continue) {
+            log.info('操作已取消')
+            process.exit(0)
+          }
+
+          if (!parsedArgs.dryRun) {
+            const commitMessage = 'chore: update mbump config and settings'
+            execSync(`git add . && git commit -m "${commitMessage}"`, { encoding: 'utf8', stdio: 'pipe' })
+            log.success(`已提交更改: ${commitMessage}`)
+          }
+          else {
+            log.info('dry-run模式: 跳过实际提交操作')
+          }
+        }
+        else {
+          log.warn('警告: 存在未提交的Git更改，您选择了忽略此检查。请注意这可能导致不一致的版本状态。')
+        }
+      }
 
       let selectedType = parsedArgs.type
       let customVersion: string | null = null
