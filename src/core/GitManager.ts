@@ -82,9 +82,10 @@ export class GitManager {
     }
   }
 
-  checkVersionExists(version: string, tagPrefix: string = 'v'): boolean {
+  checkVersionExists(version: string, tagPrefix: string = 'v', packageName?: string): boolean {
     try {
-      execSync(`git rev-parse --verify ${tagPrefix}${version}`, {
+      const tag = packageName ? `${packageName}@${version}` : `${tagPrefix}${version}`
+      execSync(`git rev-parse --verify ${tag}`, {
         cwd: this.rootDir,
         stdio: 'pipe',
       })

@@ -581,9 +581,7 @@ async function main(): Promise<void> {
     let customVersion: string | null = null
     const packageVersionSelections: PackageVersionSelections = {}
 
-    if (
-      !args.some(arg => arg === '--type' || arg.startsWith('--type=') || arg === '-t' || arg.startsWith('-t='))
-    ) {
+    if (!parsedArgsWithDefaults.type) {
       if (parsedArgsWithDefaults.package === 'all') {
         const selections = await selectAllVersionsInteractive(config, rootDir)
         Object.assign(packageVersionSelections, selections)

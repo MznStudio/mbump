@@ -5,6 +5,12 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [utils@0.0.1] - 2026-07-04
+
+🔧 工具变更
+
+- chore(rust-test): 初始化版本发布相关配置与更新日志 (.mbump.config.json.bak, CHANGELOG.md)
+
 ## [2.1.2] - 2026-07-04
 
 ### 待补充
