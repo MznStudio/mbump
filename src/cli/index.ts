@@ -313,6 +313,9 @@ async function main(): Promise<void> {
           autoCommit: parsedArgs.autoCommit,
           push: parsedArgs.push,
           customVersion,
+          tag: parsedArgs.tag,
+          tagPrefix: parsedArgs.tagPrefix,
+          changelog: parsedArgs.changelog,
         })
         process.exit(0)
       }

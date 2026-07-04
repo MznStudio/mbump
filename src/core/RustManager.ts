@@ -3,6 +3,8 @@ import { join } from 'node:path'
 import * as toml from '@iarna/toml'
 import semver from 'semver'
 import log from '@/utils/logger'
+import { ChangelogManager } from './ChangelogManager'
+import { GitManager } from './GitManager'
 
 export interface RustUpdateOptions {
   dryRun?: boolean
@@ -10,13 +12,22 @@ export interface RustUpdateOptions {
   autoCommit?: boolean
   push?: boolean
   customVersion?: string | null
+  tag?: boolean
+  tagPrefix?: string
+  changelog?: boolean
 }
 
 export class RustManager {
   private cargoTomlPath: string
+  private gitManager: GitManager
+  private changelogManager: ChangelogManager
+  private rootDir: string
 
   constructor(rootDir: string) {
+    this.rootDir = rootDir
     this.cargoTomlPath = join(rootDir, 'Cargo.toml')
+    this.gitManager = new GitManager(rootDir)
+    this.changelogManager = new ChangelogManager(rootDir)
   }
 
   exists(): boolean {
@@ -38,7 +49,16 @@ export class RustManager {
   }
 
   updateVersion(releaseType: string, options: RustUpdateOptions = {}): { success: boolean, oldVersion: string, newVersion: string } {
-    const { dryRun = false, verbose = false, customVersion = null } = options
+    const {
+      dryRun = false,
+      verbose = false,
+      customVersion = null,
+      autoCommit = true,
+      push = true,
+      tag = true,
+      tagPrefix = 'v',
+      changelog = true,
+    } = options
 
     if (!this.exists()) {
       throw new Error(`Cargo.toml 文件不存在: ${this.cargoTomlPath}`)
@@ -78,6 +98,10 @@ export class RustManager {
       log.info(`\n🔍 Dry-run 模式 - Cargo.toml 版本更新预览:`)
       log.info(`   当前版本: ${oldVersion}`)
       log.info(`   新版本:   ${newVersion}`)
+      log.info(`   Tag:      ${tag ? `${tagPrefix}${newVersion}` : '跳过'}`)
+      log.info(`   CHANGELOG: ${changelog ? '是' : '跳过'}`)
+      log.info(`   Git Commit: ${autoCommit ? '是' : '否'}`)
+      log.info(`   Git Push: ${push ? '是' : '否'}`)
       log.info(`\n✅ 以上为预览，未执行任何实际操作`)
       return { success: true, oldVersion, newVersion }
     }
@@ -90,6 +114,50 @@ export class RustManager {
     }
 
     log.success(`Cargo.toml 版本更新完成: ${oldVersion} → ${newVersion}`)
+
+    if (changelog) {
+      try {
+        const commits = this.gitManager.getCommitsSinceLastTag()
+        this.changelogManager.updateChangelog(newVersion, commits)
+        log.success(`已更新 CHANGELOG.md`)
+      }
+      catch (error) {
+        log.warn(`更新 CHANGELOG.md 失败: ${(error as Error).message}`)
+      }
+    }
+
+    if (autoCommit) {
+      try {
+        this.gitManager.addFiles(['-u'])
+        this.gitManager.commit(`chore: bump version to ${newVersion}`)
+        log.success(`已提交更改`)
+      }
+      catch (error) {
+        log.warn(`提交更改失败: ${(error as Error).message}`)
+      }
+
+      if (tag) {
+        const tagName = `${tagPrefix}${newVersion}`
+        try {
+          this.gitManager.createTag(newVersion, tagPrefix)
+          log.success(`已创建 tag: ${tagName}`)
+        }
+        catch (error) {
+          log.warn(`创建 tag ${tagName} 失败: ${(error as Error).message}`)
+        }
+      }
+
+      if (push) {
+        try {
+          this.gitManager.push(tag)
+          log.success(`已推送 commits 和 tags`)
+        }
+        catch (error) {
+          log.warn(`推送失败: ${(error as Error).message}`)
+        }
+      }
+    }
+
     return { success: true, oldVersion, newVersion }
   }
 
