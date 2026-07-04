@@ -17,6 +17,7 @@ export function parseArgs(args: string[], defaults: DefaultsConfig = {}): Parsed
     type: (defaults.releaseType || defaults.type || 'patch') as ReleaseType,
     dryRun: defaults.dryRun || false,
     help: false,
+    version: false,
     verbose: defaults.verbose || false,
     autoCommit: (defaults as any).git?.autoCommit !== false,
     push: (defaults as any).git?.push !== false,
@@ -67,6 +68,10 @@ export function parseArgs(args: string[], defaults: DefaultsConfig = {}): Parsed
     }
     else if (arg === '--show-config') {
       parsed.showConfig = true
+      i++
+    }
+    else if (arg === '--version' || arg === '-V') {
+      parsed.version = true
       i++
     }
     else if (arg === '--type' || arg === '-t') {

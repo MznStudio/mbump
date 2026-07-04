@@ -94,6 +94,7 @@ export interface ParsedArgs {
   type: ReleaseType
   dryRun: boolean
   help: boolean
+  version: boolean
   verbose: boolean
   autoCommit: boolean
   push: boolean

@@ -189,6 +189,7 @@ export function showHelp(): void {
   --allow-uncommitted, -u  允许在有未提交更改的情况下继续操作
   --npm, -npm    启用npm包发布功能（默认不发布）
   --show-config  显示当前加载的完整配置信息
+  --version, -V  显示版本信息
   --help, -h     显示此帮助信息
 
 示例:
@@ -222,6 +223,11 @@ async function main(): Promise<void> {
 
     if (args.includes('--help') || args.includes('-h')) {
       showHelp()
+      process.exit(0)
+    }
+
+    if (args.includes('--version') || args.includes('-V')) {
+      log.info(`mbump v${packageVersion}`)
       process.exit(0)
     }
 
