@@ -5,6 +5,12 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.0.3] - 2026-07-04
+
+♻️ 代码重构
+
+- refactor(config,cli): 重构包路径处理逻辑，新增路径校验 (package.json, index.ts, loader.ts, VersionManager.ts, integration.test.ts)
+
 ## [2.0.2] - 2026-05-26
 
 🔧 工具变更
