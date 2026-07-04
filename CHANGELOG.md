@@ -5,6 +5,12 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.0.4-beta.0] - 2026-07-04
+
+🚀 新增功能
+
+- feat(cli): 新增路径模式支持，允许直接指定项目目录更新版本 (README.md, index.ts, parser.ts, index.ts)
+
 ## [2.0.3] - 2026-07-04
 
 ♻️ 代码重构
