@@ -5,5 +5,11 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [web@0.0.3] - 2026-07-05
+
+🔧 工具变更
+
+- 52c4c63879d78bb3a9ee3004d0e1dfd3b79c9157 chore(web): add initial CHANGELOG.md file (CHANGELOG.md)
+
 ## [web@0.0.2] - 2026-07-05
 
