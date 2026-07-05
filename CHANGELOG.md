@@ -5,6 +5,12 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.3.4-beta.0] - 2026-07-05
+
+🚀 新增功能
+
+- 11c945e6 feat: CHANGELOG 中为 commit hash 添加 GitHub 链接 (ChangelogManager.ts, GitManager.ts, VersionManager.ts)
+
 ## [2.3.3] - 2026-07-05
 
 🩹 缺陷修复
