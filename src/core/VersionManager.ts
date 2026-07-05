@@ -206,13 +206,13 @@ export class VersionManager {
       }
     }
     else {
-      const targets = pkgName === 'all' ? Object.values(packagePaths) : [packagePaths[pkgName]]
+      const targets = pkgName === 'all' ? Object.entries(packagePaths) : [[pkgName, packagePaths[pkgName]]]
 
-      if (!targets.length || targets.some(path => !path)) {
+      if (!targets.length || targets.some(([, path]) => !path)) {
         throw new Error(`无效的包名: ${pkgName}`)
       }
 
-      for (const pkgPath of targets) {
+      for (const [packageName, pkgPath] of targets) {
         const pkg = this.getPackageInfo(pkgPath)
         let newVersion: string | null = null
 
@@ -290,7 +290,7 @@ export class VersionManager {
           throw new Error(`无法计算新版本号，当前版本: ${pkg.version}，类型: ${releaseType}`)
         }
 
-        const isDefaultPackage = pkgName === 'default' || packagePaths[pkgName] === 'package.json'
+        const isDefaultPackage = packageName === 'default' || packagePaths[packageName] === 'package.json'
         const tagName = this.versionProvider.getDefaultTagFormat(
           isDefaultPackage ? 'default' : pkg.name,
           newVersion,

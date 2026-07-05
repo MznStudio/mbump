@@ -34,7 +34,10 @@ export class NodeVersionProvider implements IVersionProvider {
   }
 
   getDefaultTagFormat(packageName: string, version: string): string {
-    return packageName === 'default' || packageName === 'mbump'
+    return packageName === 'default'
+      || packageName === 'mbump'
+      || packageName === '@mznjs/mbump'
+      || packageName.startsWith('@mznjs/')
       ? `v${version}`
       : `${packageName}@${version}`
   }
