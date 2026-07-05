@@ -5,6 +5,12 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.0.12] - 2026-07-05
+
+♻️ 代码重构
+
+- 3f5c96ffc215ed1dd8c28e36c7588d8d185d2905 refactor(VersionManager): 简化默认标签格式的判断逻辑 (VersionManager.ts, VersionProvider.ts)
+
 ## [0.0.11] - 2026-07-05
 
 ### 待补充
