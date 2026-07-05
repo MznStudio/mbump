@@ -207,7 +207,9 @@ export class VersionManager {
 
         const isDefaultPackage = this._isDefaultPackage(packageName)
         const tagName = this.versionProvider.getDefaultTagFormat(
-          isDefaultPackage ? 'default' : pkg.name,
+          pkg.name,
+          newVersion,
+          isDefaultPackage,
         )
 
         packages.push({
@@ -642,8 +644,9 @@ export class VersionManager {
         for (const pkg of updatedPackages) {
           const isMainPackage = pkg.pkgKey === 'default'
           const tagName = this.versionProvider.getDefaultTagFormat(
-            isMainPackage ? 'default' : pkg.name,
+            pkg.name,
             pkg.newVersion,
+            isMainPackage,
           )
 
           try {
