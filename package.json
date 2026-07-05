@@ -39,18 +39,17 @@
   "author": "mznjs",
   "license": "MIT",
   "dependencies": {
-    "@iarna/toml": "^2.2.5",
     "consola": "^3.4.2",
     "inquirer": "^9.3.8",
     "ora": "^8.2.0",
     "semver": "^7.8.5",
+    "toml": "^4.1.2",
     "tsx": "^4.23.0"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^9.1.0",
     "@mznjs/eslint-config": "^0.0.9",
     "@mznjs/tsconfig": "^1.0.8",
-    "@types/iarna__toml": "^2.0.5",
     "@types/inquirer": "^9.0.10",
     "@types/node": "^25.9.4",
     "@types/semver": "^7.7.1",
