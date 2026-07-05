@@ -5,6 +5,12 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.3.4-beta.4] - 2026-07-05
+
+🚀 新增功能
+
+- [e7c53446](https://git.qcsm.ccwu.cc//commit/e7c5344643fbf3dc6e2b60d85371b46e150a4fc1) feat(git): 新增自定义commitUrl配置并完善commit链接生成逻辑 (schema.ts, GitManager.ts, VersionManager.ts, index.ts)
+
 ## [2.3.4-beta.3] - 2026-07-05
 
 🩹 缺陷修复
