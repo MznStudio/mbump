@@ -48,7 +48,7 @@ export class VersionManager {
       return false
 
     const isDefaultKey = pkgKey === 'default'
-    const isNodeRoot = pkgPath === 'package.json' || pkgPath === './package.json'
+    const isNodeRoot = pkgPath.endsWith('package.json') && dirname(pkgPath) === this.rootDir
     const isRustRoot = pkgPath.includes('Cargo.toml')
 
     return isDefaultKey || isNodeRoot || isRustRoot
