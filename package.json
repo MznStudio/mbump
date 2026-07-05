@@ -36,8 +36,10 @@
     "monorepo",
     "semver"
   ],
-  "author": "mznjs",
+  "author": "supbose",
   "license": "MIT",
+  "repository": "https://github.com/MznStudio/mbump",
+  "homepage": "https://github.com/MznStudio/mbump",
   "dependencies": {
     "consola": "^3.4.2",
     "inquirer": "^9.3.8",
