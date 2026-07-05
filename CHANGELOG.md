@@ -5,6 +5,23 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.3.3] - 2026-07-05
+
+🩹 缺陷修复
+
+- 938e7af17c732f3642b6d771b8a3e88ebe514967 fix: 修复 GitHub Actions 推送权限问题 (deploy.yml)
+
+🔧 工具变更
+
+- 646542befe5bc26bbf4fcadc262934462bd3fe42 chore: 更新 package.json 元数据 (package.json)
+
+👷 CI 变更
+
+- 1ef13fedefc12ccca5042a2330af681f6efea961 ci(deploy): 简化 release 名称格式 (deploy.yml)
+- 10d339cacc7e0577e868792a97c2b20cd3c9f928 ci(github workflows): 发布npm时跳过git检查 (deploy.yml)
+- 0ba9ae5276df09a763c6232f2ca05a27d2746bc8 ci(github workflows): 调整部署流程，移除测试步骤并更新令牌密钥 (deploy.yml)
+- 81370a72c00e1799a5c33bf99aa2bf0fe098d8bf ci(github workflows): 替换部署用的GITHUB_TOKEN为TAG_TOKEN (deploy.yml)
+
 ## [2.3.2] - 2026-07-05
 
 🔧 工具变更
