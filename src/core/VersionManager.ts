@@ -519,7 +519,10 @@ export class VersionManager {
               log.info(`\n发布 ${pkg.name}...`)
 
               try {
-                const publishCmd = this.publishConfig.command || 'pnpm publish --access public --no-git-checks'
+                const defaultCmd = this.versionProvider.type === 'rust'
+                  ? 'cargo publish'
+                  : 'pnpm publish --access public --no-git-checks'
+                const publishCmd = this.publishConfig.command || defaultCmd
 
                 if (!validateCommand(publishCmd)) {
                   throw new Error(`不安全的发布命令: ${publishCmd}`)
