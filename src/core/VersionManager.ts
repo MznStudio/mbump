@@ -1,6 +1,6 @@
 import type { IVersionProvider, ProjectType } from './VersionProvider'
 import type { Config, GitConfig, PackageInfo, PackagePaths, PreviewPackage, PreviewResult, PublishConfig, ReleaseType, UpdateOptions, UpdateResult, VersionManagerOptions } from '@/types'
-import { dirname } from 'node:path'
+import { dirname, resolve } from 'node:path'
 import process from 'node:process'
 import { loadConfig } from '@/config/loader'
 import log from '@/utils/logger'
@@ -48,8 +48,12 @@ export class VersionManager {
       return false
 
     const isDefaultKey = pkgKey === 'default'
-    const isNodeRoot = pkgPath.endsWith('package.json') && dirname(pkgPath) === this.rootDir
+    const resolvedPkgDir = resolve(dirname(pkgPath))
+    const resolvedRootDir = resolve(this.rootDir)
+    const isNodeRoot = pkgPath.endsWith('package.json') && resolvedPkgDir === resolvedRootDir
     const isRustRoot = pkgPath.includes('Cargo.toml')
+
+    log.debug(`_isDefaultPackage: pkgKey=${pkgKey}, pkgPath=${pkgPath}, rootDir=${this.rootDir}, resolvedPkgDir=${resolvedPkgDir}, resolvedRootDir=${resolvedRootDir}, isDefaultKey=${isDefaultKey}, isNodeRoot=${isNodeRoot}, isRustRoot=${isRustRoot}`)
 
     return isDefaultKey || isNodeRoot || isRustRoot
   }
