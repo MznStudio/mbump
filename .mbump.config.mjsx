@@ -1,6 +1,0 @@
-/** @type {import('@mznjs/mbump').Config} */
-export default {
-  packagePaths: {
-    test1: 'package.json',
-  },
-}
