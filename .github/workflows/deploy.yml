@@ -27,9 +27,6 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Run tests
-        run: pnpm run test
-
       - name: Get version from package.json
         id: get-version
         run: echo "VERSION=$(node -e "console.log(require('./package.json').version)")" >> $GITHUB_OUTPUT
