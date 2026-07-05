@@ -42,6 +42,18 @@ export class VersionManager {
     this._preloadPackageCache()
   }
 
+  private _isDefaultPackage(pkgKey: string): boolean {
+    const pkgPath = this.config.packagePaths[pkgKey]
+    if (!pkgPath)
+      return false
+
+    const isDefaultKey = pkgKey === 'default'
+    const isNodeRoot = pkgPath.includes('package.json')
+    const isRustRoot = pkgPath.includes('Cargo.toml')
+
+    return isDefaultKey || isNodeRoot || isRustRoot
+  }
+
   /**
    * 预加载所有包信息到缓存，避免后续重复读取文件
    */
@@ -189,10 +201,9 @@ export class VersionManager {
           throw new Error(`无法计算新版本号，当前版本: ${pkg.version}，类型: ${selection.type}`)
         }
 
-        const isDefaultPackage = packageName === 'default' || packagePaths[packageName] === 'package.json'
+        const isDefaultPackage = this._isDefaultPackage(packageName)
         const tagName = this.versionProvider.getDefaultTagFormat(
           isDefaultPackage ? 'default' : pkg.name,
-          newVersion,
         )
 
         packages.push({
@@ -290,7 +301,7 @@ export class VersionManager {
           throw new Error(`无法计算新版本号，当前版本: ${pkg.version}，类型: ${releaseType}`)
         }
 
-        const isDefaultPackage = packageName === 'default' || packagePaths[packageName] === 'package.json'
+        const isDefaultPackage = this._isDefaultPackage(packageName)
         const tagName = this.versionProvider.getDefaultTagFormat(
           isDefaultPackage ? 'default' : pkg.name,
           newVersion,
@@ -430,7 +441,7 @@ export class VersionManager {
             // 只在第一个包时检查版本
             if (!finalVersion) {
               finalVersion = newVersion
-              const isDefaultPackage = pkgName === 'default' || this.config.packagePaths[pkgName] === 'package.json'
+              const isDefaultPackage = this._isDefaultPackage(pkgName)
               const versionTag = this.versionProvider.getDefaultTagFormat(
                 isDefaultPackage ? 'default' : pkg.name,
                 newVersion,
@@ -459,7 +470,7 @@ export class VersionManager {
 
           // 生成CHANGELOG
           // 在批量更新模式时，只有主项目包（default）才生成 CHANGELOG
-          const isDefaultPackage = pkgName === 'default' || this.config.packagePaths[pkgName] === 'package.json'
+          const isDefaultPackage = this._isDefaultPackage(pkgName)
 
           if (!dryRun && changelog && finalVersion) {
             // 如果是批量模式且不是主项目包，跳过 CHANGELOG 生成
@@ -524,7 +535,7 @@ export class VersionManager {
               let commitMessage: string
               const updatedPackage = result.updatedPackages[0]
               const newVersion = updatedPackage.newVersion
-              const isDefaultPackage = pkgName === 'default' || this.config.packagePaths[pkgName] === 'package.json'
+              const isDefaultPackage = this._isDefaultPackage(pkgName)
 
               if (this.gitConfig.commitMessage && this.gitConfig.commitMessage !== 'chore: bump version to {{newVersion}}') {
                 commitMessage = this.gitConfig.commitMessage.replace(/\{\{newVersion\}\}/g, newVersion)
