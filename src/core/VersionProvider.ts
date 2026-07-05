@@ -113,12 +113,6 @@ export class RustVersionProvider implements IVersionProvider {
   }
 
   getDefaultTagFormat(packageName: string, version: string): string {
-    return packageName === 'default'
-      || packageName === 'mbump'
-      || packageName === '@mznjs/mbump'
-      || packageName.startsWith('@mznjs/')
-      ? `v${version}`
-      : `${packageName}@${version}`
-    // return `${packageName}@${version}`
+    return `${packageName}@${version}`
   }
 }
