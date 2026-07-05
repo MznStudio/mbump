@@ -5,6 +5,12 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.0.16] - 2026-07-05
+
+🚀 新增功能
+
+- c9629fd8cbade65db27dfe7c5e52f14718b6ac2e feat(GitManager/VersionManager): 新增自定义完整tag名称的支持 (GitManager.ts, VersionManager.ts)
+
 ## [0.0.15] - 2026-07-05
 
 ### 待补充
