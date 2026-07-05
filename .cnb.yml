@@ -22,6 +22,7 @@
             git_email: ${GITHUB_MZN_USERMAIL}
             git_commit: false
             force_commit: true
+            clear_remote: true
             branch: main
             # 仅上传以下文件/目录（逗号分隔）
             include: 'src/,dist/,*.md,package.json,.env.production'
