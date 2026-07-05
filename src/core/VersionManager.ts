@@ -53,9 +53,14 @@ export class VersionManager {
     const isNodeRoot = pkgPath.endsWith('package.json') && resolvedPkgDir === resolvedRootDir
     const isRustRoot = pkgPath.includes('Cargo.toml')
 
-    log.debug(`_isDefaultPackage: pkgKey=${pkgKey}, pkgPath=${pkgPath}, rootDir=${this.rootDir}, resolvedPkgDir=${resolvedPkgDir}, resolvedRootDir=${resolvedRootDir}, isDefaultKey=${isDefaultKey}, isNodeRoot=${isNodeRoot}, isRustRoot=${isRustRoot}`)
+    const isSinglePackageMode = Object.keys(this.config.packagePaths).length === 1
+    const isPathModeRoot = isSinglePackageMode && isNodeRoot
 
-    return isDefaultKey || isNodeRoot || isRustRoot
+    const result = isDefaultKey || (isNodeRoot && !isPathModeRoot) || isRustRoot
+
+    log.debug(`_isDefaultPackage: pkgKey=${pkgKey}, pkgPath=${pkgPath}, rootDir=${this.rootDir}, resolvedPkgDir=${resolvedPkgDir}, resolvedRootDir=${resolvedRootDir}, isDefaultKey=${isDefaultKey}, isNodeRoot=${isNodeRoot}, isRustRoot=${isRustRoot}, isSinglePackageMode=${isSinglePackageMode}, isPathModeRoot=${isPathModeRoot}, result=${result}`)
+
+    return result
   }
 
   /**
