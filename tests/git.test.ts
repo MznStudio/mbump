@@ -109,4 +109,71 @@ describe('GitManager', () => {
       cleanup()
     })
   })
+
+  describe('getCommitUrl', () => {
+    const testHash = 'a72b240eca99c81166c456c4fb71e3f5c65e3cf7'
+
+    it('应该返回 null 当没有远程仓库时', () => {
+      const repoPath = setupTestRepo()
+      const gitManager = new GitManager(repoPath)
+      expect(gitManager.getCommitUrl(testHash)).toBeNull()
+      cleanup()
+    })
+
+    it('应该为 GitHub 生成 /commit/ 路径', () => {
+      const repoPath = setupTestRepo()
+      execSync('git remote add origin https://github.com/MznStudio/mbump.git', { cwd: repoPath, stdio: 'pipe' })
+      const gitManager = new GitManager(repoPath)
+      expect(gitManager.getCommitUrl(testHash)).toBe(`https://github.com/MznStudio/mbump/commit/${testHash}`)
+      cleanup()
+    })
+
+    it('应该为 GitLab 生成 /-/commit/ 路径', () => {
+      const repoPath = setupTestRepo()
+      execSync('git remote add origin https://gitlab.com/MznStudio/mbump.git', { cwd: repoPath, stdio: 'pipe' })
+      const gitManager = new GitManager(repoPath)
+      expect(gitManager.getCommitUrl(testHash)).toBe(`https://gitlab.com/MznStudio/mbump/-/commit/${testHash}`)
+      cleanup()
+    })
+
+    it('应该为自定义 GitLab 域名生成 /-/commit/ 路径', () => {
+      const repoPath = setupTestRepo()
+      execSync('git remote add origin https://gitlab.cnb.cool/mznjs/mbump.git', { cwd: repoPath, stdio: 'pipe' })
+      const gitManager = new GitManager(repoPath)
+      expect(gitManager.getCommitUrl(testHash)).toBe(`https://gitlab.cnb.cool/mznjs/mbump/-/commit/${testHash}`)
+      cleanup()
+    })
+
+    it('应该为 Gitee 生成 /commit/ 路径', () => {
+      const repoPath = setupTestRepo()
+      execSync('git remote add origin https://gitee.com/MznStudio/mbump.git', { cwd: repoPath, stdio: 'pipe' })
+      const gitManager = new GitManager(repoPath)
+      expect(gitManager.getCommitUrl(testHash)).toBe(`https://gitee.com/MznStudio/mbump/commit/${testHash}`)
+      cleanup()
+    })
+
+    it('应该为 Bitbucket 生成 /commits/ 路径', () => {
+      const repoPath = setupTestRepo()
+      execSync('git remote add origin https://bitbucket.org/MznStudio/mbump.git', { cwd: repoPath, stdio: 'pipe' })
+      const gitManager = new GitManager(repoPath)
+      expect(gitManager.getCommitUrl(testHash)).toBe(`https://bitbucket.org/MznStudio/mbump/commits/${testHash}`)
+      cleanup()
+    })
+
+    it('应该为其他平台默认使用 /-/commit/ 路径', () => {
+      const repoPath = setupTestRepo()
+      execSync('git remote add origin https://cnb.cool/mznjs/mbump', { cwd: repoPath, stdio: 'pipe' })
+      const gitManager = new GitManager(repoPath)
+      expect(gitManager.getCommitUrl(testHash)).toBe(`https://cnb.cool/mznjs/mbump/-/commit/${testHash}`)
+      cleanup()
+    })
+
+    it('应该支持自定义提交路径', () => {
+      const repoPath = setupTestRepo()
+      execSync('git remote add origin https://github.com/MznStudio/mbump.git', { cwd: repoPath, stdio: 'pipe' })
+      const gitManager = new GitManager(repoPath)
+      expect(gitManager.getCommitUrl(testHash, '/custom/commit/')).toBe(`https://github.com/MznStudio/mbump/custom/commit/${testHash}`)
+      cleanup()
+    })
+  })
 })
