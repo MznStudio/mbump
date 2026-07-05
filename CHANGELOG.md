@@ -5,6 +5,18 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.2.11] - 2026-07-05
+
+🩹 缺陷修复
+
+- 6e09e184542111e37ab223ba63f11e1fd9aee207 fix: 修复批量更新时 tag 格式错误 (VersionManager.ts, test-full-flow.mjs, test-tag-format-simple.mjs, test-tag-format.js, test-tag-format.mjs, test-tag-issue.mjs)
+- 8fb56158b4544d1c8b99768433b8d215fc8fe25c fix: 修复 getDefaultTagFormat 调用参数 (VersionManager.ts)
+- 504c46d8731fe1c30cec68c2178c9224291cd96c fix: 使用 resolve 统一路径比较 (VersionManager.ts)
+
+🔧 工具变更
+
+- 5e10c03bb886567421b99860054710a9ad0cb40e chore(test): 删除全部旧的测试文件 (test-full-flow.mjs, test-tag-format-simple.mjs, test-tag-format.js, test-tag-format.mjs, test-tag-issue.mjs)
+
 ## [2.2.10] - 2026-07-05
 
 ### 待补充
