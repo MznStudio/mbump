@@ -103,7 +103,7 @@ export interface PreviewResult {
   packages: PreviewPackage[]
   autoCommit: boolean
   push: boolean
-  npm: boolean
+  publish: boolean
 }
 
 export interface ParsedArgs {
@@ -117,7 +117,7 @@ export interface ParsedArgs {
   autoCommit: boolean
   push: boolean
   allowUncommitted: boolean
-  npm: boolean
+  publish: boolean
   showConfig: boolean
   rust: boolean
   tag: boolean

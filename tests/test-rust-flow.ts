@@ -1,7 +1,7 @@
-import { VersionManager } from './src/core/VersionManager'
-import { join, resolve } from 'node:path'
 import { existsSync, readFileSync } from 'node:fs'
+import { join, resolve } from 'node:path'
 import * as toml from 'toml'
+import { VersionManager } from '../src/core/VersionManager'
 
 const rootDir = resolve('./rust-test')
 const cargoTomlPath = join(rootDir, 'Cargo.toml')
