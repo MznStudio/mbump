@@ -69,10 +69,9 @@ export class ChangelogManager {
     }
   }
 
-  async updateChangelog(newVersion: string, commits: ChangelogCommit[], packageName?: string): Promise<void> {
+  async updateChangelog(newVersion: string, commits: ChangelogCommit[], packageName?: string, repoUrl?: string): Promise<void> {
     const today = new Date().toISOString().split('T')[0]
 
-    // 构建版本标题：如果有包名，使用 {package-name}@{version} 格式
     const versionTitle = packageName ? `${packageName}@${newVersion}` : newVersion
 
     const categorized: Record<
@@ -91,8 +90,11 @@ export class ChangelogManager {
       const fileNames = this.formatFileNames(files)
       const fileTag = fileNames.length > 0 ? ` (${fileNames.join(', ')})` : ''
 
+      const shortHash = hash.slice(0, 8)
+      const hashLink = repoUrl ? `[${shortHash}](${repoUrl}/commit/${hash})` : shortHash
+
       categorized[typeKey].items.push({
-        message: `${hash} ${message}${fileTag}`,
+        message: `${hashLink} ${message}${fileTag}`,
         files,
       })
     }

@@ -86,6 +86,36 @@ export class GitManager {
     return null
   }
 
+  getRepoUrl(): string | null {
+    try {
+      const remote = this.getDefaultRemote()
+      if (!remote)
+        return null
+
+      const output = execSync(`git remote get-url ${remote}`, {
+        cwd: this.rootDir,
+        encoding: 'utf8',
+        stdio: 'pipe',
+      })
+      const url = output.trim()
+
+      if (url.startsWith('git@github.com:')) {
+        return url.replace('git@github.com:', 'https://github.com/')
+      }
+      else if (url.startsWith('https://github.com/')) {
+        return url
+      }
+      else if (url.startsWith('git://github.com/')) {
+        return url.replace('git://', 'https://')
+      }
+
+      return null
+    }
+    catch {
+      return null
+    }
+  }
+
   getCommitsSinceLastTag(): { hash: string, message: string, files: string[] }[] {
     try {
       const lastTag = this.getLastTag()

@@ -503,7 +503,8 @@ export class VersionManager {
                 }
                 // 主项目包：packageName 为 undefined，ChangelogManager 会直接使用 version
 
-                await this.changelogManager.updateChangelog(finalVersion, commits, packageName)
+                const repoUrl = this.gitManager.getRepoUrl()
+                await this.changelogManager.updateChangelog(finalVersion, commits, packageName, repoUrl)
                 log.success('已更新 CHANGELOG.md')
               }
               catch (changelogError) {
