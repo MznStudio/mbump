@@ -14,7 +14,6 @@ export interface RustUpdateOptions {
   push?: boolean
   customVersion?: string | null
   tag?: boolean
-  tagPrefix?: string
   changelog?: boolean
   allowUncommitted?: boolean
 }
@@ -72,7 +71,6 @@ export class RustManager {
       autoCommit = true,
       push = true,
       tag = true,
-      tagPrefix = 'v',
       changelog = true,
       allowUncommitted = false,
     } = options
@@ -187,8 +185,7 @@ export class RustManager {
       }
 
       if (tag) {
-        // const tagName = `${packageName}@${newVersion}`
-        const tagName = tag ? `${tagPrefix}${packageName}@${newVersion}` : '跳过'
+        const tagName = `${packageName}@${newVersion}`
         try {
           execSync(`git tag -a ${tagName} -m "Release ${tagName}"`, {
             cwd: this.rootDir,

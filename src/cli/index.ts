@@ -445,7 +445,6 @@ async function main(): Promise<void> {
           push: parsedArgs.push,
           customVersion,
           tag: parsedArgs.tag,
-          tagPrefix: parsedArgs.tagPrefix,
           changelog: parsedArgs.changelog,
           allowUncommitted: parsedArgs.allowUncommitted,
         })
