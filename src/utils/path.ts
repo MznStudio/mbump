@@ -1,24 +1,26 @@
+import { resolve } from 'node:path'
+
 export function isPathLike(arg: string): boolean {
   return (
-    arg.startsWith('./') ||
-    arg.startsWith('../') ||
-    arg.startsWith('.\\') ||
-    arg.startsWith('..\\') ||
-    arg.startsWith('/') ||
-    arg.startsWith('\\') ||
-    /^[A-Za-z]:[\\/].*/.test(arg) ||
-    arg.startsWith('~') ||
-    arg === '.' ||
-    arg.startsWith('\\\\') ||
-    arg.startsWith('//') ||
-    arg.includes('/') ||
-    arg.includes('\\') ||
-    arg.includes('.')
+    arg.startsWith('./')
+    || arg.startsWith('../')
+    || arg.startsWith('.\\')
+    || arg.startsWith('..\\')
+    || arg.startsWith('/')
+    || arg.startsWith('\\')
+    || /^[A-Z]:[\\/].*/i.test(arg)
+    || arg.startsWith('~')
+    || arg === '.'
+    || arg.startsWith('\\\\')
+    || arg.startsWith('//')
+    || arg.includes('/')
+    || arg.includes('\\')
+    || arg.includes('.')
   )
 }
 
 export function resolvePath(basePath: string, targetPath: string): string {
-  const { resolve } = require('node:path')
+  // const { resolve } = require('node:path')
   if (targetPath.startsWith('/') || /^[a-z]:\\/i.test(targetPath)) {
     return resolve(targetPath)
   }

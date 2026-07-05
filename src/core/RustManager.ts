@@ -187,7 +187,8 @@ export class RustManager {
       }
 
       if (tag) {
-        const tagName = `${packageName}@${newVersion}`
+        // const tagName = `${packageName}@${newVersion}`
+        const tagName = tag ? `${tagPrefix}${packageName}@${newVersion}` : '跳过'
         try {
           execSync(`git tag -a ${tagName} -m "Release ${tagName}"`, {
             cwd: this.rootDir,

@@ -1,4 +1,6 @@
 import type { Config, PackageVersionSelections, ReleaseType } from '@/types'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import inquirer from 'inquirer'
 import semver from 'semver'
 import { VersionManager } from '@/core/VersionManager'
@@ -14,8 +16,8 @@ export async function selectVersionInteractive(
   if (rootDir && packageName !== 'default') {
     const pkgPath = config.packagePaths[packageName]
     if (pkgPath) {
-      const { readFileSync } = require('node:fs')
-      const { join, resolve } = require('node:path')
+      // const { readFileSync } = require('node:fs')
+      // const { _join, resolve } = require('node:path')
       try {
         const fullPath = resolve(rootDir, pkgPath)
         const pkgContent = JSON.parse(readFileSync(fullPath, 'utf8'))
