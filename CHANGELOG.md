@@ -5,6 +5,12 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.0.10] - 2026-07-05
+
+🔧 工具变更
+
+- abbdf45020ec070ee1480ce302a2ffb1c604bc81 chore(rust-test): 将版本从0.0.14-beta.1更改为0.0.14并更新changelog (VersionProvider.ts)
+
 ## [2.2.5] - 2026-07-05
 
 ### 待补充
