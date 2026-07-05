@@ -61,11 +61,29 @@ export class GitManager {
         encoding: 'utf8',
         stdio: 'pipe',
       })
-      return output.trim() || null
+      const upstreamRemote = output.trim()
+      if (upstreamRemote)
+        return upstreamRemote
     }
     catch {
-      return null
     }
+
+    try {
+      const output = execSync('git remote', {
+        cwd: this.rootDir,
+        encoding: 'utf8',
+        stdio: 'pipe',
+      })
+      const remotes = output.trim().split('\n').filter(Boolean)
+      if (remotes.length > 0) {
+        const origin = remotes.find(r => r === 'origin')
+        return origin || remotes[0]
+      }
+    }
+    catch {
+    }
+
+    return null
   }
 
   getCommitsSinceLastTag(): { hash: string, message: string, files: string[] }[] {
