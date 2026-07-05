@@ -5,6 +5,30 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.3.0] - 2026-07-05
+
+🚀 新增功能
+
+- eec77e324b8d7c959f34d3a5f946e12b18092a1e feat: Rust 项目支持 cargo publish 发布命令 (VersionManager.ts)
+
+🩹 缺陷修复
+
+- a3e4b4dee6f6c17c6eb12c54f43a8e9332998dd8 fix: 修复类型定义中遗漏的 npm 字段改为 publish (index.ts, test-rust-flow.ts)
+
+♻️ 代码重构
+
+- b7838b079379e5445a3faf9b5ca62fe36c05bd3f refactor: 将 --npm 参数改为 --publish，Rust 模式写死 cargo publish (index.ts, parser.ts, schema.ts, VersionManager.ts, index.ts)
+
+📝 文档更新
+
+- 88891287bebaa43da704acf148f707f26d57969f docs: 优化README.md的表格排版与文档结构 (README.md)
+- c3284f4dc3e3b542826069e308bcd5232a652140 docs: 重新编写 README.md 文档 (README.md)
+
+🔧 工具变更
+
+- bb0a16a742c64da82ca230f56c99b85ed9ab3385 chore(core): 移除未使用的isDefaultPackage参数 (VersionProvider.ts)
+- 5d7eb1677d6975bc05c3b3681a449de098f5833b chore: 清理调试日志和多余代码 (VersionManager.ts)
+
 ## [2.2.12] - 2026-07-05
 
 ### 待补充
