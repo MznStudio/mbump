@@ -307,8 +307,9 @@ export class VersionManager {
 
         const isDefaultPackage = this._isDefaultPackage(packageName)
         const tagName = this.versionProvider.getDefaultTagFormat(
-          isDefaultPackage ? 'default' : pkg.name,
+          pkg.name,
           newVersion,
+          isDefaultPackage,
         )
 
         packages.push({
