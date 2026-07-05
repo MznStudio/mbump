@@ -3,3 +3,6 @@ branch:
       - name: 发布npm包
         description: 发布npm包
         event: web_trigger_npm_publish
+      - name: 发布到github
+        description: 发布github
+        event: web_trigger_github

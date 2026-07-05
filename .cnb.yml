@@ -8,3 +8,17 @@
           settings:
             token: $NPM_TOKEN
             build: build
+  web_trigger_github:
+    - imports: https://cnb.cool/qingshuPrivate/setting/-/blob/main/envs.yml
+      stages:
+        - name: sync to github
+          image: docker.cnb.cool/mznjs/docker/github-sync # #tencentcom/git-sync
+          settings:
+            target_url: https://github.com/MznStudio/mbump.git
+            auth_type: https
+            username: ${GITHUB_USERNAME}
+            password: ${GITHUB_MZN_TOKEN}
+            git_user: ${GITHUB_USERNAME}
+            git_email: ${GITHUB_MZN_USERMAIL}
+            git_commit: false
+            branch: main
