@@ -10,7 +10,7 @@ export interface IVersionProvider {
   getVersionFilePaths: (rootDir: string) => string[]
   getPackageInfo: (filePath: string) => PackageInfo
   updateVersion: (filePath: string, newVersion: string) => void
-  getDefaultTagFormat: (packageName: string, version: string) => string
+  getDefaultTagFormat: (packageName: string, version: string, isDefaultPackage: boolean) => string
 }
 
 export class NodeVersionProvider implements IVersionProvider {
@@ -33,13 +33,8 @@ export class NodeVersionProvider implements IVersionProvider {
     writeFileSync(filePath, JSON.stringify(parsed, null, 2))
   }
 
-  getDefaultTagFormat(packageName: string, version: string): string {
-    return packageName === 'default'
-      || packageName === 'mbump'
-      || packageName === '@mznjs/mbump'
-      || packageName.startsWith('@mznjs/')
-      ? `v${version}`
-      : `${packageName}@${version}`
+  getDefaultTagFormat(packageName: string, version: string, isDefaultPackage: boolean): string {
+    return isDefaultPackage ? `v${version}` : `${packageName}@${version}`
   }
 }
 
@@ -112,7 +107,7 @@ export class RustVersionProvider implements IVersionProvider {
     writeFileSync(filePath, newLines.join('\n'), { encoding: 'utf8' })
   }
 
-  getDefaultTagFormat(packageName: string, version: string): string {
+  getDefaultTagFormat(packageName: string, version: string, isDefaultPackage: boolean): string {
     return `${packageName}@${version}`
   }
 }

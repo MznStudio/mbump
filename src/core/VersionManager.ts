@@ -555,8 +555,9 @@ export class VersionManager {
               }
               else {
                 tagName = this.versionProvider.getDefaultTagFormat(
-                  isDefaultPackage ? 'default' : updatedPackage.name,
+                  updatedPackage.name,
                   newVersion,
+                  isDefaultPackage,
                 )
               }
 
