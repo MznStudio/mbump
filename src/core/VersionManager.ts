@@ -115,7 +115,7 @@ export class VersionManager {
       customVersion = null,
       autoCommit = this.gitConfig.autoCommit !== false,
       push = this.gitConfig.push !== false,
-      npm = false,
+      publish = false,
       changelog = this.gitConfig.changelog !== false,
       packageVersionSelections,
     } = options
@@ -330,7 +330,7 @@ export class VersionManager {
       packages,
       autoCommit,
       push,
-      npm,
+      publish,
     }
   }
 
@@ -341,11 +341,11 @@ export class VersionManager {
       packagePaths = this.packagePaths,
       customVersion = null,
       autoCommit = this.gitConfig.autoCommit !== false,
-      npm = false,
+      publish = false,
       changelog = this.gitConfig.changelog !== false,
       tag = this.gitConfig.tag !== false,
       tagPrefix = this.gitConfig.tagPrefix || 'v',
-      isBatchMode = false, // 默认不是批量模式
+      isBatchMode = false,
     } = options
 
     const result: UpdateResult = {
@@ -512,17 +512,20 @@ export class VersionManager {
             }
           }
 
-          if (!dryRun && npm) {
+          if (!dryRun && publish) {
             for (const pkgPath of targets) {
               const pkg = this.getPackageInfo(pkgPath)
               const pkgDir = dirname(pkgPath)
               log.info(`\n发布 ${pkg.name}...`)
 
               try {
-                const defaultCmd = this.versionProvider.type === 'rust'
-                  ? 'cargo publish'
-                  : 'pnpm publish --access public --no-git-checks'
-                const publishCmd = this.publishConfig.command || defaultCmd
+                let publishCmd: string
+                if (this.versionProvider.type === 'rust') {
+                  publishCmd = 'cargo publish'
+                }
+                else {
+                  publishCmd = this.publishConfig.command || 'pnpm publish --access public --no-git-checks'
+                }
 
                 if (!validateCommand(publishCmd)) {
                   throw new Error(`不安全的发布命令: ${publishCmd}`)

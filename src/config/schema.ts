@@ -9,7 +9,7 @@ export const BASE_CONFIG: Config = {
     dryRun: false,
     verbose: false,
     allowUncommitted: false,
-    npm: false,
+    publish: false,
   },
   git: {
     commitMessage: 'chore: bump version to {{newVersion}}',

@@ -28,7 +28,7 @@ function renderPreview(preview: PreviewResult): void {
 
   log.info(`     Git Commit: ${preview.autoCommit ? '是' : '否'}`)
   log.info(`     Git Push: ${preview.push ? '是' : '否'}`)
-  log.info(`     NPM Publish: ${preview.npm ? '是' : '否'}`)
+  log.info(`     Publish: ${preview.publish ? '是' : '否'}`)
   log.info('\n✅ 以上为预览，未执行任何实际操作')
 }
 
@@ -300,7 +300,7 @@ export function showHelp(): void {
   --no-commit, -n  禁用自动git提交
   --no-push, -p    禁用自动推送到远程仓库
   --allow-uncommitted, -u  允许在有未提交更改的情况下继续操作
-  --npm, -N      启用npm包发布功能（默认不发布）
+  --publish, -P  启用包发布功能（默认不发布）
   --show-config, -c  显示当前加载的完整配置信息
   --rust, -r     启用 Rust 项目模式，更新 Cargo.toml 中的版本号
   --version, -V  显示版本信息
@@ -311,7 +311,7 @@ export function showHelp(): void {
   mbump all minor           # 将所有包升级一个小版本
   mbump plugins major --dry-run  # 试运行升级plugins包主版本
   mbump core patch --no-push  # 更新版本并提交到本地，但不推送到远程
-  mbump components patch --npm  # 更新版本并发布到npm
+  mbump components patch --publish  # 更新版本并发布
 
   # 路径模式（直接指定项目目录）
   mbump ./packages/my-pkg    # 更新 ./packages/my-pkg 目录下的 package.json
@@ -566,7 +566,7 @@ async function main(): Promise<void> {
           customVersion,
           autoCommit: parsedArgs.autoCommit,
           push: parsedArgs.push,
-          npm: parsedArgs.npm,
+          publish: parsedArgs.publish,
         })
         renderPreview(preview)
         process.exit(0)
@@ -577,7 +577,7 @@ async function main(): Promise<void> {
         verbose: parsedArgs.verbose,
         autoCommit: parsedArgs.autoCommit,
         push: parsedArgs.push,
-        npm: parsedArgs.npm,
+        publish: parsedArgs.publish,
         customVersion,
       })
 
@@ -620,7 +620,7 @@ async function main(): Promise<void> {
       log.info(`  dryRun: ${config.defaults?.dryRun}`)
       log.info(`  verbose: ${config.defaults?.verbose}`)
       log.info(`  allowUncommitted: ${config.defaults?.allowUncommitted}`)
-      log.info(`  npm: ${config.defaults?.npm}`)
+      log.info(`  publish: ${config.defaults?.publish}`)
 
       // 显示 Git 选项
       log.info('')
@@ -691,7 +691,7 @@ async function main(): Promise<void> {
               customVersion,
               autoCommit: parsedArgsWithDefaults.autoCommit,
               push: parsedArgsWithDefaults.push,
-              npm: parsedArgsWithDefaults.npm,
+              publish: parsedArgsWithDefaults.publish,
             })
             renderPreview(preview)
             process.exit(0)
@@ -702,7 +702,7 @@ async function main(): Promise<void> {
             verbose: parsedArgsWithDefaults.verbose,
             autoCommit: parsedArgsWithDefaults.autoCommit,
             push: parsedArgsWithDefaults.push,
-            npm: parsedArgsWithDefaults.npm,
+            publish: parsedArgsWithDefaults.publish,
             customVersion,
           })
 
@@ -800,7 +800,7 @@ async function main(): Promise<void> {
           packageVersionSelections,
           autoCommit: parsedArgsWithDefaults.autoCommit,
           push: parsedArgsWithDefaults.push,
-          npm: parsedArgsWithDefaults.npm,
+          publish: parsedArgsWithDefaults.publish,
         })
         renderPreview(preview)
         process.exit(0)
@@ -868,19 +868,18 @@ async function main(): Promise<void> {
         )
       }
 
-      if (parsedArgsWithDefaults.npm && !parsedArgsWithDefaults.dryRun) {
-        const npmErrors: Array<{ packageName: string, error: Error }> = []
-        const npmPackages = Object.entries(packageVersionSelections)
-        const npmTotal = npmPackages.length
+      if (parsedArgsWithDefaults.publish && !parsedArgsWithDefaults.dryRun) {
+        const publishErrors: Array<{ packageName: string, error: Error }> = []
+        const publishPackages = Object.entries(packageVersionSelections)
+        const publishTotal = publishPackages.length
 
-        log.info(`\n🚀 开始发布 ${npmTotal} 个包到 NPM...\n`)
+        log.info(`\n🚀 开始发布 ${publishTotal} 个包...\n`)
 
-        for (let i = 0; i < npmPackages.length; i++) {
-          const [packageName, selection] = npmPackages[i]
-          const npmCurrent = i + 1
+        for (let i = 0; i < publishPackages.length; i++) {
+          const [packageName, selection] = publishPackages[i]
+          const publishCurrent = i + 1
 
-          // 显示进度
-          updateProgress(npmCurrent, npmTotal, packageName, 'processing')
+          updateProgress(publishCurrent, publishTotal, packageName, 'processing')
 
           try {
             await versionManager.updateVersion(packageName, selection.type, {
@@ -889,24 +888,23 @@ async function main(): Promise<void> {
               customVersion: selection.customVersion,
               autoCommit: false,
               push: false,
-              npm: true,
+              publish: true,
             })
 
-            updateProgress(npmCurrent, npmTotal, packageName, 'success')
+            updateProgress(publishCurrent, publishTotal, packageName, 'success')
           }
           catch (error) {
-            npmErrors.push({ packageName, error: error as Error })
+            publishErrors.push({ packageName, error: error as Error })
             displayError(error as Error, { packageName, operation: '发布' })
-            updateProgress(npmCurrent, npmTotal, packageName, 'failed')
+            updateProgress(publishCurrent, publishTotal, packageName, 'failed')
           }
         }
 
-        log.info('') // 空行分隔
+        log.info('')
 
-        // 报告 NPM 发布错误
-        if (npmErrors.length > 0) {
-          log.error(`\n❌ NPM 发布完成，但有 ${npmErrors.length} 个包发布失败:`)
-          npmErrors.forEach(({ packageName, error }) => {
+        if (publishErrors.length > 0) {
+          log.error(`\n❌ 发布完成，但有 ${publishErrors.length} 个包发布失败:`)
+          publishErrors.forEach(({ packageName, error }) => {
             log.error(`   - ${packageName}: ${error.message}`)
           })
         }
@@ -918,7 +916,7 @@ async function main(): Promise<void> {
           customVersion,
           autoCommit: parsedArgsWithDefaults.autoCommit,
           push: parsedArgsWithDefaults.push,
-          npm: parsedArgsWithDefaults.npm,
+          publish: parsedArgsWithDefaults.publish,
         })
         renderPreview(preview)
         process.exit(0)
@@ -930,7 +928,7 @@ async function main(): Promise<void> {
         customVersion,
         autoCommit: parsedArgsWithDefaults.autoCommit,
         push: parsedArgsWithDefaults.push,
-        npm: parsedArgsWithDefaults.npm,
+        publish: parsedArgsWithDefaults.publish,
       })
     }
 

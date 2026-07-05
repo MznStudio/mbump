@@ -13,7 +13,7 @@ export function parseArgs(args: string[], defaults: DefaultsConfig = {}): Parsed
     autoCommit: (defaults as any).git?.autoCommit !== false,
     push: (defaults as any).git?.push !== false,
     allowUncommitted: defaults.allowUncommitted || false,
-    npm: defaults.npm || false,
+    publish: defaults.publish || false,
     showConfig: false,
     rust: false,
     tag: (defaults as any).git?.tag !== false,
@@ -57,8 +57,8 @@ export function parseArgs(args: string[], defaults: DefaultsConfig = {}): Parsed
       parsed.allowUncommitted = true
       i++
     }
-    else if (arg === '--npm' || arg === '-N') {
-      parsed.npm = true
+    else if (arg === '--publish' || arg === '-P') {
+      parsed.publish = true
       i++
     }
     else if (arg === '--show-config' || arg === '-c') {

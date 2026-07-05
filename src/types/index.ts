@@ -29,7 +29,7 @@ export interface DefaultsConfig {
   dryRun?: boolean
   verbose?: boolean
   allowUncommitted?: boolean
-  npm?: boolean
+  publish?: boolean
 }
 
 export interface GitConfig {
@@ -68,7 +68,7 @@ export interface UpdateOptions {
   customVersion?: string | null
   autoCommit?: boolean
   push?: boolean
-  npm?: boolean
+  publish?: boolean
   changelog?: boolean
   tag?: boolean
   tagPrefix?: string
