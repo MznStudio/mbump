@@ -303,7 +303,7 @@ export default {
 ### 核心类
 
 ```typescript
-import { VersionManager, RustManager, GitManager, ChangelogManager } from '@mznjs/mbump'
+import { VersionManager, GitManager, ChangelogManager } from '@mznjs/mbump'
 ```
 
 ### VersionManager
@@ -329,17 +329,30 @@ const preview = await manager.previewUpdate('my-package', 'patch')
 const version = manager.getPackageVersion('my-package')
 ```
 
-### RustManager
+### Rust 项目支持
+
+VersionManager 支持通过 `projectType` 参数处理 Rust 项目：
 
 ```typescript
-import { RustManager } from '@mznjs/mbump'
+import { VersionManager } from '@mznjs/mbump'
 
-const rustManager = new RustManager('/path/to/rust-project')
+const manager = new VersionManager({
+  rootDir: '/path/to/rust-project',
+  projectType: 'rust',
+  config: {
+    packagePaths: {
+      'my-crate': '/path/to/rust-project/Cargo.toml',
+    },
+    git: {
+      autoCommit: true,
+      push: true,
+      tag: true,
+    },
+  },
+})
 
 // 更新版本
-const result = rustManager.updateVersion('patch', {
-  dryRun: false,
-})
+const result = await manager.updateVersion('my-crate', 'patch')
 ```
 
 ### GitManager

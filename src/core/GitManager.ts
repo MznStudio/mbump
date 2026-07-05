@@ -36,6 +36,38 @@ export class GitManager {
     }
   }
 
+  getCurrentBranch(): string | null {
+    try {
+      const output = execSync('git rev-parse --abbrev-ref HEAD', {
+        cwd: this.rootDir,
+        encoding: 'utf8',
+        stdio: 'pipe',
+      })
+      return output.trim() || null
+    }
+    catch {
+      return null
+    }
+  }
+
+  getDefaultRemote(): string | null {
+    try {
+      const branch = this.getCurrentBranch()
+      if (!branch)
+        return null
+
+      const output = execSync(`git config branch.${branch}.remote`, {
+        cwd: this.rootDir,
+        encoding: 'utf8',
+        stdio: 'pipe',
+      })
+      return output.trim() || null
+    }
+    catch {
+      return null
+    }
+  }
+
   getCommitsSinceLastTag(): { hash: string, message: string, files: string[] }[] {
     try {
       const lastTag = this.getLastTag()
@@ -137,14 +169,22 @@ export class GitManager {
 
   push(includeTags: boolean = true): void {
     try {
-      execSync('git push', {
+      const remote = this.getDefaultRemote()
+      const branch = this.getCurrentBranch()
+      let pushCommand = 'git push'
+
+      if (remote) {
+        pushCommand = branch ? `git push ${remote} ${branch}` : `git push ${remote}`
+      }
+
+      execSync(pushCommand, {
         cwd: this.rootDir,
         stdio: 'pipe',
       })
       log.debug('Git push')
 
       if (includeTags) {
-        execSync('git push --tags', {
+        execSync(remote ? `git push ${remote} --tags` : 'git push --tags', {
           cwd: this.rootDir,
           stdio: 'pipe',
         })

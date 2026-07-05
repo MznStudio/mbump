@@ -1,15 +1,39 @@
-import { RustManager } from './src/core/RustManager'
+import { VersionManager } from './src/core/VersionManager'
+import { join, resolve } from 'node:path'
+import { existsSync, readFileSync } from 'node:fs'
+import * as toml from 'toml'
 
-const rm = new RustManager('./rust-test')
+const rootDir = resolve('./rust-test')
+const cargoTomlPath = join(rootDir, 'Cargo.toml')
 
-console.log('=== RustManager Flow Test ===')
-console.log('exists:', rm.exists())
-console.log('currentVersion:', rm.getCurrentVersion())
-console.log('packageName:', rm.getPackageName())
+if (!existsSync(cargoTomlPath)) {
+  console.error('Cargo.toml not found')
+  process.exit(1)
+}
 
-const commits = rm.gitManager.getCommitsSinceLastTag()
-console.log('commitsSinceLastTag:', JSON.stringify(commits, null, 2))
+const content = readFileSync(cargoTomlPath, 'utf8')
+const parsed = toml.parse(content) as Record<string, any>
+const packageName = parsed.package?.name || 'rust'
 
-console.log('=== Manual changelog update ===')
-rm.changelogManager.updateChangelog('0.0.12', commits)
-console.log('Changelog updated manually')
+const versionManager = new VersionManager({
+  rootDir,
+  projectType: 'rust',
+  config: {
+    packagePaths: {
+      [packageName]: cargoTomlPath,
+    },
+    defaults: {
+      releaseType: 'patch',
+    },
+    git: {
+      autoCommit: true,
+      push: true,
+      tag: true,
+      changelog: true,
+    },
+  },
+})
+
+console.log('=== Rust Version Manager Flow Test ===')
+console.log('currentVersion:', versionManager.getPackageVersion(packageName))
+console.log('packageName:', packageName)
