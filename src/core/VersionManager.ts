@@ -441,10 +441,13 @@ export class VersionManager {
             // 只在第一个包时检查版本
             if (!finalVersion) {
               finalVersion = newVersion
-              const isDefaultPackage = this._isDefaultPackage(pkgName)
+              const isDefaultPackage = pkgName === 'all'
+                ? this._isDefaultPackage(Object.keys(packagePaths)[0])
+                : this._isDefaultPackage(pkgName)
               const versionTag = this.versionProvider.getDefaultTagFormat(
-                isDefaultPackage ? 'default' : pkg.name,
+                pkg.name,
                 newVersion,
+                isDefaultPackage,
               )
               if (!dryRun && this.gitManager.checkVersionExists(newVersion, tagPrefix, isDefaultPackage ? undefined : pkg.name)) {
                 throw new Error(`版本 ${versionTag} 已存在，请使用其他版本`)
@@ -470,7 +473,9 @@ export class VersionManager {
 
           // 生成CHANGELOG
           // 在批量更新模式时，只有主项目包（default）才生成 CHANGELOG
-          const isDefaultPackage = this._isDefaultPackage(pkgName)
+          const isDefaultPackage = pkgName === 'all'
+            ? this._isDefaultPackage(Object.keys(packagePaths)[0])
+            : this._isDefaultPackage(pkgName)
 
           if (!dryRun && changelog && finalVersion) {
             // 如果是批量模式且不是主项目包，跳过 CHANGELOG 生成
@@ -535,7 +540,9 @@ export class VersionManager {
               let commitMessage: string
               const updatedPackage = result.updatedPackages[0]
               const newVersion = updatedPackage.newVersion
-              const isDefaultPackage = this._isDefaultPackage(pkgName)
+              const isDefaultPackage = pkgName === 'all'
+                ? this._isDefaultPackage(Object.keys(packagePaths)[0])
+                : this._isDefaultPackage(pkgName)
 
               if (this.gitConfig.commitMessage && this.gitConfig.commitMessage !== 'chore: bump version to {{newVersion}}') {
                 commitMessage = this.gitConfig.commitMessage.replace(/\{\{newVersion\}\}/g, newVersion)
