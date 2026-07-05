@@ -1,6 +1,6 @@
 {
   "name": "@mznjs/mbump",
-  "version": "2.2.0",
+  "version": "2.2.1-beta.0",
   "type": "module",
   "description": "企业级版本管理工具，支持单包和monorepo场景",
   "main": "dist/index.js",

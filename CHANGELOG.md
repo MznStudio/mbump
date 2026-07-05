@@ -5,6 +5,12 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.2.1-beta.0] - 2026-07-05
+
+♻️ 代码重构
+
+- 0fa4bd4b466607a6f656a3a95c53152963188a22 refactor(path,cli,rust): 优化导入方式和代码格式 (interactive.ts, RustManager.ts, path.ts)
+
 ## [2.2.0] - 2026-07-04
 
 ### 待补充
