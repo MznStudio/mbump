@@ -214,7 +214,7 @@ export class GitManager {
     }
   }
 
-  commitAndPush(message: string, push: boolean = true, createTag: boolean = false, tagVersion?: string, tagPrefix: string = 'v'): void {
+  commitAndPush(message: string, push: boolean = true, createTag: boolean = false, tagVersion?: string, tagPrefix: string = 'v', tagName?: string): void {
     try {
       execSync('git config --local core.autocrlf false', {
         cwd: this.rootDir,
@@ -229,7 +229,21 @@ export class GitManager {
     this.commit(message)
 
     if (createTag && tagVersion) {
-      this.createTag(tagVersion, tagPrefix)
+      if (tagName) {
+        try {
+          execSync(`git tag -a ${tagName} -m "Release ${tagName}"`, {
+            cwd: this.rootDir,
+            stdio: 'pipe',
+          })
+          log.success(`已创建 tag: ${tagName}`)
+        }
+        catch (error) {
+          throw new Error(`创建 Tag 失败: ${(error as Error).message}`)
+        }
+      }
+      else {
+        this.createTag(tagVersion, tagPrefix)
+      }
     }
 
     if (push) {

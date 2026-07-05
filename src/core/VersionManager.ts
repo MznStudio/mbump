@@ -548,14 +548,20 @@ export class VersionManager {
                 commitMessage = `chore: bump version for ${pkgName} to v${newVersion}`
               }
 
-              // 使用 versionProvider 获取 tag 格式
-              const tagName = this.versionProvider.getDefaultTagFormat(
-                isDefaultPackage ? 'default' : updatedPackage.name,
-                newVersion,
-              )
+              // 使用 versionProvider 获取 tag 格式，用户指定的 tagPrefix 优先
+              let tagName: string
+              if (tagPrefix !== 'v') {
+                tagName = `${tagPrefix}${newVersion}`
+              }
+              else {
+                tagName = this.versionProvider.getDefaultTagFormat(
+                  isDefaultPackage ? 'default' : updatedPackage.name,
+                  newVersion,
+                )
+              }
 
               if (isDefaultPackage) {
-                this.gitManager.commitAndPush(commitMessage, this.gitPush, tag, newVersion, tagPrefix)
+                this.gitManager.commitAndPush(commitMessage, this.gitPush, tag, newVersion, tagPrefix, tagName)
               }
               else {
                 const { execSync } = await import('node:child_process')
