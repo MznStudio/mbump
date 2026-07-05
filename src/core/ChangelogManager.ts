@@ -69,7 +69,7 @@ export class ChangelogManager {
     }
   }
 
-  async updateChangelog(newVersion: string, commits: ChangelogCommit[], packageName?: string, repoUrl?: string): Promise<void> {
+  async updateChangelog(newVersion: string, commits: ChangelogCommit[], packageName?: string, commitUrlFn?: (hash: string) => string | null): Promise<void> {
     const today = new Date().toISOString().split('T')[0]
 
     const versionTitle = packageName ? `${packageName}@${newVersion}` : newVersion
@@ -91,7 +91,8 @@ export class ChangelogManager {
       const fileTag = fileNames.length > 0 ? ` (${fileNames.join(', ')})` : ''
 
       const shortHash = hash.slice(0, 8)
-      const hashLink = repoUrl ? `[${shortHash}](${repoUrl}/commit/${hash})` : shortHash
+      const commitUrl = commitUrlFn ? commitUrlFn(hash) : null
+      const hashLink = commitUrl ? `[${shortHash}](${commitUrl})` : shortHash
 
       categorized[typeKey].items.push({
         message: `${hashLink} ${message}${fileTag}`,

@@ -126,6 +126,42 @@ export class GitManager {
     }
   }
 
+  getCommitUrl(hash: string, customCommitPath?: string): string | null {
+    const repoUrl = this.getRepoUrl()
+    if (!repoUrl)
+      return null
+
+    const commitPath = customCommitPath || this.detectCommitPath(repoUrl)
+
+    if (!commitPath)
+      return null
+
+    return `${repoUrl}${commitPath}${hash}`
+  }
+
+  private detectCommitPath(repoUrl: string): string | null {
+    const host = new URL(repoUrl).hostname
+
+    if (host.includes('github.com')) {
+      return '/commit/'
+    }
+    else if (host.includes('gitlab.com') || host.includes('gitlab.')) {
+      return '/-/commit/'
+    }
+    else if (host.includes('bitbucket.org') || host.includes('bitbucket.')) {
+      return '/commits/'
+    }
+    else if (host.includes('gitee.com') || host.includes('gitee.')) {
+      return '/commit/'
+    }
+    else if (host.includes('coding.net') || host.includes('coding.')) {
+      return '/commit/'
+    }
+    else {
+      return '/-/commit/'
+    }
+  }
+
   getCommitsSinceLastTag(): { hash: string, message: string, files: string[] }[] {
     try {
       const lastTag = this.getLastTag()
