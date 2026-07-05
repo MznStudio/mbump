@@ -5,6 +5,12 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [theme@0.0.9] - 2026-07-05
+
+🩹 缺陷修复
+
+- 906163c43f305559f2dcaf360cc191e76dafdc1b fix: 修复路径模式下子包 tag 格式错误 (VersionManager.ts)
+
 ## [theme@0.0.5] - 2026-07-05
 
 🩹 缺陷修复
