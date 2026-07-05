@@ -56,11 +56,7 @@ export class VersionManager {
     const isSinglePackageMode = Object.keys(this.config.packagePaths).length === 1
     const isPathModeRoot = isSinglePackageMode && isNodeRoot
 
-    const result = isDefaultKey || (isNodeRoot && !isPathModeRoot) || isRustRoot
-
-    log.debug(`_isDefaultPackage: pkgKey=${pkgKey}, pkgPath=${pkgPath}, rootDir=${this.rootDir}, resolvedPkgDir=${resolvedPkgDir}, resolvedRootDir=${resolvedRootDir}, isDefaultKey=${isDefaultKey}, isNodeRoot=${isNodeRoot}, isRustRoot=${isRustRoot}, isSinglePackageMode=${isSinglePackageMode}, isPathModeRoot=${isPathModeRoot}, result=${result}`)
-
-    return result
+    return isDefaultKey || (isNodeRoot && !isPathModeRoot) || isRustRoot
   }
 
   /**
