@@ -5,6 +5,25 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.3.1] - 2026-07-05
+
+🔧 工具变更
+
+- a07d32f60516fa54213f74b3117c8d8af65a6943 chore: 简化发布工作流，仅打包上传 (deploy.yml)
+- 74a3385a1682bef22a14043c4aaa9c332c8964af chore: 添加 GitHub Actions 手动发布工作流 (deploy.yml)
+- 74fc2725292e34c30410bacdbaba22ff794e5f98 chore(.cnb.yml): 添加tsconfig.json到上传包含列表 (.cnb.yml)
+- 43e82c04314fac4536f15e9868ca9dc1e7149459 chore(.cnb.yml): 调整上传文件包含列表，添加.github目录 (.cnb.yml)
+- 05cc794aa0c4ba4f596ec9eee7969e7d2b5a0236 chore(.cnb.yml): 更新上传文件包含列表 (.cnb.yml)
+- 3244ec05575be5e783807763bbe147ea702cc274 chore(.cnb.yml): 关闭自动git提交配置 (.cnb.yml)
+- 51556883c277382542a476f7d5083c1e38c9e82e chore(.cnb.yml): add force_commit configuration option (.cnb.yml)
+- 7fe0b7f7d096b17bc6aab2ac7d4035e14607d511 chore(.cnb.yml): 开启自动git提交功能 (.cnb.yml)
+- c5084b340b1f995b8097650323a3e781c6de3aff chore(.cnb.yml): 配置代码上传的包含和排除规则 (.cnb.yml)
+
+👷 CI 变更
+
+- f9ee0fa7e3420dd93c826fb54f40bffd74a874fe ci(.cnb.yml): add clear remote deployment option (.cnb.yml)
+- 71df52a963be49f0d6f08f4751d50f3ac9c3d853 ci: 新增github发布的web trigger配置 (.cnb.yml, web_trigger.yml)
+
 ## [2.3.0] - 2026-07-05
 
 🚀 新增功能
