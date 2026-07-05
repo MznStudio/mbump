@@ -10,7 +10,8 @@
 - **Git 集成**：自动提交、打 Tag、推送到远程仓库
 - **CHANGELOG 生成**：根据 Git 提交自动生成更新日志
 - **路径模式**：直接指定项目目录，无需配置文件
-- **Rust 支持**：更新 Cargo.toml 中的版本号
+- **Rust 支持**：更新 Cargo.toml 中的版本号，支持 `cargo publish`
+- **包发布**：支持 Node.js（pnpm/npm）和 Rust（cargo）包发布
 - **安全检查**：检测未提交更改，防止版本状态不一致
 - **Dry-run 模式**：预览将要执行的操作，避免误操作
 - **多格式配置**：支持 TS/JS/JSON/YAML/TOML 等多种配置格式
@@ -91,6 +92,9 @@ mbump all
 
 # 试运行模式
 mbump all minor --dry-run
+
+# 更新并发布所有包
+mbump all patch --publish
 ```
 
 ## 📖 使用方法
@@ -138,8 +142,8 @@ mbump pre-minor
 # 试运行模式（预览操作）
 mbump components patch --dry-run
 
-# 更新版本并发布到 NPM
-mbump components patch --npm
+# 更新版本并发布
+mbump components patch --publish
 
 # 更新版本但不推送到远程
 mbump components patch --no-push
@@ -188,9 +192,17 @@ mbump --rust patch
 # 更新指定目录的 Rust 项目
 mbump ./backend -r minor
 
+# 更新并发布到 crates.io
+mbump -r patch --publish
+
 # 试运行模式
 mbump -r major --dry-run
 ```
+
+Rust 项目特点：
+- 自动检测 `Cargo.toml` 文件
+- 使用 `cargo publish` 发布（写死，不可配置）
+- Tag 格式为 `{package-name}@{version}`
 
 ## ⚙️ 配置文件
 
@@ -205,22 +217,19 @@ mbump -r major --dry-run
 import type { Config } from '@mznjs/mbump'
 
 export default {
-  // 包路径配置
   packagePaths: {
     default: 'package.json',
     components: 'packages/components/package.json',
   },
 
-  // 默认选项
   defaults: {
     releaseType: 'patch',
     dryRun: false,
     verbose: false,
     allowUncommitted: false,
-    npm: false,
+    publish: false,
   },
 
-  // Git 选项
   git: {
     commitMessage: 'chore: bump version to {{newVersion}}',
     push: true,
@@ -230,7 +239,6 @@ export default {
     changelog: true,
   },
 
-  // 发布选项
   publish: {
     command: 'pnpm publish --access public --no-git-checks',
     skipChecks: true,
@@ -255,7 +263,7 @@ export default {
 | `dryRun` | `boolean` | `false` | 默认试运行模式 |
 | `verbose` | `boolean` | `false` | 默认详细输出 |
 | `allowUncommitted` | `boolean` | `false` | 允许未提交更改 |
-| `npm` | `boolean` | `false` | 默认启用发布 |
+| `publish` | `boolean` | `false` | 默认启用发布 |
 
 #### git
 
@@ -272,8 +280,10 @@ export default {
 
 | 选项 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
-| `command` | `string` | `'pnpm publish...'` | 发布命令 |
+| `command` | `string` | `'pnpm publish...'` | 发布命令（仅 Node.js 项目） |
 | `skipChecks` | `boolean` | `true` | 跳过安全检查 |
+
+**注意**：Rust 项目的发布命令固定为 `cargo publish`，不受此配置影响。
 
 ## 📝 命令行选项
 
@@ -291,100 +301,11 @@ export default {
   --no-commit, -n        禁用自动 Git 提交
   --no-push, -p          禁用自动推送到远程仓库
   --allow-uncommitted, -u 允许在有未提交更改的情况下继续操作
-  --npm, -N              启用 NPM/PNPM 包发布功能
+  --publish, -P          启用包发布功能（Node.js 使用 pnpm，Rust 使用 cargo）
   --show-config, -c      显示当前加载的完整配置信息
   --rust, -r             启用 Rust 项目模式
   --version, -V          显示当前版本号
   --help, -h             显示帮助信息
-```
-
-## 🔌 API 使用
-
-### 核心类
-
-```typescript
-import { VersionManager, GitManager, ChangelogManager } from '@mznjs/mbump'
-```
-
-### VersionManager
-
-```typescript
-import { VersionManager, loadConfigAsync } from '@mznjs/mbump'
-
-const config = await loadConfigAsync(process.cwd())
-const manager = new VersionManager({ config, rootDir: process.cwd() })
-
-// 更新版本
-const result = await manager.updateVersion('my-package', 'minor', {
-  dryRun: false,
-  verbose: true,
-  autoCommit: true,
-  push: true,
-})
-
-// 预览更新
-const preview = await manager.previewUpdate('my-package', 'patch')
-
-// 获取包版本
-const version = manager.getPackageVersion('my-package')
-```
-
-### Rust 项目支持
-
-VersionManager 支持通过 `projectType` 参数处理 Rust 项目：
-
-```typescript
-import { VersionManager } from '@mznjs/mbump'
-
-const manager = new VersionManager({
-  rootDir: '/path/to/rust-project',
-  projectType: 'rust',
-  config: {
-    packagePaths: {
-      'my-crate': '/path/to/rust-project/Cargo.toml',
-    },
-    git: {
-      autoCommit: true,
-      push: true,
-      tag: true,
-    },
-  },
-})
-
-// 更新版本
-const result = await manager.updateVersion('my-crate', 'patch')
-```
-
-### GitManager
-
-```typescript
-import { GitManager } from '@mznjs/mbump'
-
-const gitManager = new GitManager('/path/to/project')
-
-// 检查未提交更改
-const hasChanges = gitManager.hasUncommittedChanges()
-
-// 创建 Tag
-await gitManager.createTag('1.0.0', 'v')
-
-// 提交并推送
-await gitManager.commitAndPush('chore: bump version', true, true, '1.0.0', 'v')
-```
-
-### 工具函数
-
-```typescript
-import { pathUtils, semverUtils, securityUtils } from '@mznjs/mbump'
-
-// 路径工具
-pathUtils.isPathLike('./packages/my-pkg') // true
-
-// Semver 工具
-semverUtils.incrementVersion('1.0.0', 'patch') // '1.0.1'
-
-// 安全工具
-securityUtils.validatePath('/project/src', '/project') // true
 ```
 
 ## 🏷️ Git Tag 策略
@@ -393,13 +314,19 @@ securityUtils.validatePath('/project/src', '/project') // true
 
 - **格式**: `{tagPrefix}{version}`
 - **示例**: `v1.0.1`, `release-2.0.0`
-- **识别条件**: 包名为 `default` 或包路径为 `package.json`
+- **识别条件**: 包名为 `default` 或包路径为根目录的 `package.json`
 
 ### 子包
 
 - **格式**: `{package-name}@{version}`
 - **示例**: `@my-org/components@1.0.1`, `cli@2.3.0`
 - **识别条件**: 所有非主项目包
+
+### Rust 项目
+
+- **格式**: `{package-name}@{version}`
+- **示例**: `my-crate@0.1.0`
+- **说明**: Rust 项目始终使用子包格式，不使用 tagPrefix
 
 ### 批量更新
 
@@ -410,6 +337,20 @@ v1.0.1                    # 主项目包
 @my-org/components@1.0.1  # 子包
 @my-org/cli@2.3.0         # 子包
 ```
+
+## 🚀 包发布机制
+
+### Node.js 项目
+
+- 默认命令: `pnpm publish --access public --no-git-checks`
+- 可通过配置文件自定义发布命令
+- 使用 `--publish` 或 `-P` 启用
+
+### Rust 项目
+
+- 默认命令: `cargo publish`（固定写死，不可配置）
+- 使用 `--publish` 或 `-P` 启用
+- 发布前确保已登录 crates.io（`cargo login`）
 
 ## 📋 Dry-run 模式
 
@@ -429,9 +370,10 @@ mbump components patch --dry-run
      新版本:   1.0.1
      Tag:      @my-org/components@1.0.1
      CHANGELOG: 是
+
      Git Commit: 是
      Git Push: 是
-     NPM Publish: 否
+     Publish: 否
 
 ✅ 以上为预览，未执行任何实际操作
 ```
@@ -478,8 +420,102 @@ mbump components patch --verbose
 | 版本已存在 | 删除已有 Tag: `git tag -d v1.0.1` |
 | Git 冲突 | 解决冲突后重新运行 |
 | NPM 认证失败 | 运行 `pnpm login` 登录 |
+| Cargo 认证失败 | 运行 `cargo login` 登录 |
 | 包名不存在 | 检查配置文件中的 `packagePaths` |
 | 路径不存在 | 确认路径正确，目录存在 |
+
+## 🔌 API 使用
+
+### 核心类
+
+```typescript
+import { VersionManager, GitManager, ChangelogManager } from '@mznjs/mbump'
+```
+
+### VersionManager
+
+```typescript
+import { VersionManager, loadConfigAsync } from '@mznjs/mbump'
+
+const config = await loadConfigAsync(process.cwd())
+const manager = new VersionManager({ config, rootDir: process.cwd() })
+
+// 更新版本
+const result = await manager.updateVersion('my-package', 'minor', {
+  dryRun: false,
+  verbose: true,
+  autoCommit: true,
+  push: true,
+  publish: false,
+})
+
+// 预览更新
+const preview = await manager.previewUpdate('my-package', 'patch')
+
+// 获取包版本
+const version = manager.getPackageVersion('my-package')
+```
+
+### Rust 项目支持
+
+```typescript
+import { VersionManager } from '@mznjs/mbump'
+
+const manager = new VersionManager({
+  rootDir: '/path/to/rust-project',
+  projectType: 'rust',
+  config: {
+    packagePaths: {
+      'my-crate': '/path/to/rust-project/Cargo.toml',
+    },
+    git: {
+      autoCommit: true,
+      push: true,
+      tag: true,
+    },
+  },
+})
+
+// 更新版本
+const result = await manager.updateVersion('my-crate', 'patch')
+
+// 更新并发布
+const result = await manager.updateVersion('my-crate', 'patch', {
+  publish: true,
+})
+```
+
+### GitManager
+
+```typescript
+import { GitManager } from '@mznjs/mbump'
+
+const gitManager = new GitManager('/path/to/project')
+
+// 检查未提交更改
+const hasChanges = gitManager.hasUncommittedChanges()
+
+// 创建 Tag
+await gitManager.createTag('1.0.0', 'v')
+
+// 提交并推送
+await gitManager.commitAndPush('chore: bump version', true, true, '1.0.0', 'v')
+```
+
+### 工具函数
+
+```typescript
+import { pathUtils, semverUtils, securityUtils } from '@mznjs/mbump'
+
+// 路径工具
+pathUtils.isPathLike('./packages/my-pkg') // true
+
+// Semver 工具
+semverUtils.incrementVersion('1.0.0', 'patch') // '1.0.1'
+
+// 安全工具
+securityUtils.validatePath('/project/src', '/project') // true
+```
 
 ## 🧪 测试
 
@@ -492,6 +528,9 @@ pnpm test tests/integration.test.ts
 
 # 监听模式
 pnpm test:watch
+
+# 类型检查
+pnpm typecheck
 ```
 
 ## 🤝 贡献指南
