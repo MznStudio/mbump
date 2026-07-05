@@ -107,7 +107,7 @@ export class RustVersionProvider implements IVersionProvider {
     writeFileSync(filePath, newLines.join('\n'), { encoding: 'utf8' })
   }
 
-  getDefaultTagFormat(packageName: string, version: string, isDefaultPackage: boolean): string {
+  getDefaultTagFormat(packageName: string, version: string, _isDefaultPackage: boolean): string {
     return `${packageName}@${version}`
   }
 }
