@@ -5,6 +5,18 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.3.4-beta.2] - 2026-07-05
+
+🚀 新增功能
+
+- [1b2f0ca3](/-/commit/1b2f0ca3067916296394b7e38cf7dca6140e34aa) feat(git): add getCommitRelativePath method (GitManager.ts, VersionManager.ts, index.ts)
+- [88218bc8](/-/commit/88218bc813af61e8c2179a03d1f9e19a5bdecfa9) feat: 实现 Git 提交地址自动识别功能 (ChangelogManager.ts, GitManager.ts, VersionManager.ts)
+
+✅ 测试更新
+
+- [a47d4c2f](/-/commit/a47d4c2fa14cba42b9a0d76715a159c8c6374d66) test: 添加 getCommitUrl 和平台自动识别测试用例 (git.test.ts)
+- [6a4ec27f](/-/commit/6a4ec27f65a43e8a37f281aaa420f1d4a38d1882) test: 添加 GitManager.getRepoUrl 和 getDefaultRemote 测试用例 (git.test.ts)
+
 ## [2.3.4-beta.1] - 2026-07-05
 
 🔧 工具变更
