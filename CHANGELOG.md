@@ -5,6 +5,12 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.3.4-beta.5] - 2026-07-05
+
+🔧 工具变更
+
+- [7606f87b](https://git.commit.ccwu.cc/commit/7606f87b2e17d14b1eaf2e013d586ca3f82d579d) chore(config): 更新git提交地址 (schema.ts)
+
 ## [2.3.4-beta.4] - 2026-07-05
 
 🚀 新增功能
