@@ -5,6 +5,13 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.3.4-beta.1] - 2026-07-05
+
+🔧 工具变更
+
+- [b2f84d16](https://cnb.cool/mznjs/mbump/commit/b2f84d16c1f004a25d3885d11873f93e9530368c) chore: 删除测试脚本 (test-changelog.ts, test-git.ts, test-git2.ts)
+- [a72b240e](https://cnb.cool/mznjs/mbump/commit/a72b240eca99c81166c456c4fb71e3f5c65e3cf7) chore: 重构 getRepoUrl 支持任意 Git 托管平台 (GitManager.ts)
+
 ## [2.3.4-beta.0] - 2026-07-05
 
 🚀 新增功能
