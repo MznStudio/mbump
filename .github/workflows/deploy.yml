@@ -27,7 +27,29 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      - name: Run tests
+        run: pnpm run test
+
+      - name: Get version from package.json
+        id: get-version
+        run: echo "VERSION=$(node -e "console.log(require('./package.json').version)")" >> $GITHUB_OUTPUT
+
+      - name: Create Git tag
+        run: |
+          git tag v${{ steps.get-version.outputs.VERSION }}
+          git push origin v${{ steps.get-version.outputs.VERSION }}
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.get-version.outputs.VERSION }}
+          release_name: Release v${{ steps.get-version.outputs.VERSION }}
+          draft: false
+          prerelease: false
+
       - name: Publish to npm
-        run: pnpm publish --access public --no-git-checks
+        run: pnpm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
