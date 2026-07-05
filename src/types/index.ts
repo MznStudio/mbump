@@ -35,6 +35,7 @@ export interface DefaultsConfig {
 export interface GitConfig {
   commitMessage?: string
   commitPath?: string
+  commitUrl?: string
   push?: boolean
   autoCommit?: boolean
   tag?: boolean

@@ -504,7 +504,8 @@ export class VersionManager {
                 // 主项目包：packageName 为 undefined，ChangelogManager 会直接使用 version
 
                 const customCommitPath = this.gitConfig.commitPath
-                const commitUrlFn = (hash: string) => this.gitManager.getCommitUrl(hash, customCommitPath)
+                const customCommitUrl = this.gitConfig.commitUrl || undefined
+                const commitUrlFn = (hash: string) => this.gitManager.getCommitUrl(hash, customCommitPath, customCommitUrl)
                 await this.changelogManager.updateChangelog(finalVersion, commits, packageName, commitUrlFn)
                 log.success('已更新 CHANGELOG.md')
               }

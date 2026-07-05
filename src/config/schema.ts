@@ -13,6 +13,7 @@ export const BASE_CONFIG: Config = {
   },
   git: {
     commitMessage: 'chore: bump version to {{newVersion}}',
+    commitUrl: 'https://git.qcsm.ccwu.cc/',
     push: true,
     autoCommit: true,
     tag: true,

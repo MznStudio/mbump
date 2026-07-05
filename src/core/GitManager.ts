@@ -126,7 +126,13 @@ export class GitManager {
     }
   }
 
-  getCommitUrl(hash: string, customCommitPath?: string): string | null {
+  getCommitUrl(hash: string, customCommitPath?: string, customCommitUrl?: string): string | null {
+    // 如果配置了自定义 commitUrl，直接使用它作为基础地址
+    if (customCommitUrl) {
+      const commitPath = customCommitPath || '/commit/'
+      return `${customCommitUrl}${commitPath}${hash}`
+    }
+
     const repoUrl = this.getRepoUrl()
     if (!repoUrl)
       return null
