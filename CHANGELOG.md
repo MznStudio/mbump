@@ -5,6 +5,18 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.3.2] - 2026-07-05
+
+🔧 工具变更
+
+- 672bae95fecf24de488dcc311b18675f972f66fd chore: 发布工作流添加 GitHub Release 创建 (deploy.yml)
+
+👷 CI 变更
+
+- 4d79be6bd56c7449c60bea12a0f89bda5dd3ffcd ci(deploy): 移除部署流程中的测试执行步骤 (deploy.yml)
+- b23aae21811bd86b590c0acc9c198459447a615a ci(github workflows): 发布npm时跳过git检查 (deploy.yml)
+- 8362377f40f3d2afbe256a39b374594e4c12099d ci(github workflows): 移除部署流程中的测试执行步骤 (deploy.yml)
+
 ## [2.3.1] - 2026-07-05
 
 🔧 工具变更
