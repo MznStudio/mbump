@@ -5,6 +5,12 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [web@0.0.13] - 2026-07-05
+
+🩹 缺陷修复
+
+- 01ad1feedee16743953f2a2f0d7eb8cd464716d3 fix(VersionManager): 修正node根包文件的匹配逻辑 (VersionManager.ts)
+
 ## [0.0.12] - 2026-07-05
 
 ♻️ 代码重构
