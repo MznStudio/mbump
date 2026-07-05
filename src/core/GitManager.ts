@@ -139,6 +139,24 @@ export class GitManager {
     return `${repoUrl}${commitPath}${hash}`
   }
 
+  /**
+   * 获取 commit 的相对路径格式，用于 Markdown 链接。
+   * 返回如 `/commit/b2f84d16c1f004a25d3885d11873f93e9530368c`，
+   * 在 GitHub/GitLab 等平台的仓库上下文中可正确解析为当前仓库的 commit 页面。
+   */
+  getCommitRelativePath(hash: string, customCommitPath?: string): string | null {
+    const repoUrl = this.getRepoUrl()
+    if (!repoUrl)
+      return null
+
+    const commitPath = customCommitPath || this.detectCommitPath(repoUrl)
+
+    if (!commitPath)
+      return null
+
+    return `${commitPath}${hash}`
+  }
+
   private detectCommitPath(repoUrl: string): string | null {
     const host = new URL(repoUrl).hostname
 
