@@ -25,5 +25,5 @@
             clear_remote: true
             branch: main
             # 仅上传以下文件/目录（逗号分隔）
-            include: 'src/,dist/,*.md,package.json,.env.production'
+            include: 'src/,dist/,*.md,package.json,.env.production,bin/,tests/,config-examples/,.gitignore,eslint.config.mjs,tsdown.config.ts,vitest.config.ts'
             exclude: '.git,node_modules/,*.log,Dockerfile,.env.local,tmp/,.cnb/,.cnb.yml,.trae/'
