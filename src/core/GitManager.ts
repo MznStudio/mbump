@@ -99,17 +99,27 @@ export class GitManager {
       })
       const url = output.trim()
 
-      if (url.startsWith('git@github.com:')) {
-        return url.replace('git@github.com:', 'https://github.com/')
+      let httpsUrl: string
+
+      if (url.startsWith('git@')) {
+        const [host, repo] = url.replace('git@', '').split(':')
+        httpsUrl = `https://${host}/${repo}`
       }
-      else if (url.startsWith('https://github.com/')) {
-        return url
+      else if (url.startsWith('https://')) {
+        httpsUrl = url
       }
-      else if (url.startsWith('git://github.com/')) {
-        return url.replace('git://', 'https://')
+      else if (url.startsWith('git://')) {
+        httpsUrl = url.replace('git://', 'https://')
+      }
+      else {
+        return null
       }
 
-      return null
+      if (httpsUrl.endsWith('.git')) {
+        httpsUrl = httpsUrl.slice(0, -4)
+      }
+
+      return httpsUrl
     }
     catch {
       return null
