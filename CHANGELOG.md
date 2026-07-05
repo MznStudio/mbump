@@ -5,6 +5,17 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [web@0.0.6] - 2026-07-05
+
+♻️ 代码重构
+
+- e1140ccab10e36e0fda8cb4aae25be323228a351 refactor: 移除独立RustManager，整合到VersionManager中 (README.md, GitManager.ts, RustManager.ts, index.ts, test-rust-flow.ts, rust.test.ts)
+
+🔧 工具变更
+
+- fea8c7aca22dffe06559bba5f8653541fcb2cdbd chore(rust-test): 升级版本到0.0.14-beta.1并优化git远程仓库获取逻辑 (CHANGELOG.md, Cargo.toml, GitManager.ts)
+- f4ae76f56ff48ce7795c427cfde55b26912feb54 chore(rust-test): 发布版本0.0.14-beta.0 (CHANGELOG.md, Cargo.toml)
+
 ## [2.2.4] - 2026-07-05
 
 ### 待补充
