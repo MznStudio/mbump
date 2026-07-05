@@ -12,6 +12,8 @@ export { ChangelogManager } from './core/ChangelogManager'
 export { GitManager } from './core/GitManager'
 export { RustManager } from './core/RustManager'
 export { VersionManager } from './core/VersionManager'
+export type { IVersionProvider } from './core/VersionProvider'
+export { NodeVersionProvider, RustVersionProvider } from './core/VersionProvider'
 export * from './types'
 
 export { default as log } from './utils/logger'

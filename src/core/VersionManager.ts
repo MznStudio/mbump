@@ -1,5 +1,5 @@
+import type { IVersionProvider, ProjectType } from './VersionProvider'
 import type { Config, GitConfig, PackageInfo, PackagePaths, PreviewPackage, PreviewResult, PublishConfig, ReleaseType, UpdateOptions, UpdateResult, VersionManagerOptions } from '@/types'
-import { readFileSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 import process from 'node:process'
 import { loadConfig } from '@/config/loader'
@@ -8,6 +8,7 @@ import { validateCommand, validatePath } from '@/utils/security'
 import { getMajor, getMinor, getPatch, incrementVersion, isPrerelease, isValidVersion } from '@/utils/semver'
 import { ChangelogManager } from './ChangelogManager'
 import { GitManager } from './GitManager'
+import { NodeVersionProvider, RustVersionProvider } from './VersionProvider'
 
 export class VersionManager {
   private config: Config
@@ -19,9 +20,10 @@ export class VersionManager {
   private packageCache: Map<string, PackageInfo> = new Map()
   private gitManager: GitManager
   private changelogManager: ChangelogManager
+  private versionProvider: IVersionProvider
 
-  constructor(options: VersionManagerOptions = {}) {
-    const { packagePaths, configPath, config, rootDir = process.cwd() } = options
+  constructor(options: VersionManagerOptions & { projectType?: ProjectType } = {}) {
+    const { packagePaths, configPath, config, rootDir = process.cwd(), projectType = 'node' } = options
 
     this.config = config || (configPath ? loadConfig(dirname(configPath)) : loadConfig(rootDir))
     this.rootDir = rootDir
@@ -31,6 +33,7 @@ export class VersionManager {
     this.gitPush = this.gitConfig.push !== false
     this.gitManager = new GitManager(rootDir)
     this.changelogManager = new ChangelogManager(rootDir)
+    this.versionProvider = projectType === 'rust' ? new RustVersionProvider() : new NodeVersionProvider()
 
     if (!this.packagePaths || typeof this.packagePaths !== 'object' || Object.keys(this.packagePaths).length === 0) {
       throw new Error('配置错误：未找到有效的包路径配置')
@@ -97,7 +100,6 @@ export class VersionManager {
       push = this.gitConfig.push !== false,
       npm = false,
       changelog = this.gitConfig.changelog !== false,
-      tagPrefix = this.gitConfig.tagPrefix || 'v',
       packageVersionSelections,
     } = options
 
@@ -188,7 +190,10 @@ export class VersionManager {
         }
 
         const isDefaultPackage = packageName === 'default' || packagePaths[packageName] === 'package.json'
-        const tagName = isDefaultPackage ? `${tagPrefix}${newVersion}` : `${pkg.name}@${newVersion}`
+        const tagName = this.versionProvider.getDefaultTagFormat(
+          isDefaultPackage ? 'default' : pkg.name,
+          newVersion,
+        )
 
         packages.push({
           name: packageName,
@@ -286,7 +291,10 @@ export class VersionManager {
         }
 
         const isDefaultPackage = pkgName === 'default' || packagePaths[pkgName] === 'package.json'
-        const tagName = isDefaultPackage ? `${tagPrefix}${newVersion}` : `${pkg.name}@${newVersion}`
+        const tagName = this.versionProvider.getDefaultTagFormat(
+          isDefaultPackage ? 'default' : pkg.name,
+          newVersion,
+        )
 
         packages.push({
           name: pkg.name,
@@ -423,7 +431,10 @@ export class VersionManager {
             if (!finalVersion) {
               finalVersion = newVersion
               const isDefaultPackage = pkgName === 'default' || this.config.packagePaths[pkgName] === 'package.json'
-              const versionTag = isDefaultPackage ? `${tagPrefix}${newVersion}` : `${pkg.name}@${newVersion}`
+              const versionTag = this.versionProvider.getDefaultTagFormat(
+                isDefaultPackage ? 'default' : pkg.name,
+                newVersion,
+              )
               if (!dryRun && this.gitManager.checkVersionExists(newVersion, tagPrefix, isDefaultPackage ? undefined : pkg.name)) {
                 throw new Error(`版本 ${versionTag} 已存在，请使用其他版本`)
               }
@@ -526,20 +537,21 @@ export class VersionManager {
                 commitMessage = `chore: bump version for ${pkgName} to v${newVersion}`
               }
 
-              // 主项目包使用 {tagPrefix}{version} 格式，子包使用 {package-name}@{version} 格式
+              // 使用 versionProvider 获取 tag 格式
+              const tagName = this.versionProvider.getDefaultTagFormat(
+                isDefaultPackage ? 'default' : updatedPackage.name,
+                newVersion,
+              )
+
               if (isDefaultPackage) {
-                // 主项目包：使用配置的 tagPrefix (如 v1.0.1)
                 this.gitManager.commitAndPush(commitMessage, this.gitPush, tag, newVersion, tagPrefix)
               }
               else {
-                // 子包：创建 {package-name}@{version} 格式的 tag
                 const { execSync } = await import('node:child_process')
 
                 this.gitManager.addFiles(['-u'])
                 this.gitManager.commit(commitMessage)
 
-                // 创建 {package-name}@{version} 格式的 tag
-                const tagName = `${updatedPackage.name}@${newVersion}`
                 try {
                   execSync(`git tag -a ${tagName} -m "Release ${tagName}"`, {
                     cwd: this.rootDir,
@@ -551,7 +563,6 @@ export class VersionManager {
                   log.warn(`创建 tag ${tagName} 失败: ${(tagError as Error).message}`)
                 }
 
-                // 推送
                 if (this.gitPush) {
                   try {
                     this.gitManager.push(true)
@@ -586,7 +597,6 @@ export class VersionManager {
     push: boolean = true,
     updatedPackages?: Array<{ name: string, newVersion: string, pkgKey?: string }>,
     tag: boolean = this.gitConfig.tag !== false,
-    tagPrefix: string = this.gitConfig.tagPrefix || 'v',
   ): Promise<void> {
     try {
       const commitMessage = 'chore: bump versions for multiple packages'
@@ -600,19 +610,11 @@ export class VersionManager {
         // 为每个包创建独立的 tag
         const { execSync } = await import('node:child_process')
         for (const pkg of updatedPackages) {
-          let tagName: string
-
-          // 通过 pkgKey 判断是否为主项目包
           const isMainPackage = pkg.pkgKey === 'default'
-
-          if (isMainPackage) {
-            // 主项目包：使用 {tagPrefix}{version} 格式
-            tagName = `${tagPrefix}${pkg.newVersion}`
-          }
-          else {
-            // 子包：使用 {package-name}@{version} 格式
-            tagName = `${pkg.name}@${pkg.newVersion}`
-          }
+          const tagName = this.versionProvider.getDefaultTagFormat(
+            isMainPackage ? 'default' : pkg.name,
+            pkg.newVersion,
+          )
 
           try {
             execSync(`git tag -a ${tagName} -m "Release ${tagName}"`, {
@@ -652,16 +654,13 @@ export class VersionManager {
    * @returns 包信息对象
    */
   getPackageInfo(pkgPath: string): PackageInfo {
-    // 首先检查缓存
     const cached = this.packageCache.get(pkgPath)
     if (cached) {
       return cached
     }
 
-    // 缓存未命中，从文件读取
     try {
-      const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as PackageInfo
-      // 写入缓存
+      const pkg = this.versionProvider.getPackageInfo(pkgPath)
       this.packageCache.set(pkgPath, pkg)
       return pkg
     }
@@ -676,8 +675,7 @@ export class VersionManager {
     }
 
     try {
-      writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`)
-      // 更新缓存
+      this.versionProvider.updateVersion(pkgPath, pkg.version)
       this.packageCache.set(pkgPath, pkg)
     }
     catch (error: any) {

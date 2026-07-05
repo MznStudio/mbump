@@ -1,12 +1,11 @@
 #!/usr/bin/env node
-import type { Config, PackageVersionSelections, PreviewResult, ReleaseType } from '@/types'
+import type { Config, PackageVersionSelections, PreviewResult } from '@/types'
 import { execSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { clearConfigCache, loadConfigAsync } from '@/config/loader'
-import { RustManager } from '@/core/RustManager'
 import { VersionManager } from '@/core/VersionManager'
 import log from '@/utils/logger'
 import { selectAllVersionsInteractive, selectVersionInteractive } from './interactive'
@@ -367,11 +366,47 @@ async function main(): Promise<void> {
         process.exit(1)
       }
 
-      const rustManager = new RustManager(rootDir)
+      const cargoTomlPath = join(rootDir, 'Cargo.toml')
+      if (!existsSync(cargoTomlPath)) {
+        displayError(new Error(`Cargo.toml 文件不存在于路径 "${rootDir}"`), {
+          operation: 'Rust 项目检测',
+        })
+        log.info(`💡 请确保指定的路径是 Rust 项目根目录`)
+        process.exit(1)
+      }
 
       if (parsedArgs.projectPath) {
         log.info(`切换到项目路径: ${rootDir}`)
       }
+
+      let packageName = 'default'
+      try {
+        const content = readFileSync(cargoTomlPath, 'utf8')
+        const toml = await import('toml')
+        const parsed = toml.parse(content) as Record<string, any>
+        packageName = parsed.package?.name || 'rust'
+      }
+      catch {
+        packageName = 'rust'
+      }
+
+      const projectConfig: Config = {
+        packagePaths: {
+          [packageName]: cargoTomlPath,
+        },
+        defaults: {
+          releaseType: 'patch',
+        },
+        git: {
+          autoCommit: parsedArgs.autoCommit,
+          push: parsedArgs.push,
+          tag: parsedArgs.tag,
+          changelog: parsedArgs.changelog,
+        },
+      }
+
+      const versionManager = new VersionManager({ config: projectConfig, rootDir, projectType: 'rust' })
+      log.setLevel(parsedArgs.verbose ? 'debug' : 'info')
 
       if (hasUncommittedChanges()) {
         if (!parsedArgs.allowUncommitted) {
@@ -408,15 +443,7 @@ async function main(): Promise<void> {
         }
       }
 
-      if (!rustManager.exists()) {
-        displayError(new Error(`Cargo.toml 文件不存在于路径 "${rootDir}"`), {
-          operation: 'Rust 项目检测',
-        })
-        log.info(`💡 请确保指定的路径是 Rust 项目根目录`)
-        process.exit(1)
-      }
-
-      const currentVersion = rustManager.getCurrentVersion()
+      const currentVersion = versionManager.getPackageVersion(packageName)
       if (!currentVersion) {
         displayError(new Error(`Cargo.toml 文件中未找到 [package] 部分的 version 字段`), {
           operation: '版本读取',
@@ -428,32 +455,33 @@ async function main(): Promise<void> {
       let customVersion: string | null = null
 
       if (!parsedArgs.type) {
-        const config = {
-          defaults: { releaseType: 'patch' },
-          packagePaths: {},
-        } as any
-        const selection = await selectVersionInteractive(config, 'rust', currentVersion)
+        const selection = await selectVersionInteractive(projectConfig, packageName, currentVersion, rootDir)
         selectedType = selection.type
         customVersion = selection.customVersion
       }
 
-      try {
-        rustManager.updateVersion(selectedType as ReleaseType, {
-          dryRun: parsedArgs.dryRun,
-          verbose: parsedArgs.verbose,
+      if (parsedArgs.dryRun) {
+        const preview = await versionManager.previewUpdate(packageName, selectedType, {
+          customVersion,
           autoCommit: parsedArgs.autoCommit,
           push: parsedArgs.push,
-          customVersion,
-          tag: parsedArgs.tag,
-          changelog: parsedArgs.changelog,
-          allowUncommitted: parsedArgs.allowUncommitted,
         })
+        renderPreview(preview)
         process.exit(0)
       }
-      catch (error: any) {
-        displayError(error, { operation: 'Rust 版本更新' })
-        process.exit(1)
-      }
+
+      await versionManager.updateVersion(packageName, selectedType, {
+        dryRun: parsedArgs.dryRun,
+        verbose: parsedArgs.verbose,
+        autoCommit: parsedArgs.autoCommit,
+        push: parsedArgs.push,
+        customVersion,
+        tag: parsedArgs.tag,
+        changelog: parsedArgs.changelog,
+      })
+
+      log.success(`版本更新完成`)
+      process.exit(0)
     }
 
     if (parsedArgs.projectPath) {
@@ -837,7 +865,6 @@ async function main(): Promise<void> {
           parsedArgsWithDefaults.push,
           updatedPackagesInfo,
           config.git?.tag !== false,
-          config.git?.tagPrefix || 'v',
         )
       }
 
