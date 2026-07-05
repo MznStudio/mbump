@@ -5,6 +5,18 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.2.3] - 2026-07-05
+
+🚀 新增功能
+
+- 0feaf6a62d3c5e8667a376de0955bf3ee0172eda feat: 新增多语言版本管理，重构cli与核心逻辑 (CHANGELOG.md, Cargo.toml, index.ts, VersionManager.ts, VersionProvider.ts, index.ts, test-changelog.ts, test-git.ts, test-git2.ts, test-rust-flow.ts)
+
+🔧 工具变更
+
+- 223c0f8002ab37081de27034c0742e19cfe5e493 chore(rust-test): 发布版本 0.0.13 (CHANGELOG.md, Cargo.toml)
+- a2fecae3a4258f5fc477fe84a217f580ca5fb2c0 chore(rust-test, src): 发布v0.0.12并更新版本相关逻辑 (CHANGELOG.md, Cargo.toml, VersionManager.ts, VersionProvider.ts)
+- c8451bb9cebf34ffae76061828e8373193496ed1 chore: update mbump config and settings (Cargo.toml)
+
 ## [2.2.2] - 2026-07-05
 
 ### 待补充
