@@ -111,15 +111,15 @@ mbump <path> <type>
 
 ### 2. 版本类型
 
-| 类型 | 说明 | 示例 |
-|------|------|------|
-| `major` | 主版本号递增 | 1.0.0 → 2.0.0 |
-| `minor` | 次版本号递增 | 1.0.0 → 1.1.0 |
-| `patch` | 修订号递增 | 1.0.0 → 1.0.1 |
-| `pre-major` | 预发布主版本 | 1.0.0 → 2.0.0-beta.0 |
-| `pre-minor` | 预发布次版本 | 1.0.0 → 1.1.0-beta.0 |
-| `pre-patch` | 预发布修订版 | 1.0.0 → 1.0.1-beta.0 |
-| `as-is` | 使用自定义版本 | 指定 customVersion |
+| 类型          | 说明      | 示例                   |
+| ----------- | ------- | -------------------- |
+| `major`     | 主版本号递增  | 1.0.0 → 2.0.0        |
+| `minor`     | 次版本号递增  | 1.0.0 → 1.1.0        |
+| `patch`     | 修订号递增   | 1.0.0 → 1.0.1        |
+| `pre-major` | 预发布主版本  | 1.0.0 → 2.0.0-beta.0 |
+| `pre-minor` | 预发布次版本  | 1.0.0 → 1.1.0-beta.0 |
+| `pre-patch` | 预发布修订版  | 1.0.0 → 1.0.1-beta.0 |
+| `as-is`     | 使用自定义版本 | 指定 customVersion     |
 
 ### 3. 常用命令示例
 
@@ -174,14 +174,14 @@ mbump .
 
 支持的路径格式：
 
-| 格式 | 示例 |
-|------|------|
-| 相对路径 | `./packages/my-pkg` |
-| 上级目录 | `../other-project` |
-| 绝对路径 | `/usr/local/project` |
-| Windows 路径 | `C:\Projects\app` |
-| 用户主目录 | `~/projects/my-app` |
-| UNC 路径 | `\\server\share\project` |
+| 格式         | 示例                       |
+| ---------- | ------------------------ |
+| 相对路径       | `./packages/my-pkg`      |
+| 上级目录       | `../other-project`       |
+| 绝对路径       | `/usr/local/project`     |
+| Windows 路径 | `C:\Projects\app`        |
+| 用户主目录      | `~/projects/my-app`      |
+| UNC 路径     | `\\server\share\project` |
 
 ### 5. Rust 项目模式
 
@@ -200,6 +200,7 @@ mbump -r major --dry-run
 ```
 
 Rust 项目特点：
+
 - 自动检测 `Cargo.toml` 文件
 - 使用 `cargo publish` 发布（写死，不可配置）
 - Tag 格式为 `{package-name}@{version}`
@@ -257,31 +258,31 @@ export default {
 
 #### defaults
 
-| 选项 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `releaseType` | `string` | `'patch'` | 默认版本类型 |
-| `dryRun` | `boolean` | `false` | 默认试运行模式 |
-| `verbose` | `boolean` | `false` | 默认详细输出 |
-| `allowUncommitted` | `boolean` | `false` | 允许未提交更改 |
-| `publish` | `boolean` | `false` | 默认启用发布 |
+| 选项                 | 类型        | 默认值       | 说明      |
+| ------------------ | --------- | --------- | ------- |
+| `releaseType`      | `string`  | `'patch'` | 默认版本类型  |
+| `dryRun`           | `boolean` | `false`   | 默认试运行模式 |
+| `verbose`          | `boolean` | `false`   | 默认详细输出  |
+| `allowUncommitted` | `boolean` | `false`   | 允许未提交更改 |
+| `publish`          | `boolean` | `false`   | 默认启用发布  |
 
 #### git
 
-| 选项 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `commitMessage` | `string` | `'chore: bump version...'` | 提交消息模板 |
-| `push` | `boolean` | `true` | 是否自动推送 |
-| `autoCommit` | `boolean` | `true` | 是否自动提交 |
-| `tag` | `boolean` | `true` | 是否创建 Tag |
-| `tagPrefix` | `string` | `'v'` | Tag 前缀（仅主项目） |
-| `changelog` | `boolean` | `true` | 是否生成 CHANGELOG |
+| 选项              | 类型        | 默认值                        | 说明             |
+| --------------- | --------- | -------------------------- | -------------- |
+| `commitMessage` | `string`  | `'chore: bump version...'` | 提交消息模板         |
+| `push`          | `boolean` | `true`                     | 是否自动推送         |
+| `autoCommit`    | `boolean` | `true`                     | 是否自动提交         |
+| `tag`           | `boolean` | `true`                     | 是否创建 Tag       |
+| `tagPrefix`     | `string`  | `'v'`                      | Tag 前缀（仅主项目）   |
+| `changelog`     | `boolean` | `true`                     | 是否生成 CHANGELOG |
 
 #### publish
 
-| 选项 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `command` | `string` | `'pnpm publish...'` | 发布命令（仅 Node.js 项目） |
-| `skipChecks` | `boolean` | `true` | 跳过安全检查 |
+| 选项           | 类型        | 默认值                 | 说明                 |
+| ------------ | --------- | ------------------- | ------------------ |
+| `command`    | `string`  | `'pnpm publish...'` | 发布命令（仅 Node.js 项目） |
+| `skipChecks` | `boolean` | `true`              | 跳过安全检查             |
 
 **注意**：Rust 项目的发布命令固定为 `cargo publish`，不受此配置影响。
 
@@ -415,14 +416,14 @@ mbump components patch --verbose
 
 ### 常见错误处理
 
-| 错误 | 解决方案 |
-|------|---------|
-| 版本已存在 | 删除已有 Tag: `git tag -d v1.0.1` |
-| Git 冲突 | 解决冲突后重新运行 |
-| NPM 认证失败 | 运行 `pnpm login` 登录 |
-| Cargo 认证失败 | 运行 `cargo login` 登录 |
-| 包名不存在 | 检查配置文件中的 `packagePaths` |
-| 路径不存在 | 确认路径正确，目录存在 |
+| 错误         | 解决方案                          |
+| ---------- | ----------------------------- |
+| 版本已存在      | 删除已有 Tag: `git tag -d v1.0.1` |
+| Git 冲突     | 解决冲突后重新运行                     |
+| NPM 认证失败   | 运行 `pnpm login` 登录            |
+| Cargo 认证失败 | 运行 `cargo login` 登录           |
+| 包名不存在      | 检查配置文件中的 `packagePaths`       |
+| 路径不存在      | 确认路径正确，目录存在                   |
 
 ## 🔌 API 使用
 
@@ -533,36 +534,23 @@ pnpm test:watch
 pnpm typecheck
 ```
 
-## 🤝 贡献指南
-
-1. Fork 本仓库
-2. 创建特性分支 (`git checkout -b feature/amazing-feature`)
-3. 提交更改 (`git commit -m 'Add some amazing feature'`)
-4. 推送到分支 (`git push origin feature/amazing-feature`)
-5. 开启 Pull Request
-
-### 开发要求
-
-- Node.js >= 18.0.0
-- 所有测试必须通过
-- 代码必须符合 ESLint 规范
+<br />
 
 ## 📄 许可证
 
 MIT License
 
-## 👥 作者
+<br />
 
-**mznjs Team** - [GitHub](https://github.com/mznjs)
-
-## 🙏 致谢
+🙏 致谢
 
 感谢以下开源项目的支持：
+
 - [semver](https://github.com/npm/node-semver) - 语义化版本解析
 - [consola](https://github.com/unjs/consola) - 优雅的日志输出
 - [inquirer](https://github.com/SBoudrias/Inquirer.js) - 交互式命令行
 - [vitest](https://vitest.dev/) - 快速单元测试框架
 
----
+***
 
 **mbump** - 让版本管理更简单！🚀
