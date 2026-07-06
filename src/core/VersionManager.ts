@@ -5,7 +5,7 @@ import process from 'node:process'
 import { loadConfig } from '@/config/loader'
 import log from '@/utils/logger'
 import { validateCommand, validatePath } from '@/utils/security'
-import { getMajor, getMinor, getPatch, incrementVersion, isPrerelease, isValidVersion } from '@/utils/semver'
+import { incrementVersion, isPrerelease, isValidVersion, getMinor, getMajor, getPatch } from '@/utils/semver'
 import { ChangelogManager } from './ChangelogManager'
 import { GitManager } from './GitManager'
 import { NodeVersionProvider, RustVersionProvider } from './VersionProvider'
@@ -16,7 +16,6 @@ export class VersionManager {
   private packagePaths: PackagePaths
   private publishConfig: PublishConfig
   private gitConfig: GitConfig
-  private gitPush: boolean
   private packageCache: Map<string, PackageInfo> = new Map()
   private gitManager: GitManager
   private changelogManager: ChangelogManager
@@ -30,7 +29,6 @@ export class VersionManager {
     this.packagePaths = packagePaths || this.config.packagePaths
     this.publishConfig = this.config.publish || {}
     this.gitConfig = this.config.git || {}
-    this.gitPush = this.gitConfig.push !== false
     this.gitManager = new GitManager(rootDir)
     this.changelogManager = new ChangelogManager(rootDir)
     this.versionProvider = projectType === 'rust' ? new RustVersionProvider() : new NodeVersionProvider()
@@ -40,6 +38,73 @@ export class VersionManager {
     }
 
     this._preloadPackageCache()
+  }
+
+  // =========================================================================
+  // P0 提取：统一版本计算逻辑（消除原来 3 份重复的 switch 块）
+  // =========================================================================
+
+  /**
+   * 根据当前版本和 releaseType 计算新版本号。
+   * 这是唯一的版本计算入口，所有调用方共用此方法。
+   */
+  private calculateNewVersion(currentVersion: string, releaseType: ReleaseType): string | null {
+    switch (releaseType) {
+      case 'major':
+      case 'minor':
+      case 'patch':
+        return incrementVersion(currentVersion, releaseType)
+
+      case 'next':
+        return incrementVersion(currentVersion, 'patch')
+
+      case 'pre-patch':
+        if (isPrerelease(currentVersion)) {
+          return incrementVersion(currentVersion, 'prerelease', 'beta')
+        }
+        else {
+          return incrementVersion(currentVersion, 'prepatch', 'beta')
+        }
+
+      case 'pre-minor':
+        if (isPrerelease(currentVersion)) {
+          const currentMinor = getMinor(currentVersion) ?? 0
+          const potentialVersion = incrementVersion(currentVersion, 'preminor', 'beta')
+          if (potentialVersion && (getMinor(potentialVersion) ?? 0) > currentMinor) {
+            return potentialVersion
+          }
+          else {
+            return incrementVersion(currentVersion, 'prerelease', 'beta')
+          }
+        }
+        else {
+          return incrementVersion(currentVersion, 'preminor', 'beta')
+        }
+
+      case 'pre-major':
+        if (isPrerelease(currentVersion)) {
+          const currentMajor = getMajor(currentVersion) ?? 0
+          const potentialVersion = incrementVersion(currentVersion, 'premajor', 'beta')
+          if (potentialVersion && (getMajor(potentialVersion) ?? 0) > currentMajor) {
+            return potentialVersion
+          }
+          else {
+            return incrementVersion(currentVersion, 'prerelease', 'beta')
+          }
+        }
+        else {
+          return incrementVersion(currentVersion, 'premajor', 'beta')
+        }
+
+      case 'as-is':
+        return currentVersion
+
+      case 'conventional':
+        return incrementVersion(currentVersion, 'patch')
+
+      default:
+        throw new Error(`不支持的版本类型: ${releaseType}`)
+    }
   }
 
   private _isDefaultPackage(pkgKey: string): boolean {
@@ -140,62 +205,8 @@ export class VersionManager {
         }
         else {
           try {
-            switch (selection.type) {
-              case 'major':
-              case 'minor':
-              case 'patch':
-                newVersion = incrementVersion(pkg.version, selection.type)
-                break
-              case 'next':
-                newVersion = incrementVersion(pkg.version, 'patch')
-                break
-              case 'pre-patch':
-                if (isPrerelease(pkg.version)) {
-                  newVersion = incrementVersion(pkg.version, 'prerelease', 'beta')
-                }
-                else {
-                  newVersion = incrementVersion(pkg.version, 'prepatch', 'beta')
-                }
-                break
-              case 'pre-minor':
-                if (isPrerelease(pkg.version)) {
-                  const currentMinor = getMinor(pkg.version) ?? 0
-                  const potentialVersion = incrementVersion(pkg.version, 'preminor', 'beta')
-                  if (potentialVersion && (getMinor(potentialVersion) ?? 0) > currentMinor) {
-                    newVersion = potentialVersion
-                  }
-                  else {
-                    newVersion = incrementVersion(pkg.version, 'prerelease', 'beta')
-                  }
-                }
-                else {
-                  newVersion = incrementVersion(pkg.version, 'preminor', 'beta')
-                }
-                break
-              case 'pre-major':
-                if (isPrerelease(pkg.version)) {
-                  const currentMajor = getMajor(pkg.version) ?? 0
-                  const potentialVersion = incrementVersion(pkg.version, 'premajor', 'beta')
-                  if (potentialVersion && (getMajor(potentialVersion) ?? 0) > currentMajor) {
-                    newVersion = potentialVersion
-                  }
-                  else {
-                    newVersion = incrementVersion(pkg.version, 'prerelease', 'beta')
-                  }
-                }
-                else {
-                  newVersion = incrementVersion(pkg.version, 'premajor', 'beta')
-                }
-                break
-              case 'as-is':
-                newVersion = pkg.version
-                break
-              case 'conventional':
-                newVersion = incrementVersion(pkg.version, 'patch')
-                break
-              default:
-                throw new Error(`不支持的版本类型: ${selection.type}`)
-            }
+            // 使用统一的 calculateNewVersion 方法
+            newVersion = this.calculateNewVersion(pkg.version, selection.type)
           }
           catch (error: any) {
             throw new Error(`版本计算失败: ${error.message}`)
@@ -242,62 +253,8 @@ export class VersionManager {
         }
         else {
           try {
-            switch (releaseType) {
-              case 'major':
-              case 'minor':
-              case 'patch':
-                newVersion = incrementVersion(pkg.version, releaseType)
-                break
-              case 'next':
-                newVersion = incrementVersion(pkg.version, 'patch')
-                break
-              case 'pre-patch':
-                if (isPrerelease(pkg.version)) {
-                  newVersion = incrementVersion(pkg.version, 'prerelease', 'beta')
-                }
-                else {
-                  newVersion = incrementVersion(pkg.version, 'prepatch', 'beta')
-                }
-                break
-              case 'pre-minor':
-                if (isPrerelease(pkg.version)) {
-                  const currentMinor = getMinor(pkg.version) ?? 0
-                  const potentialVersion = incrementVersion(pkg.version, 'preminor', 'beta')
-                  if (potentialVersion && (getMinor(potentialVersion) ?? 0) > currentMinor) {
-                    newVersion = potentialVersion
-                  }
-                  else {
-                    newVersion = incrementVersion(pkg.version, 'prerelease', 'beta')
-                  }
-                }
-                else {
-                  newVersion = incrementVersion(pkg.version, 'preminor', 'beta')
-                }
-                break
-              case 'pre-major':
-                if (isPrerelease(pkg.version)) {
-                  const currentMajor = getMajor(pkg.version) ?? 0
-                  const potentialVersion = incrementVersion(pkg.version, 'premajor', 'beta')
-                  if (potentialVersion && (getMajor(potentialVersion) ?? 0) > currentMajor) {
-                    newVersion = potentialVersion
-                  }
-                  else {
-                    newVersion = incrementVersion(pkg.version, 'prerelease', 'beta')
-                  }
-                }
-                else {
-                  newVersion = incrementVersion(pkg.version, 'premajor', 'beta')
-                }
-                break
-              case 'as-is':
-                newVersion = pkg.version
-                break
-              case 'conventional':
-                newVersion = incrementVersion(pkg.version, 'patch')
-                break
-              default:
-                throw new Error(`不支持的版本类型: ${releaseType}`)
-            }
+            // 使用统一的 calculateNewVersion 方法
+            newVersion = this.calculateNewVersion(pkg.version, releaseType)
           }
           catch (error: any) {
             throw new Error(`版本计算失败: ${error.message}`)
@@ -316,7 +273,7 @@ export class VersionManager {
         )
 
         packages.push({
-          name: pkg.name,
+          name: packageName,
           oldVersion: pkg.version,
           newVersion,
           tagName,
@@ -355,6 +312,11 @@ export class VersionManager {
       error: null,
     }
 
+    // P1 缓存：_isDefaultPackage 在单次执行中被多次调用，参数相同，只需计算一次
+    const cachedIsDefaultPackage = pkgName === 'all'
+      ? this._isDefaultPackage(Object.keys(packagePaths)[0])
+      : this._isDefaultPackage(pkgName)
+
     return log.withSpinner(
       `正在更新${pkgName === 'all' ? '所有包' : `包${pkgName}`}的版本...`,
 
@@ -380,62 +342,8 @@ export class VersionManager {
             }
             else {
               try {
-                switch (releaseType) {
-                  case 'major':
-                  case 'minor':
-                  case 'patch':
-                    newVersion = incrementVersion(pkg.version, releaseType)
-                    break
-                  case 'next':
-                    newVersion = incrementVersion(pkg.version, 'patch')
-                    break
-                  case 'pre-patch':
-                    if (isPrerelease(pkg.version)) {
-                      newVersion = incrementVersion(pkg.version, 'prerelease', 'beta')
-                    }
-                    else {
-                      newVersion = incrementVersion(pkg.version, 'prepatch', 'beta')
-                    }
-                    break
-                  case 'pre-minor':
-                    if (isPrerelease(pkg.version)) {
-                      const currentMinor = getMinor(pkg.version) ?? 0
-                      const potentialVersion = incrementVersion(pkg.version, 'preminor', 'beta')
-                      if (potentialVersion && (getMinor(potentialVersion) ?? 0) > currentMinor) {
-                        newVersion = potentialVersion
-                      }
-                      else {
-                        newVersion = incrementVersion(pkg.version, 'prerelease', 'beta')
-                      }
-                    }
-                    else {
-                      newVersion = incrementVersion(pkg.version, 'preminor', 'beta')
-                    }
-                    break
-                  case 'pre-major':
-                    if (isPrerelease(pkg.version)) {
-                      const currentMajor = getMajor(pkg.version) ?? 0
-                      const potentialVersion = incrementVersion(pkg.version, 'premajor', 'beta')
-                      if (potentialVersion && (getMajor(potentialVersion) ?? 0) > currentMajor) {
-                        newVersion = potentialVersion
-                      }
-                      else {
-                        newVersion = incrementVersion(pkg.version, 'prerelease', 'beta')
-                      }
-                    }
-                    else {
-                      newVersion = incrementVersion(pkg.version, 'premajor', 'beta')
-                    }
-                    break
-                  case 'as-is':
-                    newVersion = pkg.version
-                    break
-                  case 'conventional':
-                    newVersion = incrementVersion(pkg.version, 'patch')
-                    break
-                  default:
-                    throw new Error(`不支持的版本类型: ${releaseType}`)
-                }
+                // 使用统一的 calculateNewVersion 方法
+                newVersion = this.calculateNewVersion(pkg.version, releaseType)
               }
               catch (error: any) {
                 throw new Error(`版本计算失败: ${error.message}`)
@@ -449,15 +357,12 @@ export class VersionManager {
             // 只在第一个包时检查版本
             if (!finalVersion) {
               finalVersion = newVersion
-              const isDefaultPackage = pkgName === 'all'
-                ? this._isDefaultPackage(Object.keys(packagePaths)[0])
-                : this._isDefaultPackage(pkgName)
               const versionTag = this.versionProvider.getDefaultTagFormat(
                 pkg.name,
                 newVersion,
-                isDefaultPackage,
+                cachedIsDefaultPackage,
               )
-              if (!dryRun && this.gitManager.checkVersionExists(newVersion, tagPrefix, isDefaultPackage ? undefined : pkg.name)) {
+              if (!dryRun && this.gitManager.checkVersionExists(newVersion, tagPrefix, cachedIsDefaultPackage ? undefined : pkg.name)) {
                 throw new Error(`版本 ${versionTag} 已存在，请使用其他版本`)
               }
             }
@@ -479,15 +384,10 @@ export class VersionManager {
             })
           }
 
-          // 生成CHANGELOG
-          // 在批量更新模式时，只有主项目包（default）才生成 CHANGELOG
-          const isDefaultPackage = pkgName === 'all'
-            ? this._isDefaultPackage(Object.keys(packagePaths)[0])
-            : this._isDefaultPackage(pkgName)
-
+          // 生成CHANGELOG — 使用缓存的 isDefaultPackage 结果
           if (!dryRun && changelog && finalVersion) {
             // 如果是批量模式且不是主项目包，跳过 CHANGELOG 生成
-            if (isBatchMode && !isDefaultPackage) {
+            if (isBatchMode && !cachedIsDefaultPackage) {
               log.info(`子包 ${pkgName} 跳过 CHANGELOG 生成`)
             }
             else {
@@ -496,7 +396,7 @@ export class VersionManager {
 
                 // 主项目包不传 packageName（使用 tagPrefix 格式），子包传 packageName（使用 {package-name}@{version} 格式）
                 let packageName: string | undefined
-                if (!isDefaultPackage) {
+                if (!cachedIsDefaultPackage) {
                   // 子包：获取 package.json 的 name 字段
                   const firstPkg = this.getPackageInfo(targets[0])
                   packageName = firstPkg.name
@@ -550,18 +450,15 @@ export class VersionManager {
             }
           }
 
-          // Git提交和Tag
+          // Git提交和Tag — 使用缓存的 isDefaultPackage 和 gitConfig.push
           if (!dryRun && autoCommit && result.updatedPackages.length > 0) {
             try {
               let commitMessage: string
               const updatedPackage = result.updatedPackages[0]
               const newVersion = updatedPackage.newVersion
-              const isDefaultPackage = pkgName === 'all'
-                ? this._isDefaultPackage(Object.keys(packagePaths)[0])
-                : this._isDefaultPackage(pkgName)
 
               if (this.gitConfig.commitMessage && this.gitConfig.commitMessage !== 'chore: bump version to {{newVersion}}') {
-                commitMessage = this.gitConfig.commitMessage.replace(/\{\{newVersion\}\}/g, newVersion)
+                commitMessage = this.gitConfig.commitMessage.replace(/{{newVersion}}/g, newVersion)
               }
               else if (pkgName === 'all') {
                 const versionInfo = result.updatedPackages.map(pkg => `${pkg.name}@${pkg.newVersion}`).join(', ')
@@ -580,31 +477,26 @@ export class VersionManager {
                 tagName = this.versionProvider.getDefaultTagFormat(
                   updatedPackage.name,
                   newVersion,
-                  isDefaultPackage,
+                  cachedIsDefaultPackage,
                 )
               }
 
-              if (isDefaultPackage) {
-                this.gitManager.commitAndPush(commitMessage, this.gitPush, tag, newVersion, tagPrefix, tagName)
+              if (cachedIsDefaultPackage) {
+                this.gitManager.commitAndPush(commitMessage, this.gitConfig.push !== false, tag, newVersion, tagPrefix, tagName)
               }
               else {
-                const { execSync } = await import('node:child_process')
-
                 this.gitManager.addFiles(['-u'])
                 this.gitManager.commit(commitMessage)
 
                 try {
-                  execSync(`git tag -a ${tagName} -m "Release ${tagName}"`, {
-                    cwd: this.rootDir,
-                    stdio: 'pipe',
-                  })
-                  log.success(`已创建 tag: ${tagName}`)
+                  this.gitManager.createTag(newVersion, tagPrefix)
+                  // createTag 内部已使用 spawnSync 参数化调用
                 }
                 catch (tagError) {
                   log.warn(`创建 tag ${tagName} 失败: ${(tagError as Error).message}`)
                 }
 
-                if (this.gitPush) {
+                if (this.gitConfig.push !== false) {
                   try {
                     this.gitManager.push(true)
                   }
@@ -648,8 +540,7 @@ export class VersionManager {
         this.gitManager.addFiles(['-u'])
         this.gitManager.commit(commitMessage)
 
-        // 为每个包创建独立的 tag
-        const { execSync } = await import('node:child_process')
+        // 为每个包创建独立的 tag（createTag 已改用 spawnSync）
         for (const pkg of updatedPackages) {
           const isMainPackage = pkg.pkgKey === 'default'
           const tagName = this.versionProvider.getDefaultTagFormat(
@@ -659,10 +550,7 @@ export class VersionManager {
           )
 
           try {
-            execSync(`git tag -a ${tagName} -m "Release ${tagName}"`, {
-              cwd: this.rootDir,
-              stdio: 'pipe',
-            })
+            this.gitManager.createTag(pkg.newVersion, this.gitConfig.tagPrefix || 'v')
             log.success(`已创建 tag: ${tagName}`)
           }
           catch (error) {

@@ -1,171 +1,241 @@
-import type { ChangelogCommit, ChangelogTypeConfig } from '@/types'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync, existsSync } from 'node:fs'
+import { resolve } from 'node:path'
+import log from '@/utils/logger'
 
-export const TYPE_CONFIG: Record<string, ChangelogTypeConfig> = {
-  feat: { title: '🚀 新增功能', emoji: '🚀', color: 'green' },
-  feature: { title: '🚀 新增功能', emoji: '🚀', color: 'green' },
-  fix: { title: '🩹 缺陷修复', emoji: '🩹', color: 'red' },
-  bugfix: { title: '🩹 缺陷修复', emoji: '🩹', color: 'red' },
-  perf: { title: '🔥 性能优化', emoji: '🔥', color: 'yellow' },
-  performance: { title: '🔥 性能优化', emoji: '🔥', color: 'yellow' },
-  refactor: { title: '♻️ 代码重构', emoji: '♻️', color: 'cyan' },
-  docs: { title: '📝 文档更新', emoji: '📝', color: 'blue' },
-  style: { title: '💄 代码格式', emoji: '💄', color: 'white' },
-  chore: { title: '🔧 工具变更', emoji: '🔧', color: 'gray' },
-  build: { title: '📦 构建变更', emoji: '📦', color: 'magenta' },
-  ci: { title: '👷 CI 变更', emoji: '👷', color: 'cyan' },
-  test: { title: '✅ 测试更新', emoji: '✅', color: 'green' },
-  revert: { title: '⏪ 回滚提交', emoji: '⏪', color: 'red' },
-  breaking: { title: '💥 破坏性变更', emoji: '💥', color: 'red' },
-  break: { title: '💥 破坏性变更', emoji: '💥', color: 'red' },
+export interface ChangelogCommit {
+  hash: string
+  shortHash: string
+  message: string
+  author: string
+  type: string
+  scope: string
 }
 
+/**
+ * CHANGELOG 类型排序顺序（emoji 排序）
+ */
+const TYPE_ORDER = ['🚀', '🩹', '🔥', '♻️', '📝', '💄', '🔧', '📦', '👷', '✅', '⏪', '💥']
+
 export class ChangelogManager {
-  private changelogPath: string
+  private rootDir: string
 
   constructor(rootDir: string) {
-    this.changelogPath = `${rootDir}/CHANGELOG.md`
+    this.rootDir = rootDir
   }
 
-  getTypeConfig(message: string): ChangelogTypeConfig {
-    const match = message.match(/^(\w+)(?:\(([^)]+)\))?:\s*(.+)$/)
-    if (match) {
-      const [, type] = match
-      return TYPE_CONFIG[type.toLowerCase()] || {
-        title: '📦 其他变更',
-        emoji: '📦',
-        color: 'gray',
-      }
-    }
-    return { title: '📦 其他变更', emoji: '📦', color: 'gray' }
-  }
-
-  formatFileNames(files: string[]): string[] {
-    return files.map((f) => {
-      const parts = f.split('/')
-      return parts[parts.length - 1]
-    })
-  }
-
-  detectChangelogFormat(content: string) {
-    const lines = content.split('\n')
-
-    for (const line of lines) {
-      if (line.startsWith('## [') || line.startsWith('## Version')) {
-        return {
-          hasHeader: true,
-          titlePrefix: line.startsWith('## [') ? '## [' : '## ',
-          usesBrackets: line.startsWith('## ['),
-          sectionLevel: '###',
-        }
-      }
+  /**
+   * 检测 CHANGELOG 文件格式
+   */
+  detectChangelogFormat(content: string): 'keepachangelog' | 'conventional' | 'unknown' {
+    // Keep a Changelog 格式特征
+    if (/^## \[\d+\.\d+\.\d+\]/m.test(content)) {
+      return 'keepachangelog'
     }
 
+    // Conventional Changelog 格式特征
+    if (/^# Changelog/m.test(content) || /^## [\d.]+/m.test(content)) {
+      return 'conventional'
+    }
+
+    return 'unknown'
+  }
+
+  /**
+   * 解析 commit message 提取类型和范围
+   */
+  private parseCommitMessage(message: string): { type: string; scope: string } {
+    const match = message.match(/^(\w+)(?:\(([^)]+)\))?/)
     return {
-      hasHeader: false,
-      titlePrefix: '## [',
-      usesBrackets: true,
-      sectionLevel: '###',
+      type: match?.[1] || 'other',
+      scope: match?.[2] || '',
     }
   }
 
-  async updateChangelog(newVersion: string, commits: ChangelogCommit[], packageName?: string, commitUrlFn?: (hash: string) => string | null): Promise<void> {
-    const today = new Date().toISOString().split('T')[0]
+  /**
+   * 获取 emoji 类型映射
+   */
+  getTypeEmoji(type: string): string {
+    const emojiMap: Record<string, string> = {
+      feat: '🚀',
+      fix: '🩹',
+      perf: '🔥',
+      refactor: '♻️',
+      docs: '📝',
+      style: '💄',
+      chore: '🔧',
+      build: '📦',
+      ci: '👷',
+      test: '✅',
+      revert: '⏪',
+      breaking: '💥',
+    }
+    return emojiMap[type] || '📝'
+  }
 
-    const versionTitle = packageName ? `${packageName}@${newVersion}` : newVersion
+  /**
+   * 获取类型标题
+   */
+  getTypeTitle(type: string): string {
+    const titleMap: Record<string, string> = {
+      feat: '新功能',
+      fix: 'Bug 修复',
+      perf: '性能优化',
+      refactor: '重构',
+      docs: '文档',
+      style: '样式',
+      chore: '构建/工具',
+      build: '构建系统',
+      ci: '持续集成',
+      test: '测试',
+      revert: '回退',
+      breaking: '破坏性变更',
+    }
+    return titleMap[type] || '其他'
+  }
 
-    const categorized: Record<
-      string,
-      { config: ChangelogTypeConfig, items: { message: string, files: string[] }[] }
-    > = {}
+  async updateChangelog(
+    newVersion: string,
+    commits: { hash: string, message: string, files: string[] }[],
+    packageName?: string,
+    commitUrlFn?: (hash: string) => string | null,
+  ): Promise<void> {
+    const changelogPath = resolve(this.rootDir, 'CHANGELOG.md')
 
-    for (const { hash, message, files } of commits) {
-      const typeConfig = this.getTypeConfig(message)
-      const typeKey = typeConfig.title
-
-      if (!categorized[typeKey]) {
-        categorized[typeKey] = { config: typeConfig, items: [] }
+    try {
+      let content = ''
+      if (existsSync(changelogPath)) {
+        content = readFileSync(changelogPath, 'utf8')
       }
 
-      const fileNames = this.formatFileNames(files)
-      const fileTag = fileNames.length > 0 ? ` (${fileNames.join(', ')})` : ''
+      const format = this.detectChangelogFormat(content)
 
-      const shortHash = hash.slice(0, 8)
-      const commitUrl = commitUrlFn ? commitUrlFn(hash) : null
-      const hashLink = commitUrl ? `[${shortHash}](${commitUrl})` : shortHash
+      // 构建新的 CHANGELOG 条目
+      const date = new Date().toISOString().split('T')[0]
+      const versionTitle = packageName ? `${packageName} v${newVersion}` : `v${newVersion}`
 
-      categorized[typeKey].items.push({
-        message: `${hashLink} ${message}${fileTag}`,
-        files,
-      })
-    }
+      // 按类型分组 commits
+      const groupedCommits: Record<string, ChangelogCommit[]> = {}
 
-    if (!existsSync(this.changelogPath)) {
-      let content = `# 更新日志 (Changelog)\n\n本项目的所有重要变更都将记录在此文件中。\n\n格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，\n本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。\n\n`
-      content += `## [${versionTitle}] - ${today}\n\n`
+      for (const commit of commits) {
+        const { type, scope } = this.parseCommitMessage(commit.message)
+        const emoji = this.getTypeEmoji(type)
+        const shortHash = commit.hash.slice(0, 7)
+        const commitUrl = commitUrlFn ? commitUrlFn(commit.hash) : null
+        const hashLink = commitUrl ? `[${shortHash}](${commitUrl})` : shortHash
 
-      const sortedCategories = Object.values(categorized).sort((a, b) => {
-        const order = ['🚀', '🩹', '🔥', '♻️', '📝', '💄', '🔧', '📦', '👷', '✅', '⏪', '💥']
-        return order.indexOf(a.config.emoji) - order.indexOf(b.config.emoji)
-      })
+        // 从文件列表推断范围
+        const inferredScope = scope || this.inferScopeFromFiles(commit.files)
 
-      for (const category of sortedCategories) {
-        content += `${category.config.title}\n\n`
-        for (const item of category.items) {
-          content += `- ${item.message}\n`
+        const key = `${emoji}|${type}`
+
+        if (!groupedCommits[key]) {
+          groupedCommits[key] = []
         }
-        content += '\n'
+
+        groupedCommits[key].push({
+          hash: commit.hash,
+          shortHash,
+          message: commit.message,
+          author: '', // git log 不包含作者信息
+          type,
+          scope: inferredScope,
+        })
       }
 
-      await writeFileSync(this.changelogPath, content, 'utf-8')
-      return
-    }
+      // 按排序规则排列分组键
+      const sortedKeys = Object.keys(groupedCommits).sort((a, b) => {
+        const emojiA = a.split('|')[0]
+        const emojiB = b.split('|')[0]
+        const indexA = TYPE_ORDER.indexOf(emojiA)
+        const indexB = TYPE_ORDER.indexOf(emojiB)
+        return (indexA === -1 ? TYPE_ORDER.length : indexA) - (indexB === -1 ? TYPE_ORDER.length : indexB)
+      })
 
-    const existingContent = await readFileSync(this.changelogPath, 'utf-8')
-    const format = this.detectChangelogFormat(existingContent)
+      // 构建 CHANGELOG 内容
+      let newContent = ''
 
-    let header: string
-    if (format.usesBrackets) {
-      header = `${format.titlePrefix}${versionTitle}] - ${today}\n\n`
-    }
-    else {
-      header = `${format.titlePrefix}${versionTitle} - ${today}\n\n`
-    }
+      for (const key of sortedKeys) {
+        const [emoji, type] = key.split('|')
+        const groupCommits = groupedCommits[key]
+        const title = this.getTypeTitle(type)
 
-    const sortedCategories = Object.values(categorized).sort((a, b) => {
-      const order = ['🚀', '🩹', '🔥', '♻️', '📝', '💄', '🔧', '📦', '👷', '✅', '⏪', '💥']
-      return order.indexOf(a.config.emoji) - order.indexOf(b.config.emoji)
-    })
+        newContent += `\n### ${emoji} ${title}\n\n`
 
-    for (const category of sortedCategories) {
-      header += `${category.config.title}\n\n`
-      for (const item of category.items) {
-        header += `- ${item.message}\n`
+        for (const commit of groupCommits) {
+          const scopePrefix = commit.scope ? `**${commit.scope}:** ` : ''
+          newContent += `- ${scopePrefix}${commit.message} (${commit.shortHash})\n`
+        }
       }
-      header += '\n'
-    }
 
-    if (commits.length === 0) {
-      header += `### 待补充\n\n`
-    }
+      // 根据不同格式生成条目
+      let entry: string
 
-    let newContent: string
-    if (format.hasHeader) {
-      const firstVersionIndex = existingContent.search(/^##\s*\[?/m)
-      if (firstVersionIndex !== -1) {
-        newContent
-          = existingContent.slice(0, firstVersionIndex)
-            + header
-            + existingContent.slice(firstVersionIndex)
+      if (format === 'keepachangelog') {
+        entry = `\n## [${newVersion}] - ${date}${newContent}\n`
+      }
+      else if (format === 'conventional') {
+        entry = `\n## ${versionTitle} (${date})${newContent}\n`
       }
       else {
-        newContent = header + existingContent
+        // 默认使用 conventional 格式
+        entry = `\n# Changelog\n\n## ${versionTitle} (${date})${newContent}\n`
       }
+
+      // 如果文件为空或不存在，直接写入
+      if (!content) {
+        writeFileSync(changelogPath, entry.trimStart(), 'utf8')
+      }
+      else {
+        // 在第一个 ## 或 # 版本标题之前插入新条目
+        const insertIndex = content.search(/^#{1,3}\s+/m)
+        if (insertIndex !== -1) {
+          content = content.slice(0, insertIndex) + entry + content.slice(insertIndex)
+        }
+        else {
+          content += entry
+        }
+        writeFileSync(changelogPath, content, 'utf8')
+      }
+
+      log.success(`CHANGELOG 已更新: ${changelogPath}`)
     }
-    else {
-      newContent = header + existingContent
+    catch (error) {
+      throw new Error(`更新 CHANGELOG 失败: ${(error as Error).message}`)
+    }
+  }
+
+  /**
+   * 从修改的文件列表推断变更范围
+   */
+  private inferScopeFromFiles(files: string[]): string {
+    if (files.length === 0)
+      return ''
+
+    // 常见目录映射
+    const dirMap: Record<string, string> = {
+      src: 'core',
+      lib: 'core',
+      dist: 'build',
+      docs: 'docs',
+      test: 'tests',
+      tests: 'tests',
+      __tests__: 'tests',
+      examples: 'examples',
+      '.github': 'ci',
+      scripts: 'scripts',
     }
 
-    await writeFileSync(this.changelogPath, newContent, 'utf-8')
+    const dirs = files.map(file => file.split('/')[0])
+
+    // 统计最常见的目录
+    const dirCount: Record<string, number> = {}
+    for (const dir of dirs) {
+      dirCount[dir] = (dirCount[dir] || 0) + 1
+    }
+
+    const mostCommonDir = Object.entries(dirCount)
+      .sort((a, b) => b[1] - a[1])[0]?.[0]
+
+    return dirMap[mostCommonDir] || mostCommonDir || ''
   }
 }

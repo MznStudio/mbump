@@ -1,8 +1,9 @@
-import { execSync } from 'node:child_process'
+import { execSync, spawnSync } from 'node:child_process'
 import log from '@/utils/logger'
 
 export class GitManager {
   private rootDir: string
+  private repoUrlCache: string | null = null
 
   constructor(rootDir: string) {
     this.rootDir = rootDir
@@ -38,12 +39,12 @@ export class GitManager {
 
   getCurrentBranch(): string | null {
     try {
-      const output = execSync('git rev-parse --abbrev-ref HEAD', {
+      const result = spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
         cwd: this.rootDir,
-        encoding: 'utf8',
-        stdio: 'pipe',
+        encoding: 'utf-8',
       })
-      return output.trim() || null
+      const branch = result.stdout?.trim()
+      return branch || null
     }
     catch {
       return null
@@ -56,12 +57,12 @@ export class GitManager {
       if (!branch)
         return null
 
-      const output = execSync(`git config branch.${branch}.remote`, {
+      const result = spawnSync('git', ['config', `branch.${branch}.remote`], {
         cwd: this.rootDir,
-        encoding: 'utf8',
+        encoding: 'utf-8',
         stdio: 'pipe',
       })
-      const upstreamRemote = output.trim()
+      const upstreamRemote = result.stdout?.trim()
       if (upstreamRemote)
         return upstreamRemote
     }
@@ -69,12 +70,12 @@ export class GitManager {
     }
 
     try {
-      const output = execSync('git remote', {
+      const result = spawnSync('git', ['remote'], {
         cwd: this.rootDir,
-        encoding: 'utf8',
+        encoding: 'utf-8',
         stdio: 'pipe',
       })
-      const remotes = output.trim().split('\n').filter(Boolean)
+      const remotes = (result.stdout?.trim() || '').split('\n').filter(Boolean)
       if (remotes.length > 0) {
         const origin = remotes.find(r => r === 'origin')
         return origin || remotes[0]
@@ -86,18 +87,26 @@ export class GitManager {
     return null
   }
 
+  /**
+   * 获取仓库远程 URL（带缓存，避免重复 execSync）
+   */
   getRepoUrl(): string | null {
+    // 使用缓存避免重复调用 git remote get-url
+    if (this.repoUrlCache) {
+      return this.repoUrlCache
+    }
+
     try {
       const remote = this.getDefaultRemote()
       if (!remote)
         return null
 
-      const output = execSync(`git remote get-url ${remote}`, {
+      const result = spawnSync('git', ['remote', 'get-url', remote], {
         cwd: this.rootDir,
-        encoding: 'utf8',
+        encoding: 'utf-8',
         stdio: 'pipe',
       })
-      const url = output.trim()
+      const url = result.stdout?.trim() || ''
 
       let httpsUrl: string
 
@@ -119,11 +128,20 @@ export class GitManager {
         httpsUrl = httpsUrl.slice(0, -4)
       }
 
+      // 写入缓存
+      this.repoUrlCache = httpsUrl
       return httpsUrl
     }
     catch {
       return null
     }
+  }
+
+  /**
+   * 清除 repoUrl 缓存（当 remote 配置可能变化时调用）
+   */
+  clearRepoUrlCache(): void {
+    this.repoUrlCache = null
   }
 
   /**
@@ -142,19 +160,6 @@ export class GitManager {
       return null
 
     return `${commitPath}${hash}`
-  }
-
-  getCommitUrl(hash: string, customCommitPath?: string): string | null {
-    const repoUrl = this.getRepoUrl()
-    if (!repoUrl)
-      return null
-
-    const commitPath = customCommitPath || this.detectCommitPath(repoUrl)
-
-    if (!commitPath)
-      return null
-
-    return `${repoUrl}${commitPath}${hash}`
   }
 
   private detectCommitPath(repoUrl: string): string | null {
@@ -183,17 +188,16 @@ export class GitManager {
   getCommitsSinceLastTag(): { hash: string, message: string, files: string[] }[] {
     try {
       const lastTag = this.getLastTag()
-      const range = lastTag ? `${lastTag}..HEAD` : '--max-count=50'
+      const args = lastTag
+        ? ['log', `${lastTag}..HEAD`, '--format=COMMIT_START%n%H%n%s', '--name-only']
+        : ['log', '--max-count=50', '--format=COMMIT_START%n%H%n%s', '--name-only']
 
-      // 使用 --format 和 --name-only 同时获取 commit hash、message 和文件列表
-      const output = execSync(
-        `git log ${range} --format="COMMIT_START%n%H%n%s" --name-only`,
-        {
-          cwd: this.rootDir,
-          encoding: 'utf8',
-          stdio: 'pipe',
-        },
-      )
+      const result = spawnSync('git', args, {
+        cwd: this.rootDir,
+        encoding: 'utf-8',
+      })
+
+      const output = result.stdout || ''
 
       const commits: { hash: string, message: string, files: string[] }[] = []
       const blocks = output.split('COMMIT_START').filter(Boolean)
@@ -229,7 +233,7 @@ export class GitManager {
   checkVersionExists(version: string, tagPrefix: string = 'v', packageName?: string): boolean {
     try {
       const tag = packageName ? `${packageName}@${version}` : `${tagPrefix}${version}`
-      execSync(`git rev-parse --verify ${tag}`, {
+      spawnSync('git', ['rev-parse', '--verify', tag], {
         cwd: this.rootDir,
         stdio: 'pipe',
       })
@@ -242,7 +246,7 @@ export class GitManager {
 
   addFiles(files: string[]): void {
     try {
-      execSync(`git add ${files.join(' ')}`, {
+      spawnSync('git', ['add', ...files], {
         cwd: this.rootDir,
         stdio: 'pipe',
       })
@@ -254,7 +258,7 @@ export class GitManager {
 
   commit(message: string): void {
     try {
-      execSync(`git commit -m "${message}"`, {
+      spawnSync('git', ['commit', '-m', message], {
         cwd: this.rootDir,
         stdio: 'pipe',
       })
@@ -268,7 +272,7 @@ export class GitManager {
   createTag(version: string, tagPrefix: string = 'v'): void {
     try {
       const tagName = `${tagPrefix}${version}`
-      execSync(`git tag -a ${tagName} -m "Release ${tagName}"`, {
+      spawnSync('git', ['tag', '-a', tagName, '-m', `Release ${tagName}`], {
         cwd: this.rootDir,
         stdio: 'pipe',
       })
@@ -283,25 +287,26 @@ export class GitManager {
     try {
       const remote = this.getDefaultRemote()
       const branch = this.getCurrentBranch()
-      let pushCommand = 'git push'
 
-      if (remote) {
-        pushCommand = branch ? `git push ${remote} ${branch}` : `git push ${remote}`
-      }
+      const pushArgs = includeTags && remote
+        ? ['push', remote, branch || '', '--tags'].filter(Boolean)
+        : (remote ? ['push', remote, branch || ''] : ['push']).filter(Boolean)
 
-      execSync(pushCommand, {
+      spawnSync('git', pushArgs, {
         cwd: this.rootDir,
         stdio: 'pipe',
       })
-      log.debug('Git push')
 
-      if (includeTags) {
-        execSync(remote ? `git push ${remote} --tags` : 'git push --tags', {
+      if (!includeTags && remote) {
+        spawnSync('git', ['push', remote, '--tags'], {
           cwd: this.rootDir,
           stdio: 'pipe',
         })
-        log.success('已推送 tags')
       }
+
+      log.debug('Git push')
+      if (includeTags)
+        log.success('已推送 tags')
     }
     catch (error) {
       throw new Error(`Git push failed: ${(error as Error).message}`)
@@ -310,7 +315,7 @@ export class GitManager {
 
   commitAndPush(message: string, push: boolean = true, createTag: boolean = false, tagVersion?: string, tagPrefix: string = 'v', tagName?: string): void {
     try {
-      execSync('git config --local core.autocrlf false', {
+      spawnSync('git', ['config', '--local', 'core.autocrlf', 'false'], {
         cwd: this.rootDir,
         stdio: 'ignore',
       })
@@ -325,7 +330,7 @@ export class GitManager {
     if (createTag && tagVersion) {
       if (tagName) {
         try {
-          execSync(`git tag -a ${tagName} -m "Release ${tagName}"`, {
+          spawnSync('git', ['tag', '-a', tagName, '-m', `Release ${tagName}`], {
             cwd: this.rootDir,
             stdio: 'pipe',
           })

@@ -9,6 +9,16 @@ export function parseVersion(version: string): SemVer | null {
   return semver.parse(version)
 }
 
+/**
+ * 复合方法：一次解析获取 major/minor/patch，避免重复调用 semver.parse()
+ */
+export function parseVersionInfo(version: string): { major: number; minor: number; patch: number } | null {
+  const parsed = semver.parse(version)
+  if (!parsed)
+    return null
+  return { major: parsed.major, minor: parsed.minor, patch: parsed.patch }
+}
+
 export function incrementVersion(currentVersion: string, releaseType: string, identifier?: string): string | null {
   if (identifier) {
     return semver.inc(currentVersion, releaseType as semver.ReleaseType, identifier)
@@ -43,16 +53,19 @@ export function coerceVersion(version: string): string | null {
   return coerced?.version || null
 }
 
+/** @deprecated 使用 parseVersionInfo() 替代，避免重复解析 */
 export function getMajor(version: string): number | null {
   const parsed = semver.parse(version)
   return parsed?.major ?? null
 }
 
+/** @deprecated 使用 parseVersionInfo() 替代，避免重复解析 */
 export function getMinor(version: string): number | null {
   const parsed = semver.parse(version)
   return parsed?.minor ?? null
 }
 
+/** @deprecated 使用 parseVersionInfo() 替代，避免重复解析 */
 export function getPatch(version: string): number | null {
   const parsed = semver.parse(version)
   return parsed?.patch ?? null

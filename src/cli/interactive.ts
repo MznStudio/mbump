@@ -16,8 +16,6 @@ export async function selectVersionInteractive(
   if (rootDir && packageName !== 'default') {
     const pkgPath = config.packagePaths[packageName]
     if (pkgPath) {
-      // const { readFileSync } = require('node:fs')
-      // const { _join, resolve } = require('node:path')
       try {
         const fullPath = resolve(rootDir, pkgPath)
         const pkgContent = JSON.parse(readFileSync(fullPath, 'utf8'))

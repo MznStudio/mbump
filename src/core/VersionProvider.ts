@@ -1,24 +1,17 @@
-import type { PackageInfo } from '@/types'
-
 import { readFileSync, writeFileSync } from 'node:fs'
-import * as toml from 'toml'
-
-export type ProjectType = 'node' | 'rust'
+import type { PackageInfo } from '@/types'
 
 export interface IVersionProvider {
   type: ProjectType
-  getVersionFilePaths: (rootDir: string) => string[]
-  getPackageInfo: (filePath: string) => PackageInfo
-  updateVersion: (filePath: string, newVersion: string) => void
-  getDefaultTagFormat: (packageName: string, version: string, isDefaultPackage: boolean) => string
+  getPackageInfo(filePath: string): PackageInfo
+  updateVersion(filePath: string, newVersion: string): void
+  getDefaultTagFormat(packageName: string, version: string, isDefaultPackage: boolean): string
 }
 
-export class NodeVersionProvider implements IVersionProvider {
-  type: ProjectType = 'node'
+export type ProjectType = 'node' | 'rust'
 
-  getVersionFilePaths(rootDir: string): string[] {
-    return [`${rootDir}/package.json`]
-  }
+export class NodeVersionProvider implements IVersionProvider {
+  readonly type: ProjectType = 'node'
 
   getPackageInfo(filePath: string): PackageInfo {
     const content = readFileSync(filePath, 'utf8')
@@ -26,88 +19,68 @@ export class NodeVersionProvider implements IVersionProvider {
     return parsed
   }
 
+  /**
+   * 使用正则精确替换 version 字段，保留原文件所有其他内容不变。
+   * 避免 JSON.parse → JSON.stringify 循环导致的非标准字段丢失、键顺序打乱等问题。
+   */
   updateVersion(filePath: string, newVersion: string): void {
     const content = readFileSync(filePath, 'utf8')
-    const parsed = JSON.parse(content) as PackageInfo
-    parsed.version = newVersion
-    writeFileSync(filePath, JSON.stringify(parsed, null, 2))
+
+    // 匹配 "version": "x.y.z" 格式（支持单引号和双引号）
+    const updated = content.replace(
+      /("version"\s*:\s*)"[^"]*"/,
+      `$1"${newVersion}"`,
+    )
+
+    if (updated === content) {
+      // 如果正则没匹配到，尝试单引号格式
+      const updatedSingle = content.replace(
+        /('version'\s*:\s*)'[^']*'/,
+        `$1'${newVersion}'`,
+      )
+      if (updatedSingle === content) {
+        throw new Error(`无法在 ${filePath} 中找到 version 字段`)
+      }
+      writeFileSync(filePath, updatedSingle, 'utf8')
+    }
+    else {
+      writeFileSync(filePath, updated, 'utf8')
+    }
   }
 
   getDefaultTagFormat(packageName: string, version: string, isDefaultPackage: boolean): string {
-    return isDefaultPackage ? `v${version}` : `${packageName}@${version}`
+    return `v${version}`
   }
 }
 
 export class RustVersionProvider implements IVersionProvider {
-  type: ProjectType = 'rust'
-
-  getVersionFilePaths(rootDir: string): string[] {
-    return [`${rootDir}/Cargo.toml`]
-  }
+  readonly type: ProjectType = 'rust'
 
   getPackageInfo(filePath: string): PackageInfo {
     const content = readFileSync(filePath, 'utf8')
-    const parsed = toml.parse(content) as Record<string, any>
+    const versionMatch = content.match(/^version\s*=\s*"([^"]+)"/m)
+    const nameMatch = content.match(/^name\s*=\s*"([^"]+)"/m)
+
+    if (!versionMatch) {
+      throw new Error(`无法在 ${filePath} 中解析版本号`)
+    }
+
     return {
-      name: parsed.package?.name || 'rust',
-      version: parsed.package?.version || '0.0.0',
-      description: parsed.package?.description || '',
+      name: nameMatch?.[1] || '',
+      version: versionMatch[1],
     }
   }
 
   updateVersion(filePath: string, newVersion: string): void {
     const content = readFileSync(filePath, 'utf8')
-    const lines = content.split('\n')
-    let inPackageSection = false
-    let versionUpdated = false
-
-    const newLines = lines.map((line) => {
-      const trimmedLine = line.trim()
-
-      if (trimmedLine.startsWith('[package]')) {
-        inPackageSection = true
-        return line
-      }
-
-      if (trimmedLine.startsWith('[') && inPackageSection) {
-        inPackageSection = false
-        return line
-      }
-
-      if (inPackageSection) {
-        const versionMatch = trimmedLine.match(/^version\s*=\s*["'](.+?)["']/)
-        if (versionMatch) {
-          versionUpdated = true
-          const spaces = line.match(/^\s*/)?.[0] || ''
-          const quote = versionMatch[0].includes('"') ? '"' : "'"
-          return `${spaces}version = ${quote}${newVersion}${quote}`
-        }
-      }
-
-      return line
-    })
-
-    if (!versionUpdated) {
-      let packageSectionIndex = -1
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i].trim().startsWith('[package]')) {
-          packageSectionIndex = i
-          break
-        }
-      }
-
-      if (packageSectionIndex !== -1) {
-        newLines.splice(packageSectionIndex + 1, 0, `version = "${newVersion}"`)
-      }
-      else {
-        newLines.unshift('[package]', `version = "${newVersion}"`)
-      }
-    }
-
-    writeFileSync(filePath, newLines.join('\n'), { encoding: 'utf8' })
+    const updated = content.replace(
+      /^version\s*=\s*"[^"]+"/m,
+      `version = "${newVersion}"`,
+    )
+    writeFileSync(filePath, updated, 'utf8')
   }
 
-  getDefaultTagFormat(packageName: string, version: string, _isDefaultPackage: boolean): string {
+  getDefaultTagFormat(packageName: string, version: string, isDefaultPackage: boolean): string {
     return `${packageName}@${version}`
   }
 }
