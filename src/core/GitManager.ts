@@ -87,11 +87,7 @@ export class GitManager {
     return null
   }
 
-  /**
-   * 获取仓库远程 URL（带缓存，避免重复 execSync）
-   */
   getRepoUrl(): string | null {
-    // 使用缓存避免重复调用 git remote get-url
     if (this.repoUrlCache) {
       return this.repoUrlCache
     }
@@ -128,7 +124,6 @@ export class GitManager {
         httpsUrl = httpsUrl.slice(0, -4)
       }
 
-      // 写入缓存
       this.repoUrlCache = httpsUrl
       return httpsUrl
     }
@@ -137,18 +132,10 @@ export class GitManager {
     }
   }
 
-  /**
-   * 清除 repoUrl 缓存（当 remote 配置可能变化时调用）
-   */
   clearRepoUrlCache(): void {
     this.repoUrlCache = null
   }
 
-  /**
-   * 获取 commit 的相对路径格式，用于 Markdown 链接。
-   * 返回如 `/commit/b2f84d16c1f004a25d3885d11873f93e9530368c`，
-   * 在 GitHub/GitLab 等平台的仓库上下文中可正确解析为当前仓库的 commit 页面。
-   */
   getCommitRelativePath(hash: string, customCommitPath?: string): string | null {
     const repoUrl = this.getRepoUrl()
     if (!repoUrl)
@@ -207,14 +194,12 @@ export class GitManager {
         if (lines.length === 0)
           continue
 
-        // 第一行是 commit hash，第二行是 commit message
         const hash = lines[0]?.trim() || ''
         const message = lines[1]?.trim() || ''
 
         if (!hash || !message)
           continue
 
-        // 其余行是文件列表
         const files = lines
           .slice(2)
           .map(f => f.trim())
@@ -315,7 +300,7 @@ export class GitManager {
 
   commitAndPush(message: string, push: boolean = true, createTag: boolean = false, tagVersion?: string, tagPrefix: string = 'v', tagName?: string): void {
     try {
-      spawnSync('git', ['config', '--local', 'core.autocrlf', 'false'], {
+      execSync('git config --local core.autocrlf false', {
         cwd: this.rootDir,
         stdio: 'ignore',
       })

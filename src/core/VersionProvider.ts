@@ -21,7 +21,7 @@ export class NodeVersionProvider implements IVersionProvider {
 
   /**
    * 使用正则精确替换 version 字段，保留原文件所有其他内容不变。
-   * 避免 JSON.parse → JSON.stringify 循环导致的非标准字段丢失、键顺序打乱等问题。
+   * 避免 JSON.parse -> JSON.stringify 循环导致的非标准字段丢失、键顺序打乱等问题。
    */
   updateVersion(filePath: string, newVersion: string): void {
     const content = readFileSync(filePath, 'utf8')
