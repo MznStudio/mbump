@@ -5,6 +5,12 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.3.4] - 2026-07-06
+
+♻️ 代码重构
+
+- [3e0f8a6b](/-/commit/3e0f8a6b90864e5463df35990d1e1c71175e970d) refactor(git): 移除自定义commitUrl配置并重构commit链接逻辑 (schema.ts, GitManager.ts, VersionManager.ts, index.ts)
+
 ## [2.3.4-beta.5] - 2026-07-05
 
 🔧 工具变更
