@@ -126,25 +126,6 @@ export class GitManager {
     }
   }
 
-  getCommitUrl(hash: string, customCommitPath?: string, customCommitUrl?: string): string | null {
-    // 如果配置了自定义 commitUrl，直接使用它作为基础地址
-    if (customCommitUrl) {
-      const commitPath = customCommitPath || '/commit/'
-      return `${customCommitUrl}${commitPath}${hash}`
-    }
-
-    const repoUrl = this.getRepoUrl()
-    if (!repoUrl)
-      return null
-
-    const commitPath = customCommitPath || this.detectCommitPath(repoUrl)
-
-    if (!commitPath)
-      return null
-
-    return `${repoUrl}${commitPath}${hash}`
-  }
-
   /**
    * 获取 commit 的相对路径格式，用于 Markdown 链接。
    * 返回如 `/commit/b2f84d16c1f004a25d3885d11873f93e9530368c`，
@@ -161,6 +142,19 @@ export class GitManager {
       return null
 
     return `${commitPath}${hash}`
+  }
+
+  getCommitUrl(hash: string, customCommitPath?: string): string | null {
+    const repoUrl = this.getRepoUrl()
+    if (!repoUrl)
+      return null
+
+    const commitPath = customCommitPath || this.detectCommitPath(repoUrl)
+
+    if (!commitPath)
+      return null
+
+    return `${repoUrl}${commitPath}${hash}`
   }
 
   private detectCommitPath(repoUrl: string): string | null {
