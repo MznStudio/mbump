@@ -152,24 +152,12 @@ export class GitManager {
   private detectCommitPath(repoUrl: string): string | null {
     const host = new URL(repoUrl).hostname
 
-    if (host.includes('github.com')) {
-      return '/commit/'
-    }
-    else if (host.includes('gitlab.com') || host.includes('gitlab.')) {
-      return '/-/commit/'
-    }
-    else if (host.includes('bitbucket.org') || host.includes('bitbucket.')) {
-      return '/commits/'
-    }
-    else if (host.includes('gitee.com') || host.includes('gitee.')) {
-      return '/commit/'
-    }
-    else if (host.includes('coding.net') || host.includes('coding.')) {
-      return '/commit/'
-    }
-    else {
-      return '/-/commit/'
-    }
+    if (host.includes('github.com')) return '/commit/'
+    if (host.includes('gitlab.com') || host.includes('gitlab.')) return '/-/commit/'
+    if (host.includes('bitbucket.org') || host.includes('bitbucket.')) return '/commits/'
+    if (host.includes('gitee.com') || host.includes('gitee.')) return '/commit/'
+    if (host.includes('coding.net') || host.includes('coding.')) return '/commit/'
+    return '/-/commit/'
   }
 
   getCommitsSinceLastTag(): { hash: string, message: string, files: string[] }[] {
@@ -185,26 +173,16 @@ export class GitManager {
       })
 
       const output = result.stdout || ''
-
       const commits: { hash: string, message: string, files: string[] }[] = []
       const blocks = output.split('COMMIT_START').filter(Boolean)
 
       for (const block of blocks) {
         const lines = block.trim().split('\n')
-        if (lines.length === 0)
-          continue
-
+        if (lines.length === 0) continue
         const hash = lines[0]?.trim() || ''
         const message = lines[1]?.trim() || ''
-
-        if (!hash || !message)
-          continue
-
-        const files = lines
-          .slice(2)
-          .map(f => f.trim())
-          .filter(f => f && !f.startsWith('COMMIT_START'))
-
+        if (!hash || !message) continue
+        const files = lines.slice(2).map(f => f.trim()).filter(f => f && !f.startsWith('COMMIT_START'))
         commits.push({ hash, message, files })
       }
 
@@ -290,8 +268,7 @@ export class GitManager {
       }
 
       log.debug('Git push')
-      if (includeTags)
-        log.success('Pushed tags')
+      if (includeTags) log.success('Pushed tags')
     }
     catch (error) {
       throw new Error(`Git push failed: ${(error as Error).message}`)
