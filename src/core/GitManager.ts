@@ -261,10 +261,10 @@ export class GitManager {
         cwd: this.rootDir,
         stdio: 'pipe',
       })
-      log.success(`已创建 tag: ${tagName}`)
+      log.success(`Created tag: ${tagName}`)
     }
     catch (error) {
-      throw new Error(`创建 Tag 失败: ${(error as Error).message}`)
+      throw new Error(`Create tag failed: ${(error as Error).message}`)
     }
   }
 
@@ -291,7 +291,7 @@ export class GitManager {
 
       log.debug('Git push')
       if (includeTags)
-        log.success('已推送 tags')
+        log.success('Pushed tags')
     }
     catch (error) {
       throw new Error(`Git push failed: ${(error as Error).message}`)
@@ -319,10 +319,10 @@ export class GitManager {
             cwd: this.rootDir,
             stdio: 'pipe',
           })
-          log.success(`已创建 tag: ${tagName}`)
+          log.success(`Created tag: ${tagName}`)
         }
         catch (error) {
-          throw new Error(`创建 Tag 失败: ${(error as Error).message}`)
+          throw new Error(`Create tag failed: ${(error as Error).message}`)
         }
       }
       else {

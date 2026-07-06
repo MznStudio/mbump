@@ -58,7 +58,7 @@ export async function selectVersionInteractive(
     {
       type: 'list',
       name: 'versionType',
-      message: `[${displayName}] Current version ${currentVersion} »`,
+      message: `[${displayName}] Current version ${currentVersion}`,
       choices,
       default: config.defaults?.releaseType || 'patch',
     },

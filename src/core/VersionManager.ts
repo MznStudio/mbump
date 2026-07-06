@@ -34,20 +34,13 @@ export class VersionManager {
     this.versionProvider = projectType === 'rust' ? new RustVersionProvider() : new NodeVersionProvider()
 
     if (!this.packagePaths || typeof this.packagePaths !== 'object' || Object.keys(this.packagePaths).length === 0) {
-      throw new Error('配置错误：未找到有效的包路径配置')
+      throw new Error('Invalid config: no valid package paths')
     }
 
     this._preloadPackageCache()
   }
 
-  // =========================================================================
-  // P0 提取：统一版本计算逻辑（消除原来 3 份重复的 switch 块）
-  // =========================================================================
-
-  /**
-   * 根据当前版本和 releaseType 计算新版本号。
-   * 这是唯一的版本计算入口，所有调用方共用此方法。
-   */
+  // P0: Unified version calculation (eliminates 3 copies of switch block)
   private calculateNewVersion(currentVersion: string, releaseType: ReleaseType): string | null {
     switch (releaseType) {
       case 'major':
@@ -103,7 +96,7 @@ export class VersionManager {
         return incrementVersion(currentVersion, 'patch')
 
       default:
-        throw new Error(`不支持的版本类型: ${releaseType}`)
+        throw new Error(`Unsupported release type: ${releaseType}`)
     }
   }
 
@@ -113,7 +106,7 @@ export class VersionManager {
       return false
 
     const isDefaultKey = pkgKey === 'default'
-    const resolvedPkgDir = resolve(dirname(pkgPath))
+    const resolvedPkgDir = dirname(pkgPath)
     const resolvedRootDir = resolve(this.rootDir)
     const isNodeRoot = pkgPath.endsWith('package.json') && resolvedPkgDir === resolvedRootDir
     const isRustRoot = pkgPath.includes('Cargo.toml')
@@ -124,49 +117,34 @@ export class VersionManager {
     return isDefaultKey || (isNodeRoot && !isPathModeRoot) || isRustRoot
   }
 
-  /**
-   * 预加载所有包信息到缓存，避免后续重复读取文件
-   */
   private _preloadPackageCache(): void {
     for (const pkgPath of Object.values(this.packagePaths)) {
       try {
         this.getPackageInfo(pkgPath)
       }
       catch (error) {
-        // 忽略预加载失败，在实际使用时再处理
-        log.debug(`预加载包信息失败 ${pkgPath}: ${(error as Error).message}`)
+        log.debug(`Preload package info failed ${pkgPath}: ${(error as Error).message}`)
       }
     }
-    log.debug(`已预加载 ${this.packageCache.size} 个包的信息到缓存`)
+    log.debug(`Preloaded ${this.packageCache.size} package infos into cache`)
   }
 
-  /**
-   * 清除包信息缓存
-   * @param pkgPath 可选，指定要清除的包路径，不传则清除所有缓存
-   */
   clearPackageCache(pkgPath?: string): void {
     if (pkgPath) {
       this.packageCache.delete(pkgPath)
-      log.debug(`已清除包缓存: ${pkgPath}`)
+      log.debug(`Cleared package cache: ${pkgPath}`)
     }
     else {
       this.packageCache.clear()
-      log.debug('已清除所有包缓存')
+      log.debug('Cleared all package cache')
     }
   }
 
-  /**
-   * 刷新指定包的缓存（重新从文件读取）
-   * @param pkgPath 包的路径
-   */
   refreshPackageCache(pkgPath: string): PackageInfo {
     this.packageCache.delete(pkgPath)
     return this.getPackageInfo(pkgPath)
   }
 
-  /**
-   * 获取缓存统计信息
-   */
   getCacheStats(): { size: number, packages: string[] } {
     return {
       size: this.packageCache.size,
@@ -191,7 +169,7 @@ export class VersionManager {
       for (const [packageName, selection] of Object.entries(packageVersionSelections)) {
         const pkgPath = packagePaths[packageName]
         if (!pkgPath) {
-          throw new Error(`无效的包名: ${packageName}`)
+          throw new Error(`Invalid package name: ${packageName}`)
         }
 
         const pkg = this.getPackageInfo(pkgPath)
@@ -199,22 +177,21 @@ export class VersionManager {
 
         if (selection.customVersion) {
           if (!isValidVersion(selection.customVersion)) {
-            throw new Error(`无效的自定义版本号: ${selection.customVersion}`)
+            throw new Error(`Invalid custom version: ${selection.customVersion}`)
           }
           newVersion = selection.customVersion
         }
         else {
           try {
-            // 使用统一的 calculateNewVersion 方法
             newVersion = this.calculateNewVersion(pkg.version, selection.type)
           }
           catch (error: any) {
-            throw new Error(`版本计算失败: ${error.message}`)
+            throw new Error(`Version calculation failed: ${error.message}`)
           }
         }
 
         if (!newVersion) {
-          throw new Error(`无法计算新版本号，当前版本: ${pkg.version}，类型: ${selection.type}`)
+          throw new Error(`Cannot calculate new version, current: ${pkg.version}, type: ${selection.type}`)
         }
 
         const isDefaultPackage = this._isDefaultPackage(packageName)
@@ -238,7 +215,7 @@ export class VersionManager {
       const targets = pkgName === 'all' ? Object.entries(packagePaths) : [[pkgName, packagePaths[pkgName]]]
 
       if (!targets.length || targets.some(([, path]) => !path)) {
-        throw new Error(`无效的包名: ${pkgName}`)
+        throw new Error(`Invalid package name: ${pkgName}`)
       }
 
       for (const [packageName, pkgPath] of targets) {
@@ -247,22 +224,21 @@ export class VersionManager {
 
         if (customVersion) {
           if (!isValidVersion(customVersion)) {
-            throw new Error(`无效的自定义版本号: ${customVersion}`)
+            throw new Error(`Invalid custom version: ${customVersion}`)
           }
           newVersion = customVersion
         }
         else {
           try {
-            // 使用统一的 calculateNewVersion 方法
             newVersion = this.calculateNewVersion(pkg.version, releaseType)
           }
           catch (error: any) {
-            throw new Error(`版本计算失败: ${error.message}`)
+            throw new Error(`Version calculation failed: ${error.message}`)
           }
         }
 
         if (!newVersion) {
-          throw new Error(`无法计算新版本号，当前版本: ${pkg.version}，类型: ${releaseType}`)
+          throw new Error(`Cannot calculate new version, current: ${pkg.version}, type: ${releaseType}`)
         }
 
         const isDefaultPackage = this._isDefaultPackage(packageName)
@@ -312,23 +288,22 @@ export class VersionManager {
       error: null,
     }
 
-    // P1 缓存：_isDefaultPackage 在单次执行中被多次调用，参数相同，只需计算一次
+    // P1: Cache _isDefaultPackage result (was called 4x with same params)
     const cachedIsDefaultPackage = pkgName === 'all'
       ? this._isDefaultPackage(Object.keys(packagePaths)[0])
       : this._isDefaultPackage(pkgName)
 
     return log.withSpinner(
-      `正在更新${pkgName === 'all' ? '所有包' : `包${pkgName}`}的版本...`,
+      `Updating ${pkgName === 'all' ? 'all packages' : `package ${pkgName}`}...`,
 
       async () => {
         try {
           const targets = pkgName === 'all' ? Object.values(packagePaths) : [packagePaths[pkgName]]
 
           if (!targets.length || targets.some(path => !path)) {
-            throw new Error(`无效的包名: ${pkgName}`)
+            throw new Error(`Invalid package name: ${pkgName}`)
           }
 
-          // 检查版本是否存在
           let finalVersion: string | null = null
           for (const pkgPath of targets) {
             const pkg = this.getPackageInfo(pkgPath)
@@ -336,25 +311,23 @@ export class VersionManager {
 
             if (customVersion) {
               if (!isValidVersion(customVersion)) {
-                throw new Error(`无效的自定义版本号: ${customVersion}`)
+                throw new Error(`Invalid custom version: ${customVersion}`)
               }
               newVersion = customVersion
             }
             else {
               try {
-                // 使用统一的 calculateNewVersion 方法
                 newVersion = this.calculateNewVersion(pkg.version, releaseType)
               }
               catch (error: any) {
-                throw new Error(`版本计算失败: ${error.message}`)
+                throw new Error(`Version calculation failed: ${error.message}`)
               }
             }
 
             if (!newVersion) {
-              throw new Error(`无法计算新版本号，当前版本: ${pkg.version}，类型: ${releaseType}`)
+              throw new Error(`Cannot calculate new version, current: ${pkg.version}, type: ${releaseType}`)
             }
 
-            // 只在第一个包时检查版本
             if (!finalVersion) {
               finalVersion = newVersion
               const versionTag = this.versionProvider.getDefaultTagFormat(
@@ -363,17 +336,17 @@ export class VersionManager {
                 cachedIsDefaultPackage,
               )
               if (!dryRun && this.gitManager.checkVersionExists(newVersion, tagPrefix, cachedIsDefaultPackage ? undefined : pkg.name)) {
-                throw new Error(`版本 ${versionTag} 已存在，请使用其他版本`)
+                throw new Error(`Version ${versionTag} already exists`)
               }
             }
 
             if (dryRun) {
-              log.dryRun(`将更新 ${pkg.name} 从 v${pkg.version} 到 v${newVersion}`)
+              log.dryRun(`Would update ${pkg.name} from v${pkg.version} to v${newVersion}`)
             }
             else {
               const updatedPkg = { ...pkg, version: newVersion }
               this.savePackageInfo(pkgPath, updatedPkg)
-              log.info(`已更新 ${pkg.name} 到 v${newVersion}`)
+              log.info(`Updated ${pkg.name} to v${newVersion}`)
             }
 
             result.updatedPackages.push({
@@ -384,32 +357,28 @@ export class VersionManager {
             })
           }
 
-          // 生成CHANGELOG — 使用缓存的 isDefaultPackage 结果
+          // Generate CHANGELOG — use cached isDefaultPackage
           if (!dryRun && changelog && finalVersion) {
-            // 如果是批量模式且不是主项目包，跳过 CHANGELOG 生成
             if (isBatchMode && !cachedIsDefaultPackage) {
-              log.info(`子包 ${pkgName} 跳过 CHANGELOG 生成`)
+              log.info(`Sub-package ${pkgName} skipping CHANGELOG generation`)
             }
             else {
               try {
                 const commits = this.gitManager.getCommitsSinceLastTag()
 
-                // 主项目包不传 packageName（使用 tagPrefix 格式），子包传 packageName（使用 {package-name}@{version} 格式）
                 let packageName: string | undefined
                 if (!cachedIsDefaultPackage) {
-                  // 子包：获取 package.json 的 name 字段
                   const firstPkg = this.getPackageInfo(targets[0])
                   packageName = firstPkg.name
                 }
-                // 主项目包：packageName 为 undefined，ChangelogManager 会直接使用 version
 
                 const customCommitPath = this.gitConfig.commitPath
                 const commitUrlFn = (hash: string) => this.gitManager.getCommitRelativePath(hash, customCommitPath)
                 await this.changelogManager.updateChangelog(finalVersion, commits, packageName, commitUrlFn)
-                log.success('已更新 CHANGELOG.md')
+                log.success('CHANGELOG updated')
               }
               catch (changelogError) {
-                log.warn(`CHANGELOG生成失败: ${(changelogError as Error).message}`)
+                log.warn(`CHANGELOG generation failed: ${(changelogError as Error).message}`)
               }
             }
           }
@@ -418,7 +387,7 @@ export class VersionManager {
             for (const pkgPath of targets) {
               const pkg = this.getPackageInfo(pkgPath)
               const pkgDir = dirname(pkgPath)
-              log.info(`\n发布 ${pkg.name}...`)
+              log.info(`\nPublishing ${pkg.name}...`)
 
               try {
                 let publishCmd: string
@@ -430,11 +399,11 @@ export class VersionManager {
                 }
 
                 if (!validateCommand(publishCmd)) {
-                  throw new Error(`不安全的发布命令: ${publishCmd}`)
+                  throw new Error(`Unsafe publish command: ${publishCmd}`)
                 }
 
                 if (verbose) {
-                  log.debug(`执行命令: ${publishCmd} (在目录: ${pkgDir})`)
+                  log.debug(`Executing: ${publishCmd} (in: ${pkgDir})`)
                 }
 
                 const { execSync } = await import('node:child_process')
@@ -445,12 +414,12 @@ export class VersionManager {
                 result.publishedPackages.push(pkg.name)
               }
               catch (e: any) {
-                throw new Error(`发布失败 ${pkg.name}: ${e.message}`)
+                throw new Error(`Publish failed ${pkg.name}: ${e.message}`)
               }
             }
           }
 
-          // Git提交和Tag — 使用缓存的 isDefaultPackage 和 gitConfig.push
+          // Git commit and tag — use cached isDefaultPackage and gitConfig.push
           if (!dryRun && autoCommit && result.updatedPackages.length > 0) {
             try {
               let commitMessage: string
@@ -468,7 +437,6 @@ export class VersionManager {
                 commitMessage = `chore: bump version for ${pkgName} to v${newVersion}`
               }
 
-              // 使用 versionProvider 获取 tag 格式，用户指定的 tagPrefix 优先
               let tagName: string
               if (tagPrefix !== 'v') {
                 tagName = `${tagPrefix}${newVersion}`
@@ -490,10 +458,9 @@ export class VersionManager {
 
                 try {
                   this.gitManager.createTag(newVersion, tagPrefix)
-                  // createTag 内部已使用 spawnSync 参数化调用
                 }
                 catch (tagError) {
-                  log.warn(`创建 tag ${tagName} 失败: ${(tagError as Error).message}`)
+                  log.warn(`Create tag ${tagName} failed: ${(tagError as Error).message}`)
                 }
 
                 if (this.gitConfig.push !== false) {
@@ -507,7 +474,7 @@ export class VersionManager {
               }
             }
             catch (gitError: any) {
-              log.warn(`Git操作失败: ${gitError.message}`)
+              log.warn(`Git operation failed: ${gitError.message}`)
             }
           }
 
@@ -520,8 +487,8 @@ export class VersionManager {
         }
       },
       {
-        succeedText: pkgName === 'all' ? '所有包版本更新完成' : `包 ${pkgName} 版本更新完成`,
-        failText: '版本更新失败',
+        succeedText: pkgName === 'all' ? 'All packages version updated' : `Package ${pkgName} version updated`,
+        failText: 'Version update failed',
       },
     )
   }
@@ -534,31 +501,22 @@ export class VersionManager {
     try {
       const commitMessage = 'chore: bump versions for multiple packages'
 
-      // 如果提供了更新的包列表且启用了 tag，则为每个包创建独立的 tag
       if (tag && updatedPackages && updatedPackages.length > 0) {
-        // 先提交更改
         this.gitManager.addFiles(['-u'])
         this.gitManager.commit(commitMessage)
 
-        // 为每个包创建独立的 tag（createTag 已改用 spawnSync）
         for (const pkg of updatedPackages) {
           const isMainPackage = pkg.pkgKey === 'default'
-          const tagName = this.versionProvider.getDefaultTagFormat(
-            pkg.name,
-            pkg.newVersion,
-            isMainPackage,
-          )
 
           try {
             this.gitManager.createTag(pkg.newVersion, this.gitConfig.tagPrefix || 'v')
-            log.success(`已创建 tag: ${tagName}`)
+            log.success(`Created tag for ${pkg.name}@${pkg.newVersion}`)
           }
           catch (error) {
-            log.warn(`创建 tag ${tagName} 失败: ${(error as Error).message}`)
+            log.warn(`Create tag for ${pkg.name} failed: ${(error as Error).message}`)
           }
         }
 
-        // 推送 commits 和 tags
         if (push) {
           try {
             this.gitManager.push(true)
@@ -569,20 +527,14 @@ export class VersionManager {
         }
       }
       else {
-        // 原有逻辑：不创建 tag
         this.gitManager.commitAndPush(commitMessage, push, false)
       }
     }
     catch (error: any) {
-      log.warn(`Git操作失败: ${error.message}`)
+      log.warn(`Git operation failed: ${error.message}`)
     }
   }
 
-  /**
-   * 获取包信息（带缓存）
-   * @param pkgPath 包的路径
-   * @returns 包信息对象
-   */
   getPackageInfo(pkgPath: string): PackageInfo {
     const cached = this.packageCache.get(pkgPath)
     if (cached) {
@@ -595,13 +547,13 @@ export class VersionManager {
       return pkg
     }
     catch (error: any) {
-      throw new Error(`读取文件失败 ${pkgPath}: ${error.message}`)
+      throw new Error(`Read file failed ${pkgPath}: ${error.message}`)
     }
   }
 
   private savePackageInfo(pkgPath: string, pkg: PackageInfo): void {
     if (!validatePath(pkgPath, this.rootDir)) {
-      throw new Error(`不安全的文件路径: ${pkgPath}`)
+      throw new Error(`Unsafe file path: ${pkgPath}`)
     }
 
     try {
@@ -609,7 +561,7 @@ export class VersionManager {
       this.packageCache.set(pkgPath, pkg)
     }
     catch (error: any) {
-      throw new Error(`写入文件失败 ${pkgPath}: ${error.message}`)
+      throw new Error(`Write file failed ${pkgPath}: ${error.message}`)
     }
   }
 
