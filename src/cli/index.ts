@@ -470,7 +470,7 @@ async function main(): Promise<void> {
         process.exit(0)
       }
 
-      await versionManager.updateVersion(packageName, selectedType, {
+      const result = await versionManager.updateVersion(packageName, selectedType, {
         dryRun: parsedArgs.dryRun,
         verbose: parsedArgs.verbose,
         autoCommit: parsedArgs.autoCommit,
@@ -480,8 +480,26 @@ async function main(): Promise<void> {
         changelog: parsedArgs.changelog,
       })
 
+      if (!result.success || result.error) {
+        log.error(`版本更新失败: ${result.error || '未知错误'}`)
+        process.exit(1)
+      }
+
       log.success(`版本更新完成`)
       process.exit(0)
+
+      // await versionManager.updateVersion(packageName, selectedType, {
+      //   dryRun: parsedArgs.dryRun,
+      //   verbose: parsedArgs.verbose,
+      //   autoCommit: parsedArgs.autoCommit,
+      //   push: parsedArgs.push,
+      //   customVersion,
+      //   tag: parsedArgs.tag,
+      //   changelog: parsedArgs.changelog,
+      // })
+
+      // log.success(`版本更新完成`)
+      // process.exit(0)
     }
 
     if (parsedArgs.projectPath) {
