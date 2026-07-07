@@ -1,3 +1,15 @@
+
+## [2.3.5-beta.0] - 2026-07-07
+### ♻️ Refactoring
+
+- **core:** refactor(core): 优化版本与变更日志处理逻辑 (611ae86)
+- **VersionProvider:** refactor(VersionProvider): 优化默认标签格式生成逻辑 (56e79fa)
+- **cli/core:** refactor(cli/core): 重构版本更新逻辑，优化错误处理和代码实现 (1a2a667)
+- **GitManager:** refactor(GitManager): 简化代码风格与冗余逻辑 (e9fceeb)
+- **core:** refactor: 国际化并优化代码结构 (98d423c)
+- **core:** refactor(core): 清理冗余注释并优化git配置调用方式 (0a73875)
+- **core:** refactor: 完成项目代码重构与优化 (80cf232)
+
 # 更新日志 (Changelog)
 
 本项目的所有重要变更都将记录在此文件中。
