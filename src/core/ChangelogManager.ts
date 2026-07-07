@@ -1,10 +1,11 @@
-import { readFileSync, writeFileSync, existsSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import log from '@/utils/logger'
 
 export interface ChangelogCommit {
   hash: string
   shortHash: string
+  hashLink: string | null
   message: string
   author: string
   type: string
@@ -31,7 +32,7 @@ export class ChangelogManager {
     return 'unknown'
   }
 
-  private parseCommitMessage(message: string): { type: string; scope: string } {
+  private parseCommitMessage(message: string): { type: string, scope: string } {
     const match = message.match(/^(\w+)(?:\(([^)]+)\))?/)
     return {
       type: match?.[1] || 'other',
@@ -59,20 +60,20 @@ export class ChangelogManager {
 
   getTypeTitle(type: string): string {
     const titleMap: Record<string, string> = {
-      feat: 'New Features',
-      fix: 'Bug Fixes',
-      perf: 'Performance',
-      refactor: 'Refactoring',
-      docs: 'Documentation',
-      style: 'Style',
-      chore: 'Build/Tooling',
-      build: 'Build System',
+      feat: '新增功能',
+      fix: '修复 Bug',
+      perf: '性能优化',
+      refactor: '代码重构',
+      docs: '文档更新',
+      style: '代码格式',
+      chore: '工具变更',
+      build: '构建系统',
       ci: 'CI/CD',
-      test: 'Tests',
-      revert: 'Revert',
-      breaking: 'Breaking Changes',
+      test: '测试用例',
+      revert: '回退变更',
+      breaking: '破坏性变更',
     }
-    return titleMap[type] || 'Other'
+    return titleMap[type] || '其他'
   }
 
   async updateChangelog(
@@ -110,6 +111,7 @@ export class ChangelogManager {
         groupedCommits[key].push({
           hash: commit.hash,
           shortHash,
+          hashLink: commitUrl,
           message: commit.message,
           author: '',
           type,
@@ -136,7 +138,8 @@ export class ChangelogManager {
           const scopePart = commit.scope ? `(${commit.scope})` : ''
           const messageWithoutType = commit.message.replace(/^(\w+)(?:\([^)]+\))?:\s*/, '')
           const filesPart = commit.files.length > 0 ? ` (${commit.files.join(', ')})` : ''
-          newContent += `- ${commit.type}${scopePart}: ${messageWithoutType}${filesPart}\n`
+          const hashLink = commit.hashLink ? `[${commit.shortHash}](${commit.hashLink})` : commit.shortHash
+          newContent += `- ${hashLink} ${commit.type}${scopePart}: ${messageWithoutType}${filesPart}\n`
         }
       }
 
@@ -175,16 +178,16 @@ export class ChangelogManager {
     if (files.length === 0)
       return ''
     const dirMap: Record<string, string> = {
-      src: 'core',
-      lib: 'core',
-      dist: 'build',
-      docs: 'docs',
-      test: 'tests',
-      tests: 'tests',
-      __tests__: 'tests',
-      examples: 'examples',
+      'src': 'core',
+      'lib': 'core',
+      'dist': 'build',
+      'docs': 'docs',
+      'test': 'tests',
+      'tests': 'tests',
+      '__tests__': 'tests',
+      'examples': 'examples',
       '.github': 'ci',
-      scripts: 'scripts',
+      'scripts': 'scripts',
     }
     const dirs = files.map(file => file.split('/')[0])
     const dirCount: Record<string, number> = {}
