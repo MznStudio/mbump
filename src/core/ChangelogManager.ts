@@ -58,6 +58,24 @@ export class ChangelogManager {
     return emojiMap[type] || '📝'
   }
 
+  getTypeChinese(type: string): string {
+    const chineseMap: Record<string, string> = {
+      feat: '新增',
+      fix: '修复',
+      perf: '优化',
+      refactor: '重构',
+      docs: '文档',
+      style: '格式',
+      chore: '工具',
+      build: '构建',
+      ci: 'CI',
+      test: '测试',
+      revert: '回退',
+      breaking: '破坏',
+    }
+    return chineseMap[type] || type
+  }
+
   getTypeTitle(type: string): string {
     const titleMap: Record<string, string> = {
       feat: '新增功能',
@@ -139,7 +157,8 @@ export class ChangelogManager {
           const messageWithoutType = commit.message.replace(/^(\w+)(?:\([^)]+\))?:\s*/, '')
           const filesPart = commit.files.length > 0 ? ` (${commit.files.join(', ')})` : ''
           const hashLink = commit.hashLink ? `[${commit.shortHash}](${commit.hashLink})` : commit.shortHash
-          newContent += `- ${hashLink} ${commit.type}${scopePart}: ${messageWithoutType}${filesPart}\n`
+          const chineseType = this.getTypeChinese(commit.type)
+          newContent += `- ${hashLink} ${chineseType}${scopePart}: ${messageWithoutType}${filesPart}\n`
         }
       }
 
