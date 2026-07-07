@@ -6,6 +6,12 @@
 
 
 
+
+## [2.3.7] - 2026-07-07
+### 🔧 工具变更
+
+- [6cae3f9](/-/commit/6cae3f9ee32adbdbc8b8f4a158a99ff383eae398) chore(changelog): 优化变更日志生成逻辑 (src/core/ChangelogManager.ts)
+
 ## [2.3.6] - 2026-07-07
 ### 🚀 New Features
 
