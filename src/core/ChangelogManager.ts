@@ -9,6 +9,7 @@ export interface ChangelogCommit {
   author: string
   type: string
   scope: string
+  files: string[]
 }
 
 const TYPE_ORDER = ['🚀', '🩹', '🔥', '♻️', '📝', '💄', '🔧', '📦', '👷', '✅', '⏪', '💥']
@@ -113,6 +114,7 @@ export class ChangelogManager {
           author: '',
           type,
           scope: inferredScope,
+          files: commit.files,
         })
       }
 
@@ -131,8 +133,10 @@ export class ChangelogManager {
         const title = this.getTypeTitle(type)
         newContent += `\n### ${this.getTypeEmoji(type)} ${title}\n\n`
         for (const commit of groupCommits) {
-          const scopePrefix = commit.scope ? `**${commit.scope}:** ` : ''
-          newContent += `- ${scopePrefix}${commit.message} (${commit.shortHash})\n`
+          const scopePart = commit.scope ? `(${commit.scope})` : ''
+          const messageWithoutType = commit.message.replace(/^(\w+)(?:\([^)]+\))?:\s*/, '')
+          const filesPart = commit.files.length > 0 ? ` (${commit.files.join(', ')})` : ''
+          newContent += `- ${commit.type}${scopePart}: ${messageWithoutType}${filesPart}\n`
         }
       }
 
