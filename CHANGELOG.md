@@ -5,6 +5,16 @@
 
 
 
+
+## [2.3.6] - 2026-07-07
+### 🚀 New Features
+
+- feat(changelog): 完善变更日志生成，添加文件变更和格式优化 (src/core/ChangelogManager.ts)
+
+### 🔧 Build/Tooling
+
+- chore(config): 替换npm配置项为publish并更新文档 (README.md, config-examples/SUMMARY.md, config-examples/USAGE.md)
+
 ## [2.3.5] - 2026-07-07
 ## [0.0.30] - 2026-07-07
 ## [2.3.5-beta.3] - 2026-07-07
