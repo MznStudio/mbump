@@ -8,6 +8,12 @@
 
 
 
+
+## [2.3.8] - 2026-07-07
+### 🚀 新增功能
+
+- [7f9e192](/-/commit/7f9e192bc278b3a19b185f13e3696d2fea995fdd) 新增(changelog): 为变更日志添加中文类型映射与展示 (src/core/ChangelogManager.ts)
+
 ## [2.3.8-beta.0] - 2026-07-07
 ### ♻️ 代码重构
 
