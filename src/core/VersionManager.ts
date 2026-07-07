@@ -508,10 +508,18 @@ export class VersionManager {
 
         for (const pkg of updatedPackages) {
           const isMainPackage = pkg.pkgKey === 'default'
+          let tagName: string
+
+          if (isMainPackage) {
+            tagName = `${this.gitConfig.tagPrefix || 'v'}${pkg.newVersion}`
+          }
+          else {
+            tagName = `${pkg.name}@${pkg.newVersion}`
+          }
 
           try {
-            this.gitManager.createTag(pkg.newVersion, this.gitConfig.tagPrefix || 'v')
-            log.success(`Created tag for ${pkg.name}@${pkg.newVersion}`)
+            this.gitManager.createTag(pkg.newVersion, this.gitConfig.tagPrefix || 'v', tagName)
+            log.success(`Created tag for ${tagName}`)
           }
           catch (error) {
             log.warn(`Create tag for ${pkg.name} failed: ${(error as Error).message}`)
