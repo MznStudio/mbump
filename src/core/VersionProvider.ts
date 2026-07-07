@@ -30,8 +30,8 @@ export class NodeVersionProvider implements IVersionProvider {
     writeFileSync(filePath, JSON.stringify(parsed, null, 2), 'utf8')
   }
 
-  getDefaultTagFormat(_packageName: string, version: string, _isDefaultPackage: boolean): string {
-    return `v${version}`
+  getDefaultTagFormat(packageName: string, version: string, isDefaultPackage: boolean): string {
+    return isDefaultPackage ? `v${version}` : `${packageName}@${version}`
   }
 }
 
