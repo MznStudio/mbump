@@ -101,7 +101,7 @@ export class ChangelogManager {
         const emoji = this.getTypeEmoji(type)
         const shortHash = commit.hash.slice(0, 7)
         const commitUrl = commitUrlFn ? commitUrlFn(commit.hash) : null
-        const hashLink = commitUrl ? `[${shortHash}](${commitUrl})` : shortHash
+        const _hashLink = commitUrl ? `[${shortHash}](${commitUrl})` : shortHash
         const inferredScope = scope || this.inferScopeFromFiles(commit.files)
         const key = `${emoji}|${type}`
 
