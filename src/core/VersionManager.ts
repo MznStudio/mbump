@@ -458,7 +458,7 @@ export class VersionManager {
                 this.gitManager.commit(commitMessage)
 
                 try {
-                  this.gitManager.createTag(newVersion, tagPrefix)
+                  this.gitManager.createTag(newVersion, tagPrefix, tagName)
                 }
                 catch (tagError) {
                   log.warn(`Create tag ${tagName} failed: ${(tagError as Error).message}`)

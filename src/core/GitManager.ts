@@ -252,14 +252,14 @@ export class GitManager {
     }
   }
 
-  createTag(version: string, tagPrefix: string = 'v'): void {
+  createTag(version: string, tagPrefix: string = 'v', tagName?: string): void {
     try {
-      const tagName = `${tagPrefix}${version}`
-      spawnSync('git', ['tag', '-a', tagName, '-m', `Release ${tagName}`], {
+      const finalTagName = tagName || `${tagPrefix}${version}`
+      spawnSync('git', ['tag', '-a', finalTagName, '-m', `Release ${finalTagName}`], {
         cwd: this.rootDir,
         stdio: 'pipe',
       })
-      log.success(`Created tag: ${tagName}`)
+      log.success(`Created tag: ${finalTagName}`)
     }
     catch (error) {
       throw new Error(`Create tag failed: ${(error as Error).message}`)
