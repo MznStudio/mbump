@@ -7,6 +7,12 @@
 
 
 
+
+## [2.3.8-beta.0] - 2026-07-07
+### ♻️ 代码重构
+
+- [934e6d0](/-/commit/934e6d060bd9ae9fa19d037d68a1dc3e1aa2704d) refactor(ChangelogManager): 重命名hashLink变量为_hashLink (src/core/ChangelogManager.ts)
+
 ## [2.3.7] - 2026-07-07
 ### 🔧 工具变更
 
