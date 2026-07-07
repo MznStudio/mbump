@@ -43,13 +43,9 @@ export class RustVersionProvider implements IVersionProvider {
     const versionMatch = content.match(/^version\s*=\s*"([^"]+)"/m)
     const nameMatch = content.match(/^name\s*=\s*"([^"]+)"/m)
 
-    if (!versionMatch) {
-      throw new Error(`无法在 ${filePath} 中解析版本号`)
-    }
-
     return {
       name: nameMatch?.[1] || '',
-      version: versionMatch[1],
+      version: versionMatch?.[1] || '0.0.0',
     }
   }
 

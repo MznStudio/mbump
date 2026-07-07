@@ -136,6 +136,19 @@ export class GitManager {
     this.repoUrlCache = null
   }
 
+  getCommitUrl(hash: string, customCommitPath?: string): string | null {
+    const repoUrl = this.getRepoUrl()
+    if (!repoUrl)
+      return null
+
+    const commitPath = customCommitPath || this.detectCommitPath(repoUrl)
+
+    if (!commitPath)
+      return null
+
+    return `${repoUrl}${commitPath}${hash}`
+  }
+
   getCommitRelativePath(hash: string, customCommitPath?: string): string | null {
     const repoUrl = this.getRepoUrl()
     if (!repoUrl)
@@ -152,11 +165,16 @@ export class GitManager {
   private detectCommitPath(repoUrl: string): string | null {
     const host = new URL(repoUrl).hostname
 
-    if (host.includes('github.com')) return '/commit/'
-    if (host.includes('gitlab.com') || host.includes('gitlab.')) return '/-/commit/'
-    if (host.includes('bitbucket.org') || host.includes('bitbucket.')) return '/commits/'
-    if (host.includes('gitee.com') || host.includes('gitee.')) return '/commit/'
-    if (host.includes('coding.net') || host.includes('coding.')) return '/commit/'
+    if (host.includes('github.com'))
+      return '/commit/'
+    if (host.includes('gitlab.com') || host.includes('gitlab.'))
+      return '/-/commit/'
+    if (host.includes('bitbucket.org') || host.includes('bitbucket.'))
+      return '/commits/'
+    if (host.includes('gitee.com') || host.includes('gitee.'))
+      return '/commit/'
+    if (host.includes('coding.net') || host.includes('coding.'))
+      return '/commit/'
     return '/-/commit/'
   }
 
@@ -178,10 +196,12 @@ export class GitManager {
 
       for (const block of blocks) {
         const lines = block.trim().split('\n')
-        if (lines.length === 0) continue
+        if (lines.length === 0)
+          continue
         const hash = lines[0]?.trim() || ''
         const message = lines[1]?.trim() || ''
-        if (!hash || !message) continue
+        if (!hash || !message)
+          continue
         const files = lines.slice(2).map(f => f.trim()).filter(f => f && !f.startsWith('COMMIT_START'))
         commits.push({ hash, message, files })
       }
@@ -196,11 +216,11 @@ export class GitManager {
   checkVersionExists(version: string, tagPrefix: string = 'v', packageName?: string): boolean {
     try {
       const tag = packageName ? `${packageName}@${version}` : `${tagPrefix}${version}`
-      spawnSync('git', ['rev-parse', '--verify', tag], {
+      const result = spawnSync('git', ['rev-parse', '--verify', tag], {
         cwd: this.rootDir,
         stdio: 'pipe',
       })
-      return true
+      return result.status === 0
     }
     catch {
       return false
@@ -268,7 +288,8 @@ export class GitManager {
       }
 
       log.debug('Git push')
-      if (includeTags) log.success('Pushed tags')
+      if (includeTags)
+        log.success('Pushed tags')
     }
     catch (error) {
       throw new Error(`Git push failed: ${(error as Error).message}`)

@@ -144,7 +144,7 @@ export class ChangelogManager {
         entry = `\n## ${versionTitle} (${date})${newContent}\n`
       }
       else {
-        entry = `\n# Changelog\n\n## ${versionTitle} (${date})${newContent}\n`
+        entry = `\n# Changelog\n\n## [${newVersion}] - ${date}${newContent}\n`
       }
 
       if (!content) {

@@ -5,7 +5,7 @@ import process from 'node:process'
 import { loadConfig } from '@/config/loader'
 import log from '@/utils/logger'
 import { validateCommand, validatePath } from '@/utils/security'
-import { incrementVersion, isPrerelease, isValidVersion, getMinor, getMajor, getPatch } from '@/utils/semver'
+import { getMajor, getMinor, getPatch, incrementVersion, isPrerelease, isValidVersion } from '@/utils/semver'
 import { ChangelogManager } from './ChangelogManager'
 import { GitManager } from './GitManager'
 import { NodeVersionProvider, RustVersionProvider } from './VersionProvider'
@@ -106,7 +106,8 @@ export class VersionManager {
       return false
 
     const isDefaultKey = pkgKey === 'default'
-    const resolvedPkgDir = dirname(pkgPath)
+    const resolvedPkgPath = resolve(this.rootDir, pkgPath)
+    const resolvedPkgDir = dirname(resolvedPkgPath)
     const resolvedRootDir = resolve(this.rootDir)
     const isNodeRoot = pkgPath.endsWith('package.json') && resolvedPkgDir === resolvedRootDir
     const isRustRoot = pkgPath.includes('Cargo.toml')
@@ -169,7 +170,7 @@ export class VersionManager {
       for (const [packageName, selection] of Object.entries(packageVersionSelections)) {
         const pkgPath = packagePaths[packageName]
         if (!pkgPath) {
-          throw new Error(`Invalid package name: ${packageName}`)
+          throw new Error(`无效的包名: ${packageName}`)
         }
 
         const pkg = this.getPackageInfo(pkgPath)
@@ -177,7 +178,7 @@ export class VersionManager {
 
         if (selection.customVersion) {
           if (!isValidVersion(selection.customVersion)) {
-            throw new Error(`Invalid custom version: ${selection.customVersion}`)
+            throw new Error(`无效的自定义版本号: ${selection.customVersion}`)
           }
           newVersion = selection.customVersion
         }
@@ -215,7 +216,7 @@ export class VersionManager {
       const targets = pkgName === 'all' ? Object.entries(packagePaths) : [[pkgName, packagePaths[pkgName]]]
 
       if (!targets.length || targets.some(([, path]) => !path)) {
-        throw new Error(`Invalid package name: ${pkgName}`)
+        throw new Error(`无效的包名: ${pkgName}`)
       }
 
       for (const [packageName, pkgPath] of targets) {
@@ -224,7 +225,7 @@ export class VersionManager {
 
         if (customVersion) {
           if (!isValidVersion(customVersion)) {
-            throw new Error(`Invalid custom version: ${customVersion}`)
+            throw new Error(`无效的自定义版本号: ${customVersion}`)
           }
           newVersion = customVersion
         }
@@ -301,7 +302,7 @@ export class VersionManager {
           const targets = pkgName === 'all' ? Object.values(packagePaths) : [packagePaths[pkgName]]
 
           if (!targets.length || targets.some(path => !path)) {
-            throw new Error(`Invalid package name: ${pkgName}`)
+            throw new Error(`无效的包名: ${pkgName}`)
           }
 
           let finalVersion: string | null = null
@@ -311,7 +312,7 @@ export class VersionManager {
 
             if (customVersion) {
               if (!isValidVersion(customVersion)) {
-                throw new Error(`Invalid custom version: ${customVersion}`)
+                throw new Error(`无效的自定义版本号: ${customVersion}`)
               }
               newVersion = customVersion
             }
@@ -336,7 +337,7 @@ export class VersionManager {
                 cachedIsDefaultPackage,
               )
               if (!dryRun && this.gitManager.checkVersionExists(newVersion, tagPrefix, cachedIsDefaultPackage ? undefined : pkg.name)) {
-                throw new Error(`Version ${versionTag} already exists`)
+                throw new Error(`版本 ${versionTag} 已存在`)
               }
             }
 
@@ -427,7 +428,7 @@ export class VersionManager {
               const newVersion = updatedPackage.newVersion
 
               if (this.gitConfig.commitMessage && this.gitConfig.commitMessage !== 'chore: bump version to {{newVersion}}') {
-                commitMessage = this.gitConfig.commitMessage.replace(/{{newVersion}}/g, newVersion)
+                commitMessage = this.gitConfig.commitMessage.replace(/\{\{newVersion\}\}/g, newVersion)
               }
               else if (pkgName === 'all') {
                 const versionInfo = result.updatedPackages.map(pkg => `${pkg.name}@${pkg.newVersion}`).join(', ')
