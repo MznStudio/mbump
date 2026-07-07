@@ -1,4 +1,10 @@
 
+
+## [0.0.26] - 2026-07-07
+### 🩹 Bug Fixes
+
+- **VersionManager, GitManager:** fix(VersionManager, GitManager): 支持自定义完整标签名 (ae37773)
+
 ## [0.0.25] - 2026-07-07
 # 更新日志 (Changelog)
 
