@@ -99,7 +99,7 @@ pnpm dev all patch --dry-run
     dryRun: false,               // 默认是否试运行
     verbose: false,              // 默认是否详细输出
     allowUncommitted: false,     // 是否允许未提交更改
-    npm: false,                  // 是否默认发布到 npm
+    publish: false,              // 是否默认发布（替代旧的 npm 参数）
   }
 }
 ```
@@ -174,7 +174,7 @@ const config: Config = {
 if (process.env.NODE_ENV === 'production') {
   config.defaults = {
     ...config.defaults,
-    npm: true,
+    publish: true,
   }
 }
 

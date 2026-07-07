@@ -264,7 +264,7 @@ export default {
 | `dryRun`           | `boolean` | `false`   | 默认试运行模式 |
 | `verbose`          | `boolean` | `false`   | 默认详细输出  |
 | `allowUncommitted` | `boolean` | `false`   | 允许未提交更改 |
-| `publish`          | `boolean` | `false`   | 默认启用发布  |
+| `publish`          | `boolean` | `false`   | 默认启用发布（替代旧的 `npm` 参数） |
 
 #### git
 
